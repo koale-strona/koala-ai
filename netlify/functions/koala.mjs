@@ -1,4 +1,4 @@
-import { answerQuestion } from "./koala-engine.mjs";
+import { answerQuestion, classifyQuestion } from "./koala-engine.mjs";
 
 /*
  * Koala.ai — backend + własny crawler.
@@ -22,13 +22,13 @@ const MAX_REQUEST_BYTES = 180_000;
 
 const CRAWLER_USER_AGENT = "KoalaAI-Crawler/2.0";
 const CRAWLER_REQUEST_TIMEOUT = 2200;
-const CRAWLER_TOTAL_BUDGET = 7000;
+const CRAWLER_TOTAL_BUDGET = 7800;
 const CRAWLER_MAX_PAGE_SIZE = 450_000;
 const CRAWLER_MAX_SITEMAP_SIZE = 300_000;
-const CRAWLER_MAX_PAGES_PER_SITE = 3;
+const CRAWLER_MAX_PAGES_PER_SITE = 4;
 const CRAWLER_MAX_SITEMAPS_PER_SITE = 2;
 const CRAWLER_MAX_RESULTS = 6;
-const CRAWLER_MAX_SOURCES = 4;
+const CRAWLER_MAX_SOURCES = 3;
 const CRAWLER_MAX_LINKS_PER_PAGE = 120;
 const CRAWLER_MAX_TERMS = 24;
 
@@ -159,28 +159,43 @@ const STOP_WORDS = new Set([
   "oraz", "dla", "przez", "podaj", "prosze", "chce", "sprawdz",
   "zweryfikuj", "potwierdz", "internet", "internecie", "online",
   "informacje", "informacja", "kiedy", "gdzie", "dlaczego", "czemu",
-  "teraz", "dzisiaj", "jutro", "wczoraj", "aktualnie", "obecnie",
+  "teraz", "dzisiaj", "dzis", "jutro", "wczoraj", "aktualnie", "obecnie",
   "najnowszy", "najnowsza", "najnowsze", "mi", "mnie", "ten", "tej",
-  "tego", "tym", "oraz", "albo", "lub", "mam", "ma", "mieć", "byc"
+  "tego", "tym", "albo", "lub", "mam", "ma", "byc", "hej", "hejka",
+  "czesc", "siema", "witaj", "witam", "koala", "nowego", "wiadomo",
+  "opowiedz", "wyjasnij", "prosze", "znajdz", "wyszukaj", "poszukaj",
+  "w", "na", "z", "ze", "do", "od", "to", "co", "kto", "czyli"
 ]);
 
 const QUERY_EXPANSIONS = [
   { match: /\b(barcelona|barca|barcelony)\b/, terms: ["barcelona", "barca", "fc barcelona"] },
   { match: /\b(mecz|mecze|spotkanie|terminarz|pilka|pilkarski)\b/, terms: ["match", "fixture", "fixtures", "schedule", "calendar"] },
-  { match: /\b(nauka|naukowy|badania|kosmos|astronomia|planeta|planety)\b/, terms: ["science", "research", "space", "planet", "astronomy"] },
+  { match: /\b(nauka|naukowy|badania|kosmos|kosmosu|astronomia|eksploracji|planeta|planety)\b/, terms: ["science", "research", "space", "planet", "astronomy", "exploration"] },
+  { match: /\b(fotosynteza|fotosyntezy|rosliny|chlorofil)\b/, terms: ["photosynthesis", "plant", "chlorophyll"] },
   { match: /\b(szkoła|szkolny|lekcja|edukacja|zadanie)\b/, terms: ["edukacja", "lekcja", "szkoła", "materiały"] },
-  { match: /\b(polska|polski|polskie|urzad|prawo|przepisy|ministerstwo)\b/, terms: ["polska", "polski", "gov"] }
+  { match: /\b(polska|polski|polskie|urzad|prawo|przepisy|ministerstwo)\b/, terms: ["polska", "polski", "gov"] },
+  { match: /\b(historia|historyczny|historyczna)\b/, terms: ["historia", "history", "historyczny"] }
 ];
 
 function getCrawlerTerms(question) {
   const normalized = normalizeSearchText(question);
-  const terms = tokenize(normalized).filter(term => !STOP_WORDS.has(term));
+  const rawTerms = tokenize(normalized).filter(term => !STOP_WORDS.has(term));
+  const terms = [...rawTerms];
 
   for (const expansion of QUERY_EXPANSIONS) {
     if (expansion.match.test(normalized)) terms.push(...expansion.terms);
   }
 
-  return unique(terms).slice(0, CRAWLER_MAX_TERMS);
+  // Dodajemy łagodny rdzeń dla polskich końcówek fleksyjnych. Nie usuwamy
+  // oryginalnego słowa, bo tytuły stron mogą zawierać pełną formę.
+  for (const term of rawTerms) {
+    if (term.length >= 7) {
+      const stem = term.replace(/(owego|owej|owych|ami|ach|owie|acji|ację|acja|enia|enie|ego|emu|owej|ami|ów|om|ie|em|ę|ą|y|a|e|u|i)$/u, "");
+      if (stem.length >= 4 && stem !== term) terms.push(stem);
+    }
+  }
+
+  return unique(terms).filter(term => term.length >= 3).slice(0, CRAWLER_MAX_TERMS);
 }
 
 function scoreCrawlerText(value, terms) {
@@ -190,20 +205,21 @@ function scoreCrawlerText(value, terms) {
   const tokens = normalized.split(" ");
   const tokenSet = new Set(tokens);
   let score = 0;
-
   for (const term of terms) {
     if (tokenSet.has(term)) score += 2;
-    else if (normalized.includes(term)) score += 1;
+    else if (term.length >= 4 && normalized.includes(term)) score += 1;
   }
-
-  // Niewielki bonus za frazę złożoną, gdy występuje w tekście obok siebie.
-  const meaningful = terms.filter(term => term.length >= 4).slice(0, 5);
-  for (let i = 0; i < meaningful.length - 1; i++) {
-    const phrase = `${meaningful[i]} ${meaningful[i + 1]}`;
-    if (normalized.includes(phrase)) score += 2;
-  }
-
   return score;
+}
+
+function getDocumentRelevance(page, url, terms) {
+  const titleScore = scoreCrawlerText(page.title || "", terms);
+  const descriptionScore = scoreCrawlerText(page.description || "", terms);
+  const urlScore = scoreCrawlerText(url || "", terms);
+  const contentScore = scoreCrawlerText(`${(page.paragraphs || []).join(" ")} ${page.text || ""}`, terms);
+  const strongMatch = titleScore > 0 || descriptionScore > 0;
+  const score = titleScore * 7 + descriptionScore * 4 + urlScore * 2 + Math.min(contentScore, 12) * 0.35;
+  return { score, titleScore, descriptionScore, urlScore, contentScore, strongMatch };
 }
 
 function getCrawlerSnippet(page, terms) {
@@ -726,19 +742,22 @@ function selectCrawlerSources(question) {
   const has = pattern => pattern.test(text);
 
   const sports = has(/\b(mecz|mecze|barcelona|barcelony|barca|liga|pilka|pilkarski|terminarz|uefa)\b/);
-  const science = has(/\b(nauka|naukowy|badania|kosmos|astronomia|biologia|fizyka|chemia|planeta|planety|nasa)\b/);
+  const astronomy = has(/\b(kosmos|kosmosu|astronomia|planeta|planety|nasa|eksploracji kosmosu|misja kosmiczna)\b/);
+  const science = has(/\b(nauka|naukowy|badania|biologia|fizyka|chemia|fotosynteza|chlorofil)\b/);
   const education = has(/\b(szkoła|szkolny|lekcja|edukacja|zadanie|egzamin|matura|podstawa programowa)\b/);
-  const poland = has(/\b(polska|polski|polskie|urzad|prawo|przepisy|ministerstwo|obywatel)\b/);
+  const officialPoland = has(/\b(gov|urzad|urząd|ministerstwo|ustawa|prawo|przepisy|wniosek|świadczenie|podatki|prezydent|sejm|senat)\b/);
 
   let categories;
   if (sports) categories = ["sport"];
+  else if (astronomy) categories = ["science", "general"];
+  else if (science) categories = ["education", "general", "science"];
   else if (education) categories = ["education", "general"];
-  else if (science) categories = ["science", "general", "education"];
-  else if (poland) categories = ["poland", "general", "education"];
-  else categories = ["general", "education", "poland"];
+  else if (officialPoland) categories = ["poland", "general"];
+  else categories = ["general", "education"];
 
-  const selected = CRAWLER_SOURCES.filter(source => categories.includes(source.category));
-  return selected.slice(0, CRAWLER_MAX_SOURCES);
+  return CRAWLER_SOURCES.filter(source => categories.includes(source.category))
+    .sort((a, b) => categories.indexOf(a.category) - categories.indexOf(b.category))
+    .slice(0, CRAWLER_MAX_SOURCES);
 }
 
 function extractAllowedSourceFromMessage(message) {
@@ -759,7 +778,7 @@ function extractAllowedSourceFromMessage(message) {
 // CRAWLER JEDNEJ WITRYNY
 // ---------------------------------------------------------------------------
 
-async function crawlPublicSite(source, terms, deadline) {
+async function crawlPublicSite(source, question, terms, deadline) {
   const results = [];
   const visited = new Set();
 
@@ -777,7 +796,22 @@ async function crawlPublicSite(source, terms, deadline) {
       deadline
     );
 
-    const queue = unique([seed.href, ...sitemapPages]).slice(0, 80);
+    // Wikipedia ma własną publiczną stronę wyszukiwania. Korzystamy z niej
+    // jako strony startowej, a wyniki dalej pobieramy i oceniamy samodzielnie.
+    const discoveryUrls = [];
+    if (host === "pl.wikipedia.org") {
+      const searchUrl = new URL("https://pl.wikipedia.org/w/index.php");
+      searchUrl.searchParams.set("search", String(question).slice(0, 180));
+      discoveryUrls.push(searchUrl.href);
+    } else if (host === "www.nasa.gov") {
+      // NASA wykorzystuje wyszukiwanie w swojej witrynie; pobieramy jego stronę
+      // wyników, a następnie sami oceniamy i pobieramy znalezione podstrony.
+      const searchUrl = new URL("https://www.nasa.gov/");
+      searchUrl.searchParams.set("s", String(question).slice(0, 180));
+      discoveryUrls.push(searchUrl.href);
+    }
+
+    const queue = unique([...discoveryUrls, ...sitemapPages, seed.href]).slice(0, 100);
 
     while (queue.length && visited.size < CRAWLER_MAX_PAGES_PER_SITE && Date.now() < deadline) {
       const url = queue.shift();
@@ -798,36 +832,43 @@ async function crawlPublicSite(source, terms, deadline) {
         cacheSet(PAGE_CACHE, url, page, PAGE_CACHE_TTL, PAGE_CACHE_LIMIT);
       }
 
-      if (page.text.length < 80 && page.description.length < 30) continue;
+      const isSearchLanding = /[?&](search|s)=/i.test(url) || /wyniki wyszukiwania|search results/i.test(page.title);
+      if (page.text.length < 80 && page.description.length < 30 && !isSearchLanding) continue;
 
-      const pageScore =
-        scoreCrawlerText(`${page.title} ${page.description} ${url}`, terms) * 4 +
-        scoreCrawlerText(page.text, terms) +
-        scoreCrawlerText(page.title, source.hints || []) * 2;
+      const looksLikeCategory = /\/wiki\/(kategoria:|dyskusja|specjalna:)/i.test(url) || /^(kategoria:|dyskusja kategorii:)/i.test(page.title);
+      const relevance = getDocumentRelevance(page, url, terms);
 
-      if (pageScore > 0) {
-        results.push({
-          source: source.name,
-          title: page.title,
-          url,
-          description: page.description,
-          date: page.date,
-          text: getCrawlerSnippet(page, terms),
-          score: pageScore
-        });
+      // Nie prezentujemy strony wyników wyszukiwania, stron dyskusji ani samych
+      // kategorii jako rzekomo merytorycznych źródeł.
+      if (!isSearchLanding && !looksLikeCategory && relevance.strongMatch && relevance.score >= 5.5) {
+        const snippet = getCrawlerSnippet(page, terms);
+        const snippetScore = scoreCrawlerText(snippet, terms);
+        if (snippet.length >= 60 && (snippetScore > 0 || relevance.titleScore > 0 || relevance.descriptionScore > 0)) {
+          results.push({
+            source: source.name,
+            title: page.title,
+            url,
+            description: page.description,
+            date: page.date,
+            text: snippet,
+            score: relevance.score,
+            relevance: relevance.titleScore > 0 ? "Wysokie" : "Dobre"
+          });
+        }
       }
 
       const candidates = (page.links || [])
         .map(link => ({
           ...link,
-          score: scoreCrawlerText(`${link.label} ${link.url}`, [...terms, ...(source.hints || [])])
+          score: scoreCrawlerText(`${link.label} ${link.url}`, terms) * 3 + scoreCrawlerText(link.label, source.hints || [])
         }))
-        .filter(link => link.score > 0 && !visited.has(link.url) && !queue.includes(link.url))
+        .filter(link => link.score >= 2 && !visited.has(link.url) && !queue.includes(link.url))
         .sort((a, b) => b.score - a.score);
 
-      for (const link of candidates.slice(0, 12)) {
-        if (queue.length >= 80) break;
-        queue.push(link.url);
+      // Wstawiamy najbardziej obiecujące linki przed dalszymi pozycjami mapy
+      // witryny, aby limit stron nie był zużywany na przypadkowe adresy.
+      for (const link of candidates.slice(0, 10).reverse()) {
+        if (queue.length < 100) queue.unshift(link.url);
       }
     }
   } catch (error) {
@@ -841,11 +882,16 @@ async function crawlPublicSite(source, terms, deadline) {
 // GŁÓWNE WYSZUKIWANIE INTERNETOWE KOALI
 // ---------------------------------------------------------------------------
 
-function escapeMarkdown(value) {
+function cleanDisplayText(value, maxLength = 1400) {
   return String(value || "")
-    .replace(/[\\`*_{}\[\]()#+.!|<>~-]/g, "\\$&")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    // Nie pozwalamy, aby składnia Markdown pobrana z obcej strony udawała
+    // nagłówki, obrazy lub linki w odpowiedzi Koali.
+    .replace(/[\`*_#\[\]()>|!]/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .slice(0, maxLength);
 }
 
 function safeSourceUrl(rawUrl) {
@@ -870,16 +916,14 @@ async function searchAllSources(question) {
   const deadline = Date.now() + CRAWLER_TOTAL_BUDGET;
   const preferredSource = extractAllowedSourceFromMessage(question);
   let sources = selectCrawlerSources(question);
-  if (preferredSource) {
-    sources = [preferredSource, ...sources.filter(source => source.name !== preferredSource.name)];
-  }
+  if (preferredSource) sources = [preferredSource, ...sources.filter(source => source.name !== preferredSource.name)];
   sources = unique(sources.map(source => source.name))
     .map(name => CRAWLER_SOURCES.find(source => source.name === name))
     .filter(Boolean)
     .slice(0, CRAWLER_MAX_SOURCES);
 
   const resultsBySite = await Promise.all(
-    sources.map(source => crawlPublicSite(source, terms, deadline))
+    sources.map(source => crawlPublicSite(source, question, terms, deadline))
   );
 
   const seen = new Set();
@@ -897,15 +941,19 @@ async function searchAllSources(question) {
 
   const sections = results.map((result, index) => {
     const url = safeSourceUrl(result.url);
-    const title = escapeMarkdown(result.title || "Strona internetowa");
-    const source = escapeMarkdown(result.source || "Witryna");
-    const date = result.date ? `\nData podana na stronie: ${escapeMarkdown(result.date)}` : "";
-    const excerpt = escapeMarkdown(result.text || result.description || "Brak krótkiego opisu.");
-
-    return `${index + 1}. **${title}**\n\nWitryna: ${source}${date}\n\n${excerpt}\n\nŹródło: ${url}`;
+    const title = cleanDisplayText(result.title || "Strona internetowa", 180);
+    const source = cleanDisplayText(result.source || "Witryna", 100);
+    const date = result.date ? `\n**Data podana na stronie:** ${cleanDisplayText(result.date, 80)}` : "";
+    const excerpt = cleanDisplayText(result.text || result.description || "Brak krótkiego opisu.", 1100);
+    return `### ${index + 1}. ${title}\n\n**Witryna:** ${source} · **Dopasowanie:** ${result.relevance}${date}\n\n${excerpt}\n\n[Otwórz źródło](${url})`;
   });
 
-  const answer = `🐨 KOALA SEARCH 2.0\n\nZnalazłam ${results.length} pasujących materiałów w dostępnych witrynach. Wyniki uporządkowałam według dopasowania do pytania.\n\n${sections.join("\n\n---\n\n")}\n\n---\n\n**Ważne:** to fragmenty publicznych stron, a nie niezależnie potwierdzone fakty. Data może pochodzić z metadanych strony. Koala nie odczytuje stron, które wymagają wykonania JavaScriptu lub blokują robota.`;
+  const countPhrase = results.length === 1
+    ? "materiał, który przeszedł"
+    : results.length >= 2 && results.length <= 4
+      ? "materiały, które przeszły"
+      : "materiałów, które przeszły";
+  const answer = `## 🐨 Koala Search\n\nZnalazłam **${results.length} ${countPhrase} ocenę trafności**. Najpierw pokazuję strony z dopasowaniem w tytule lub opisie.\n\n${sections.join("\n\n---\n\n")}\n\n---\n\n**Jak czytać wyniki?** To fragmenty znalezionych stron, nie automatycznie potwierdzone fakty. Sprawdź źródło i datę publikacji. Koala nie odczyta części stron, które wymagają JavaScriptu albo blokują robota.`;
 
   cacheSet(SEARCH_CACHE, cacheKey, answer, SEARCH_CACHE_TTL, SEARCH_CACHE_LIMIT);
   return answer;
@@ -929,7 +977,7 @@ function asksToVerifyOnline(message) {
 
 function asksForCurrentInformation(message) {
   const text = normalizeSearchText(message);
-  if (/\b(aktualnie|obecnie|dzisiaj|jutro|wczoraj|najnowszy|najnowsza|najnowsze|na zywo|najblizszy|najblizsza|najblizsze|teraz)\b/.test(text)) {
+  if (/\b(aktualnie|obecnie|dzisiaj|jutro|wczoraj|najnowszy|najnowsza|najnowsze|na zywo|najblizszy|najblizsza|najblizsze|teraz|co nowego|co wiadomo|ostatnie informacje)\b/.test(text)) {
     return true;
   }
   return /\b(mecz|spotkanie|terminarz|wynik meczu|pogoda|kurs walut|kurs euro|kurs dolara)\b/.test(text);
@@ -941,8 +989,8 @@ function isUnsupportedLiveDataQuestion(message) {
   return /\b(pogoda|prognoza pogody|kurs walut|kurs euro|kurs dolara|notowania gieldowe)\b/.test(text);
 }
 
-function shouldSearchOnline(message, answer) {
-  return isLocalUnknown(answer) || asksToVerifyOnline(message) || asksForCurrentInformation(message);
+function shouldSearchOnline(message, answer, history) {
+  return classifyQuestion(message, answer, history).shouldSearchWeb;
 }
 
 function getNoSearchResultMessage(message, localUnknown) {
@@ -1112,20 +1160,22 @@ export default async function handler(request) {
       : "Nie udało mi się przygotować odpowiedzi. Spróbuj ponownie.";
 
     const localUnknown = isLocalUnknown(finalAnswer);
-    const onlineSearch = shouldSearchOnline(message, finalAnswer);
+    const route = classifyQuestion(message, finalAnswer, history);
+    const onlineSearch = shouldSearchOnline(message, finalAnswer, history);
 
-    if (onlineSearch) {
+    if (onlineSearch && !["greeting", "thanks", "social", "math", "knowledge", "teacher-answer"].includes(route.kind)) {
       const internetAnswer = await searchAllSources(message);
+      const searchIsPrimary = !route.topic || localUnknown || asksForCurrentInformation(message);
       if (internetAnswer) {
-        if (localUnknown || asksForCurrentInformation(message)) {
+        if (searchIsPrimary) {
           finalAnswer = internetAnswer;
         } else {
-          finalAnswer += `\n\n---\n\n🐨 Sprawdziłam również publiczne strony internetowe.\n\n${internetAnswer}`;
+          finalAnswer += `\n\n---\n\n🐨 Dodatkowe materiały z internetu\n\n${internetAnswer}`;
         }
       } else {
-        const noResult = getNoSearchResultMessage(message, localUnknown);
-        if (localUnknown || asksForCurrentInformation(message)) finalAnswer = noResult;
-        else finalAnswer += noResult;
+        const noResult = getNoSearchResultMessage(message, localUnknown).trim();
+        if (searchIsPrimary) finalAnswer = noResult;
+        else finalAnswer += `\n\n${noResult}`;
       }
     }
 
