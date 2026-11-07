@@ -1,8 +1,8 @@
 /*
  * Koala.ai — lokalny, edukacyjny silnik regułowy.
- * Bez zewnętrznych modeli AI, kluczy API i zależności.
- * Obsługuje bazę wiedzy, naukę krok po kroku i matematykę.
- * Nie jest modelem językowym ogólnego przeznaczenia.
+ * Bez zewnętrznych modeli AI, kluczy API i dodatkowych zależności.
+ * Zachowuje bazę wiedzy, matematykę, historię rozmowy i tryb nauczyciela.
+ * To nie jest ogólny model językowy — odpowiedzi wynikają z reguł i wiedzy w pliku.
  */
 
 const MAX_QUESTION_LENGTH = 2000;
@@ -14,6 +14,7 @@ const knowledge = [
   {
     title: "Rzeczownik",
     keywords: ["rzeczownik", "co to jest rzeczownik"],
+    aliases: ["rzeczownika", "rzeczowniku"],
     short: "Rzeczownik nazywa osoby, zwierzęta, rzeczy, miejsca, zjawiska i pojęcia.",
     explanation: "Odpowiada na pytania: kto? co? Odmienia się przez przypadki i liczby. Występuje w rodzaju męskim, żeńskim lub nijakim.",
     example: "W zdaniu „Pies biega” wyraz „pies” jest rzeczownikiem. Inne przykłady: uczeń, książka, szkoła, radość.",
@@ -23,6 +24,7 @@ const knowledge = [
   {
     title: "Czasownik",
     keywords: ["czasownik", "co to jest czasownik"],
+    aliases: ["czasownika", "czasowniku"],
     short: "Czasownik oznacza czynność, stan lub proces.",
     explanation: "Odpowiada na pytania: co robi? co się z nim dzieje? Czasowniki występują w czasie przeszłym, teraźniejszym i przyszłym oraz odmieniają się przez osoby i liczby.",
     example: "W zdaniu „Ola czyta książkę” wyraz „czyta” jest czasownikiem. Inne przykłady: pisze, biega, śpi.",
@@ -32,6 +34,7 @@ const knowledge = [
   {
     title: "Przymiotnik",
     keywords: ["przymiotnik", "co to jest przymiotnik"],
+    aliases: ["przymiotnika", "przymiotniku"],
     short: "Przymiotnik określa cechy osób, rzeczy i zjawisk.",
     explanation: "Odpowiada na pytania: jaki? jaka? jakie? Dopasowuje się do rzeczownika pod względem rodzaju, liczby i przypadku.",
     example: "W wyrażeniu „zielona trawa” wyraz „zielona” jest przymiotnikiem. Inne przykłady: wysoki budynek, ciekawe książki.",
@@ -41,6 +44,7 @@ const knowledge = [
   {
     title: "Przysłówek",
     keywords: ["przysłówek", "przyslowek", "co to jest przysłówek"],
+    aliases: ["przysłówka", "przysłówku"],
     short: "Przysłówek określa sposób, miejsce, czas lub stopień wykonywania czynności.",
     explanation: "Odpowiada między innymi na pytania: jak? gdzie? kiedy? Często określa czasownik.",
     example: "W zdaniu „Ola biegnie szybko” wyraz „szybko” jest przysłówkiem. Inne przykłady: daleko, wczoraj, bardzo.",
@@ -50,6 +54,7 @@ const knowledge = [
   {
     title: "Zaimek",
     keywords: ["zaimek", "co to jest zaimek"],
+    aliases: ["zaimka", "zaimku"],
     short: "Zaimek zastępuje inne części mowy, najczęściej rzeczownik, przymiotnik lub liczebnik.",
     explanation: "Dzięki zaimkom nie musimy stale powtarzać tych samych wyrazów. Przykłady pytań: kto? jaki? ile? czyj?",
     example: "Zamiast „Ania wzięła książkę Ani” możemy powiedzieć „Ania wzięła swoją książkę”. Wyraz „swoją” jest zaimkiem.",
@@ -59,6 +64,7 @@ const knowledge = [
   {
     title: "Liczby pierwsze",
     keywords: ["liczba pierwsza", "liczby pierwsze"],
+    aliases: ["liczb pierwszych", "liczbach pierwszych"],
     short: "Liczba pierwsza to liczba naturalna większa od 1, która ma dokładnie dwa dzielniki: 1 i samą siebie.",
     explanation: "Aby sprawdzić, czy liczba jest pierwsza, szukamy dzielników innych niż 1 i ona sama. Jeśli żadnego nie ma, liczba jest pierwsza.",
     example: "2, 3, 5, 7, 11 i 13 są pierwsze. 9 nie jest pierwsza, bo dzieli się przez 3.",
@@ -68,6 +74,7 @@ const knowledge = [
   {
     title: "Ułamki zwykłe",
     keywords: ["ułamek zwykły", "ulamek zwykly", "ułamek", "ulamek", "ułamki", "ulamki"],
+    aliases: ["ułamka zwykłego", "ułamków zwykłych", "ułamkach zwykłych"],
     short: "Ułamek zwykły przedstawia część całości. Składa się z licznika i mianownika.",
     explanation: "Mianownik jest pod kreską i mówi, na ile równych części podzielono całość. Licznik jest nad kreską i mówi, ile części wybrano.",
     example: "W ułamku 3/4 mianownik 4 oznacza cztery równe części, a licznik 3 oznacza trzy wybrane części.",
@@ -77,6 +84,7 @@ const knowledge = [
   {
     title: "Procenty",
     keywords: ["procent", "procenty", "co to jest procent"],
+    aliases: ["procentów", "procencie", "procentach"],
     short: "Procent oznacza jedną setną całości. Zapisujemy go symbolem %.",
     explanation: "100% to całość, 50% to połowa, 25% to jedna czwarta, a 10% to jedna dziesiąta. Procent zamieniamy na ułamek dziesiętny, dzieląc przez 100.",
     example: "20% z 50 to 10, ponieważ 20/100 × 50 = 10.",
@@ -86,6 +94,7 @@ const knowledge = [
   {
     title: "Pole kwadratu",
     keywords: ["pole kwadratu", "jak obliczyć pole kwadratu", "jak obliczyc pole kwadratu"],
+    aliases: ["pola kwadratu", "polu kwadratu"],
     short: "Pole kwadratu obliczamy ze wzoru P = a × a, czyli P = a².",
     explanation: "Litera a oznacza długość boku. Pole opisuje powierzchnię figury, dlatego wynik zapisujemy w jednostkach kwadratowych, np. cm².",
     example: "Jeśli bok ma 4 cm, to P = 4 × 4 = 16 cm².",
@@ -95,6 +104,7 @@ const knowledge = [
   {
     title: "Pole prostokąta",
     keywords: ["pole prostokąta", "pole prostokata", "prostokąt", "prostokat"],
+    aliases: ["pola prostokąta", "polu prostokąta"],
     short: "Pole prostokąta obliczamy ze wzoru P = a × b.",
     explanation: "Mnożymy długość jednego boku przez długość drugiego boku. Wynik zapisujemy w jednostkach kwadratowych.",
     example: "Dla boków 6 cm i 3 cm: P = 6 × 3 = 18 cm².",
@@ -104,15 +114,17 @@ const knowledge = [
   {
     title: "Obwód kwadratu",
     keywords: ["obwód kwadratu", "obwod kwadratu"],
+    aliases: ["obwodu kwadratu", "obwodzie kwadratu"],
     short: "Obwód kwadratu obliczamy ze wzoru O = 4 × a.",
     explanation: "Kwadrat ma cztery równe boki. Obwód to suma długości wszystkich boków.",
     example: "Jeśli bok ma 3 cm, obwód wynosi 3 + 3 + 3 + 3 = 12 cm.",
     related: "Pole kwadratu obliczamy ze wzoru P = a². Obwód i pole to różne wielkości.",
     check: "Kwadrat ma bok 6 cm. Jaki jest jego obwód?"
   },
-    {
+  {
     title: "Obwód prostokąta",
     keywords: ["obwód prostokąta", "obwod prostokata"],
+    aliases: ["obwodu prostokąta", "obwodzie prostokąta"],
     short: "Obwód prostokąta obliczamy ze wzoru O = 2a + 2b.",
     explanation: "Dodajemy długości wszystkich czterech boków. Przeciwległe boki prostokąta są równe.",
     example: "Dla boków 5 cm i 3 cm: O = 5 + 3 + 5 + 3 = 16 cm.",
@@ -122,6 +134,7 @@ const knowledge = [
   {
     title: "Fotosynteza",
     keywords: ["fotosynteza", "co to jest fotosynteza"],
+    aliases: ["fotosyntezy", "fotosyntezie", "fotosyntezę", "fotosynteze"],
     short: "Fotosynteza to proces, w którym rośliny wykorzystują energię światła do wytwarzania substancji organicznych.",
     explanation: "Rośliny pobierają wodę i dwutlenek węgla. Dzięki energii światła i chlorofilowi wytwarzają związki organiczne, między innymi glukozę. W procesie uwalnia się tlen.",
     example: "Liście pobierają światło słoneczne, a roślina wykorzystuje jego energię podczas fotosyntezy.",
@@ -131,6 +144,7 @@ const knowledge = [
   {
     title: "Oddychanie komórkowe",
     keywords: ["oddychanie komórkowe", "oddychanie komorkowe"],
+    aliases: ["oddychania komórkowego", "oddychaniu komórkowym"],
     short: "Oddychanie komórkowe to proces uwalniania energii ze związków organicznych.",
     explanation: "W oddychaniu tlenowym komórki wykorzystują tlen do rozkładania glukozy. Powstają dwutlenek węgla, woda i energia magazynowana między innymi w ATP.",
     example: "Komórki mięśni wykorzystują energię uzyskaną w oddychaniu komórkowym do pracy.",
@@ -140,6 +154,7 @@ const knowledge = [
   {
     title: "Komórka",
     keywords: ["komórka biologiczna", "komorka biologiczna", "komórka", "komorka"],
+    aliases: ["komórki", "komórce"],
     short: "Komórka jest podstawową jednostką budowy i funkcjonowania organizmów.",
     explanation: "Wiele komórek zawiera błonę komórkową, cytoplazmę i materiał genetyczny. Komórki roślinne mają dodatkowo m.in. ścianę komórkową i chloroplasty.",
     example: "Komórki mięśniowe umożliwiają ruch, a komórki nerwowe uczestniczą w przekazywaniu informacji.",
@@ -149,6 +164,7 @@ const knowledge = [
   {
     title: "Układ Słoneczny",
     keywords: ["układ słoneczny", "uklad sloneczny", "planety układu słonecznego", "planety ukladu slonecznego"],
+    aliases: ["układu słonecznego", "układzie słonecznym"],
     short: "Układ Słoneczny składa się ze Słońca oraz krążących wokół niego planet i innych ciał niebieskich.",
     explanation: "Grawitacja Słońca utrzymuje planety na orbitach. W Układzie Słonecznym znajdują się też księżyce, planety karłowate, asteroidy i komety.",
     example: "Osiem planet to: Merkury, Wenus, Ziemia, Mars, Jowisz, Saturn, Uran i Neptun.",
@@ -158,6 +174,7 @@ const knowledge = [
   {
     title: "Grawitacja",
     keywords: ["grawitacja", "co to jest grawitacja"],
+    aliases: ["grawitacji"],
     short: "Grawitacja to oddziaływanie, dzięki któremu obiekty posiadające masę przyciągają się.",
     explanation: "Siła przyciągania zależy między innymi od mas obiektów i odległości między nimi. Grawitacja Ziemi utrzymuje nas na jej powierzchni.",
     example: "Gdy puścisz piłkę, spada ona w kierunku podłoża wskutek przyciągania grawitacyjnego Ziemi.",
@@ -167,6 +184,7 @@ const knowledge = [
   {
     title: "Atom",
     keywords: ["atom", "co to jest atom", "budowa atomu"],
+    aliases: ["atomu", "atomie"],
     short: "Atom to podstawowa jednostka budowy pierwiastka chemicznego.",
     explanation: "Atom składa się z jądra, w którym znajdują się protony i neutrony, oraz elektronów znajdujących się wokół jądra.",
     example: "Atom wodoru ma jeden proton w jądrze i zwykle jeden elektron.",
@@ -176,6 +194,7 @@ const knowledge = [
   {
     title: "Energia",
     keywords: ["energia", "co to jest energia", "energia kinetyczna", "energia potencjalna"],
+    aliases: ["energii", "energię"],
     short: "Energia opisuje zdolność układu do wykonania pracy lub wywołania zmian.",
     explanation: "Wyróżnia się między innymi energię kinetyczną, potencjalną, cieplną, chemiczną i elektryczną. Energia może zmieniać formę.",
     example: "Poruszający się rower ma energię kinetyczną, a podniesiony przedmiot — energię potencjalną grawitacji.",
@@ -185,6 +204,7 @@ const knowledge = [
   {
     title: "Demokracja",
     keywords: ["demokracja", "co to jest demokracja"],
+    aliases: ["demokracji"],
     short: "Demokracja to forma rządów, w której obywatele mają udział w podejmowaniu decyzji publicznych.",
     explanation: "Obywatele mogą uczestniczyć w życiu politycznym między innymi poprzez wybory. Ważne są też prawa obywatelskie, pluralizm i praworządność.",
     example: "Wybory parlamentarne są jednym ze sposobów udziału obywateli w demokracji.",
@@ -194,6 +214,7 @@ const knowledge = [
   {
     title: "Pan Tadeusz",
     keywords: ["pan tadeusz", "autor pana tadeusza", "kto napisał pana tadeusza", "kto napisal pana tadeusza"],
+    aliases: ["pana tadeusza"],
     short: "Autorem epopei „Pan Tadeusz” jest Adam Mickiewicz.",
     explanation: "Utwór został wydany w 1834 roku. Jego pełny tytuł brzmi „Pan Tadeusz, czyli Ostatni zajazd na Litwie”.",
     example: "Akcja utworu rozgrywa się na Litwie, a ważne tematy to życie szlachty i tęsknota za ojczyzną.",
@@ -203,6 +224,7 @@ const knowledge = [
   {
     title: "Druga wojna światowa",
     keywords: ["druga wojna światowa", "druga wojna swiatowa", "ii wojna światowa", "ii wojna swiatowa"],
+    aliases: ["drugiej wojny światowej", "drugiej wojnie światowej"],
     short: "II wojna światowa trwała od 1939 do 1945 roku.",
     explanation: "Rozpoczęła się 1 września 1939 roku atakiem Niemiec na Polskę. Był to największy konflikt zbrojny w historii.",
     example: "W Europie wojna zakończyła się w maju 1945 roku, a kapitulacja Japonii nastąpiła we wrześniu 1945 roku.",
@@ -212,6 +234,7 @@ const knowledge = [
   {
     title: "Najdłuższa rzeka Polski",
     keywords: ["najdłuższa rzeka polski", "najdluzsza rzeka polski", "wisła", "wisla"],
+    aliases: ["najdłuższej rzeki polski"],
     short: "Najdłuższą rzeką Polski jest Wisła.",
     explanation: "Wisła ma około 1047 km długości. Przepływa przez wiele regionów Polski i uchodzi do Morza Bałtyckiego.",
     example: "Do ważnych miast położonych nad Wisłą należą Kraków, Warszawa i Toruń.",
@@ -219,285 +242,209 @@ const knowledge = [
     check: "Do jakiego morza uchodzi Wisła?"
   }
 ];
+
+const teacherAnswerRules = {
+  "Rzeczownik": { all: ["kot"], hint: "Poszukaj wyrazu nazywającego zwierzę." },
+  "Czasownik": { all: [["graja", "grają"]], hint: "Szukaj wyrazu, który oznacza wykonywaną czynność." },
+  "Przymiotnik": { all: ["maly"], hint: "Przymiotnik odpowiada między innymi na pytanie: jaki?" },
+  "Przysłówek": { all: ["kiedy"], hint: "Zastanów się, na jakie pytanie odpowiada wyraz „wczoraj”." },
+  "Zaimek": { all: ["ona", "swoja"], hint: "W zdaniu są dwa wyrazy zastępujące inne części mowy." },
+  "Liczby pierwsze": { all: ["3"], hint: "Sprawdź, czy 15 można podzielić przez 3 bez reszty." },
+  "Ułamki zwykłe": { all: ["2", "5"], hint: "Licznik jest nad kreską, a mianownik pod kreską." },
+  "Procenty": { all: ["8"], hint: "10% to jedna dziesiąta liczby. Oblicz jedną dziesiątą z 80." },
+  "Pole kwadratu": { all: ["25"], hint: "Pomnóż długość boku przez samą siebie: 5 × 5." },
+  "Pole prostokąta": { all: ["14"], hint: "Pole obliczamy, mnożąc długości dwóch boków." },
+  "Obwód kwadratu": { all: ["24"], hint: "Kwadrat ma cztery równe boki. Dodaj je." },
+  "Obwód prostokąta": { all: ["24"], hint: "Dodaj wszystkie cztery boki: 8 + 4 + 8 + 4." },
+  "Fotosynteza": { all: ["woda", "dwutlenek wegla"], hint: "Pomyśl, jakie dwa surowce roślina pobiera ze środowiska." },
+  "Oddychanie komórkowe": { all: ["tlen"], hint: "Pomyśl, jaki gaz pobieramy podczas oddychania tlenowego." },
+  "Komórka": { any: ["chloroplast", "sciana komorkowa"], hint: "Pomyśl o strukturach, które odróżniają komórkę roślinną." },
+  "Układ Słoneczny": { all: ["merkury"], hint: "To planeta znajdująca się najbliżej Słońca." },
+  "Grawitacja": { all: ["ziemia", "przyciaga"], hint: "Pomyśl, co sprawia, że puszczona piłka spada na podłoże." },
+  "Atom": { all: ["proton", "neutron"], hint: "W jądrze atomu znajdują się dwa rodzaje cząstek." },
+  "Energia": { all: ["kinetyczna"], hint: "To energia związana z ruchem." },
+  "Demokracja": { all: ["wybory"], hint: "Pomyśl, w jaki sposób obywatele wybierają swoich przedstawicieli." },
+  "Pan Tadeusz": { all: ["adam", "mickiewicz"], hint: "Chodzi o polskiego poetę epoki romantyzmu." },
+  "Druga wojna światowa": { all: ["1939"], hint: "Pomyśl o roku ataku Niemiec na Polskę." },
+  "Najdłuższa rzeka Polski": { any: ["baltyk", "baltyckiego"], hint: "Wisła uchodzi do morza na północy Polski." }
+};
+
+const STOPWORDS = new Set([
+  "a", "aby", "ale", "albo", "bo", "by", "byc", "co", "czy", "dla", "do", "dlaczego",
+  "gdzie", "i", "ile", "jak", "jaka", "jaki", "jakie", "jest", "jeszcze", "kiedy", "ktora",
+  "ktore", "ktory", "lub", "ma", "mam", "mi", "mnie", "na", "nad", "nie", "o", "od",
+  "oraz", "po", "pod", "poniewaz", "prosze", "przez", "się", "sie", "to", "w", "we",
+  "z", "za", "ze", "że", "ten", "ta", "te", "tym", "tego", "tej", "mozesz", "mi"
+]);
+
 function normalize(value) {
-  return String(value || "")
-    .toLowerCase()
+  return String(value ?? "")
+    .toLocaleLowerCase("pl-PL")
     .replace(/ł/g, "l")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[.,!?;:()[\]{}"'„”]/g, " ")
+    .replace(/[„”"'`]/g, " ")
+    .replace(/[^\p{L}\p{N}%+*/().,^=\-]+/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
 function containsPhrase(text, phrase) {
-  return (` ${text} `).includes(` ${normalize(phrase)} `);
+  const normalizedText = normalize(text);
+  const normalizedPhrase = normalize(phrase);
+  if (!normalizedPhrase) return false;
+  return (` ${normalizedText} `).includes(` ${normalizedPhrase} `);
 }
 
 function findKnowledge(question) {
   const text = normalize(question);
-
-  const aliases = {
-    "Rzeczownik": ["rzeczownika", "rzeczowniku"],
-    "Czasownik": ["czasownika", "czasowniku"],
-    "Przymiotnik": ["przymiotnika", "przymiotniku"],
-    "Przysłówek": ["przysłówka", "przysłówku"],
-    "Zaimek": ["zaimka", "zaimku"],
-    "Liczby pierwsze": ["liczb pierwszych", "liczbach pierwszych"],
-    "Ułamki zwykłe": ["ułamka zwykłego", "ułamków zwykłych", "ułamkach zwykłych"],
-    "Procenty": ["procentów", "procencie", "procentach"],
-    "Pole kwadratu": ["pola kwadratu", "polu kwadratu"],
-    "Pole prostokąta": ["pola prostokąta", "polu prostokąta"],
-    "Obwód kwadratu": ["obwodu kwadratu", "obwodzie kwadratu"],
-    "Obwód prostokąta": ["obwodu prostokąta", "obwodzie prostokąta"],
-    "Fotosynteza": ["fotosyntezy", "fotosyntezie"],
-    "Oddychanie komórkowe": ["oddychania komórkowego", "oddychaniu komórkowym"],
-    "Komórka": ["komórki", "komórce"],
-    "Układ Słoneczny": ["układu słonecznego", "układzie słonecznym"],
-    "Grawitacja": ["grawitacji"],
-    "Atom": ["atomu", "atomie"],
-    "Energia": ["energii", "energię"],
-    "Demokracja": ["demokracji"],
-    "Pan Tadeusz": ["pana tadeusza"],
-    "Druga wojna światowa": ["drugiej wojny światowej", "drugiej wojnie światowej"],
-    "Najdłuższa rzeka Polski": ["najdłuższej rzeki polski"]
-  };
-
   let best = null;
   let bestScore = 0;
 
   for (const item of knowledge) {
-    const terms = [
-      ...(item.keywords || []),
-      ...(aliases[item.title] || [])
-    ];
-
-    for (const keyword of terms) {
-      const normalizedKeyword = normalize(keyword);
-
-      if (
-        normalizedKeyword.length > bestScore &&
-        containsPhrase(text, normalizedKeyword)
-      ) {
+    const phrases = [...(item.keywords || []), ...(item.aliases || [])];
+    for (const phrase of phrases) {
+      const key = normalize(phrase);
+      if (!key) continue;
+      let score = 0;
+      if (containsPhrase(text, key)) score = 10 + key.length;
+      else if (key.length >= 6 && text.includes(key)) score = 3 + key.length / 10;
+      if (score > bestScore) {
         best = item;
-        bestScore = normalizedKeyword.length;
+        bestScore = score;
       }
     }
   }
-
   return best;
+}
+
+function isGreetingMessage(question) {
+  const text = normalize(question).replace(/[!.?,]+$/g, "").trim();
+  return /^(hej|hejka|czesc|siema|witaj|witam|hello|hi|elo|dzien dobry|dobry wieczor|dobranoc)( koala( ai)?| koalo)?$/.test(text);
+}
+
+function isThanksMessage(question) {
+  const text = normalize(question).replace(/[!.?,]+$/g, "").trim();
+  return /^(dziekuje|dzieki|wielkie dzieki|dziekuje koala|dzieki koala|dziekuje koalo|dzieki koalo|super dzieki)$/.test(text);
+}
+
+function isSocialMessage(question) {
+  const text = normalize(question);
+  return /^(jak sie masz|co tam|co u ciebie|jestes fajna|jestes super|kim jestes|co potrafisz|pomoz mi|potrzebuje pomocy)( koala)?\??$/.test(text);
+}
+
+function isCurrentInformationQuestion(question) {
+  const text = normalize(question);
+  return /\b(aktualnie|obecnie|dzisiaj|dzis|jutro|wczoraj|najnowsz\w*|na zywo|teraz|aktualn\w*|ostatnie wiadomosci|co nowego|ostatnie informacje)\b/.test(text)
+    || /\b(mecz|terminarz|wynik meczu|pogoda|kurs walut|kurs euro|kurs dolara)\b/.test(text);
+}
+
+function asksToSearchOnline(question) {
+  const text = normalize(question);
+  return /\b(w internecie|online|w sieci|wyszukaj|poszukaj|szukaj w internecie|znajdz w internecie|znajdz w sieci|sprawdz w internecie|sprawdz online|zweryfikuj online|potwierdz w zrodlach)\b/.test(text);
+}
+
+function looksLikeFactualQuestion(question) {
+  const text = normalize(question);
+  if (isGreetingMessage(text) || isThanksMessage(text) || isSocialMessage(text)) return false;
+  return /\b(co to jest|czym jest|kto jest|kto byl|kto|gdzie|kiedy|ile|jak dziala|jak powstal|jak powstala|dlaczego|czemu|wymien|podaj informacje|opowiedz o|wyjasnij|co oznacza|co nowego|co wiadomo|najnowsze informacje|informacje o|historia|biografia|definicja|znaczenie|czy)\b/.test(text);
+}
+
+function getQuestionRoute(question, localAnswer = "") {
+  const text = String(question ?? "").trim();
+  if (!text) return { kind: "empty", shouldSearchWeb: false };
+  if (isGreetingMessage(text)) return { kind: "greeting", shouldSearchWeb: false };
+  if (isThanksMessage(text)) return { kind: "thanks", shouldSearchWeb: false };
+  if (isSocialMessage(text)) return { kind: "social", shouldSearchWeb: false };
+
+  const topic = findKnowledge(text);
+  const math = calculate(text) !== null;
+  if (math) return { kind: "math", shouldSearchWeb: false };
+  if (topic && !asksToSearchOnline(text) && !isCurrentInformationQuestion(text)) {
+    return { kind: "knowledge", shouldSearchWeb: false, topic: topic.title };
+  }
+
+  const explicit = asksToSearchOnline(text) || isCurrentInformationQuestion(text);
+  const unknownLocal = normalize(localAnswer).includes("nie znalazlam jeszcze tego zagadnienia");
+  const shouldSearchWeb = explicit || (!topic && !math && looksLikeFactualQuestion(text));
+  return {
+    kind: shouldSearchWeb ? "search" : "unknown",
+    shouldSearchWeb,
+    topic: topic?.title || null
+  };
 }
 
 function getIntent(question) {
   const text = normalize(question);
-
-  if (/\b(notatk\w*|podsumuj\w*|podsumowani\w*|skroc\w*|najwazniejsz\w*)\b/.test(text)) {
-    return "summary";
-  }
-
-  if (/\b(przyklad\w*|podaj przyklad|daj przyklad)\b/.test(text)) {
-    return "example";
-  }
-
-  if (/\b(prosciej|latwiej|nie rozumiem|wytlumacz\w*|wyjasn\w*|po ludzku)\b/.test(text)) {
-    return "simple";
-  }
-
-  if (/\b(dlaczego|czemu|z jakiego powodu)\b/.test(text)) {
-    return "why";
-  }
-
-  if (/\b(rozwin\w*|rozszerz\w*|dokladniej|wiecej|opowiedz wiecej|szerzej)\b/.test(text)) {
-    return "expand";
-  }
-
-  if (/\b(sprawdz mnie|zrob quiz|przepytaj mnie|pytanie sprawdzajace)\b/.test(text)) {
-    return "quiz";
-  }
-
+  if (/\b(notatk\w*|podsumuj\w*|podsumowani\w*|skroc\w*|najwazniejsz\w*)\b/.test(text)) return "summary";
+  if (/\b(przyklad\w*|podaj przyklad|daj przyklad)\b/.test(text)) return "example";
+  if (/\b(prosciej|latwiej|nie rozumiem|wytlumacz\w*|wyjasn\w*|po ludzku)\b/.test(text)) return "simple";
+  if (/\b(dlaczego|czemu|z jakiego powodu)\b/.test(text)) return "why";
+  if (/\b(rozwin\w*|rozszerz\w*|dokladniej|wiecej|opowiedz wiecej|szerzej)\b/.test(text)) return "expand";
+  if (/\b(sprawdz mnie|zrob quiz|przepytaj mnie|pytanie sprawdzajace)\b/.test(text)) return "quiz";
   return "normal";
 }
 
 function isFollowUp(question) {
   const text = normalize(question);
-
-  return (
-    /^(a\s+)?(mozesz\s+mi\s+to\s+)?(wyjasn\w*|wytlumacz\w*|dlaczego|czemu|jak to|rozwin\w*|rozszerz\w*|dokladniej|wiecej|przyklad|podaj przyklad|daj przyklad|prosciej|latwiej|nie rozumiem|zrob notatk\w*|podsumuj\w*|sprawdz mnie|przepytaj mnie)( .*)?$/.test(text) ||
-    /\b(notatk\w*|podsumuj\w*|podsumowani\w*)\b/.test(text)
-  );
+  return /^(a )?(mozesz mi to )?(wyjasn\w*|wytlumacz\w*|dlaczego|czemu|jak to|rozwin\w*|rozszerz\w*|dokladniej|wiecej|przyklad|podaj przyklad|daj przyklad|prosciej|latwiej|nie rozumiem|zrob notatk\w*|podsumuj\w*|sprawdz mnie|przepytaj mnie)( .*)?$/.test(text)
+    || /\b(notatk\w*|podsumuj\w*|podsumowani\w*)\b/.test(text);
 }
 
 function isTopicChange(question) {
-  const text = normalize(question);
-
-  return /\b(zmienmy temat|zmien temat|zmieniamy temat|przejdzmy do|teraz matm\w*|teraz matematy\w*|teraz biologi\w*|teraz histori\w*|teraz geograf\w*|teraz polski)\b/.test(text);
-}
-
-function formatNumber(value) {
-  return new Intl.NumberFormat("pl-PL", {
-    maximumFractionDigits: 8
-  }).format(value);
+  return /\b(zmienmy temat|zmien temat|zmieniamy temat|przejdzmy do|teraz matm\w*|teraz matematy\w*|teraz biologi\w*|teraz histori\w*|teraz geograf\w*|teraz polski)\b/.test(normalize(question));
 }
 
 function formatKnowledge(item, intent = "normal") {
   if (!item) return null;
+  if (intent === "example") return `## 🐨 Przykład: ${item.title}\n\n${item.example}\n\n**Sprawdź, czy rozumiesz:**\n${item.check}`;
+  if (intent === "simple") return `## 🐨 Wyjaśnijmy to prościej\n\n**${item.title}**\n\n${item.short}\n\n**Przykład:**\n${item.example}\n\nCzy teraz jest to bardziej zrozumiałe?`;
+  if (intent === "summary") return `## 📝 Krótka notatka — ${item.title}\n\n**Najważniejsze:** ${item.short}\n\n**Warto zapamiętać:** ${item.explanation}\n\n**Przykład:** ${item.example}`;
+  if (intent === "why") return `## 🐨 Dlaczego to jest ważne?\n\n${item.related}\n\n**Dokładniej:**\n${item.explanation}`;
+  if (intent === "expand") return `## 📚 ${item.title} — rozwinięcie\n\n**1. Podstawowa definicja**\n${item.short}\n\n**2. Dokładniejsze wyjaśnienie**\n${item.explanation}\n\n**3. Przykład**\n${item.example}\n\n**4. Co warto zapamiętać?**\n${item.related}\n\n**🎓 Sprawdź swoją wiedzę**\n${item.check}`;
+  if (intent === "quiz") return `## 🎓 Mini quiz — ${item.title}\n\n**Pytanie:** ${item.check}\n\nSpróbuj odpowiedzieć samodzielnie. Nie podam od razu rozwiązania! 🐨`;
+  return `## 🐨 ${item.title}\n\n**Najważniejsze**\n${item.short}\n\n**Wyjaśnienie**\n${item.explanation}\n\n**Przykład**\n${item.example}\n\n**🎓 Sprawdź, czy rozumiesz**\n${item.check}\n\n_Możesz poprosić mnie o prostsze wyjaśnienie, przykład albo krótką notatkę._`;
+}
 
-  if (intent === "example") {
-    return `🐨 Przyjrzyjmy się przykładowi: ${item.title}
-
-${item.example}
-
-🎓 Sprawdź, czy rozumiesz:
-${item.check}`;
-  }
-
-  if (intent === "simple") {
-    return `🐨 Wyjaśnię to prostszymi słowami.
-
-${item.title}
-
-${item.short}
-
-Pomyśl o tym na takim przykładzie:
-${item.example}
-
-Czy teraz jest to bardziej zrozumiałe?`;
-  }
-
-  if (intent === "summary") {
-    return `📝 KRÓTKA NOTATKA — ${item.title}
-
-• Najważniejsze:
-${item.short}
-
-• Warto zapamiętać:
-${item.explanation}
-
-• Przykład:
-${item.example}`;
-  }
-
-  if (intent === "why") {
-    return `🐨 Dlaczego to jest ważne?
-
-${item.related}
-
-Przyjrzyjmy się temu dokładniej:
-${item.explanation}`;
-  }
-
-  if (intent === "expand") {
-    return `📚 ROZWINIĘCIE TEMATU: ${item.title}
-
-1. PODSTAWOWA DEFINICJA
-${item.short}
-
-2. DOKŁADNIEJSZE WYJAŚNIENIE
-${item.explanation}
-
-3. PRZYKŁAD
-${item.example}
-
-4. CO WARTO ZAPAMIĘTAĆ?
-${item.related}
-
-🎓 SPRAWDŹ SWOJĄ WIEDZĘ
-${item.check}`;
-  }
-
-  if (intent === "quiz") {
-    return `🎓 Czas sprawdzić Twoją wiedzę!
-
-Temat: ${item.title}
-
-Pytanie:
-${item.check}
-
-Spróbuj odpowiedzieć samodzielnie. Nie podam od razu rozwiązania! 🐨`;
-  }
-
-  return `🐨 ${item.title}
-
-NAJWAŻNIEJSZE:
-${item.short}
-
-WYJAŚNIENIE:
-${item.explanation}
-
-PRZYKŁAD:
-${item.example}
-
-🎓 SPRAWDŹ, CZY ROZUMIESZ:
-${item.check}
-
-Możesz poprosić mnie o prostsze wyjaśnienie, przykład albo krótką notatkę.`;
+function getSafeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history
+    .filter(item => item && typeof item === "object" && ["user", "model"].includes(item.role) && typeof item.text === "string")
+    .slice(-MAX_HISTORY_ITEMS)
+    .map(item => ({ role: item.role, text: item.text.slice(0, MAX_QUESTION_LENGTH) }));
 }
 
 function getPreviousUserQuestion(history) {
-  if (!Array.isArray(history)) return null;
-
   for (let i = history.length - 1; i >= 0; i--) {
-    const item = history[i];
-
-    if (
-      item &&
-      item.role === "user" &&
-      typeof item.text === "string"
-    ) {
-      return item.text;
-    }
+    if (history[i]?.role === "user" && typeof history[i].text === "string") return history[i].text;
   }
-
   return null;
 }
 
 function getPreviousAnswer(history) {
-  if (!Array.isArray(history)) return "";
-
   for (let i = history.length - 1; i >= 0; i--) {
-    const item = history[i];
-
-    if (
-      item &&
-      item.role === "model" &&
-      typeof item.text === "string"
-    ) {
-      return item.text;
-    }
+    if (history[i]?.role === "model" && typeof history[i].text === "string") return history[i].text;
   }
-
   return "";
 }
 
 function getPreviousTopic(history) {
-  if (!Array.isArray(history)) return null;
-
   for (let i = history.length - 1; i >= 0; i--) {
     const item = history[i];
-
-    if (!item || item.role !== "user" || typeof item.text !== "string") {
-      continue;
-    }
-
-    if (isTopicChange(item.text)) {
-      return null;
-    }
-
+    if (!item || item.role !== "user" || typeof item.text !== "string") continue;
+    if (isTopicChange(item.text)) return null;
     const topic = findKnowledge(item.text);
-
-    if (topic) {
-      return topic;
-    }
+    if (topic) return topic;
   }
-
   return null;
 }
-// ==========================================
-// MATEMATYKA — NORMALIZACJA DZIAŁAŃ
-// ==========================================
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("pl-PL", { maximumFractionDigits: 8 }).format(value);
+}
 
 function cleanMathExpression(input) {
-  let expression = String(input || "")
+  let expression = String(input ?? "")
     .toLowerCase()
     .replace(/ł/g, "l")
     .normalize("NFD")
@@ -513,8 +460,7 @@ function cleanMathExpression(input) {
     .replace(/\b(minus|odjac)\b/g, "-")
     .replace(/\b(podzielone przez|dzielone przez|podzielic przez|podziel przez)\b/g, "/")
     .replace(/\b(do potegi|podniesione do potegi)\b/g, "^")
-    .replace(/(\d)\s*[x×]\s*(?=[\d(])/g, "$1 * ")
-    .replace(/×/g, "*")
+    .replace(/[×x]/g, "*")
     .replace(/÷/g, "/")
     .replace(/\s+/g, " ")
     .trim();
@@ -522,948 +468,271 @@ function cleanMathExpression(input) {
   return expression;
 }
 
-
-// ==========================================
-// ROZPOZNAWANIE PROSTYCH DZIAŁAŃ
-// ==========================================
-
 function parseSimpleArithmetic(input) {
   const expression = cleanMathExpression(input);
-
-  const match = expression.match(
-    /^(-?\d+)\s*([+\-*/])\s*(-?\d+)$/
-  );
-
+  const match = expression.match(/^(-?\d+)\s*([+\-*/])\s*(-?\d+)$/);
   if (!match) return null;
-
-  return {
-    a: BigInt(match[1]),
-    operator: match[2],
-    b: BigInt(match[3])
-  };
+  try {
+    return { a: BigInt(match[1]), operator: match[2], b: BigInt(match[3]) };
+  } catch {
+    return null;
+  }
 }
-
-
-// ==========================================
-// POMOCNICZE FORMATOWANIE SŁUPKÓW
-// ==========================================
 
 function alignRight(value, width) {
   return String(value).padStart(width, " ");
 }
 
 function formatColumnWork(a, b, operator, result) {
-  if (!["+", "-", "*", "/"].includes(operator)) {
-    return "";
+  if (["+", "-"].includes(operator) && a >= 0n && b >= 0n) {
+    const width = Math.max(a.toString().length, (operator + b.toString()).length, result.toString().length);
+    return [alignRight(a, width), alignRight(operator + b.toString(), width), "─".repeat(width), alignRight(result, width)].join("\n");
   }
-
-  if (b === 0n && operator === "/") {
-    return "Nie można dzielić przez zero.";
-  }
-
-  if (a < 0n || b < 0n) {
-    return `Działanie na liczbach ujemnych:\n${a} ${operator} ${b} = ${result}\n\nNajpierw ustalamy znak wyniku, a następnie wykonujemy działanie na wartościach bezwzględnych.`;
-  }
-
-  const width = Math.max(
-    a.toString().length,
-    b.toString().length + 1,
-    result.toString().length
-  );
-
-  const top = alignRight(a.toString(), width);
-  const bottom = alignRight(
-    `${operator}${b.toString()}`,
-    width
-  );
-
-  const line = "─".repeat(width);
-
-  // DODAWANIE I ODEJMOWANIE
-  if (operator === "+" || operator === "-") {
-    return [
-      top,
-      bottom,
-      line,
-      alignRight(result.toString(), width)
-    ].join("\n");
-  }
-
-  // MNOŻENIE
-  if (operator === "*") {
-    if (b === 0n) {
-      return [
-        top,
-        bottom,
-        line,
-        alignRight("0", width)
-      ].join("\n");
-    }
-
-    const partials = b
-      .toString()
-      .split("")
-      .reverse()
-      .map((digit, index) => {
-        const part =
-          a * BigInt(digit) * (10n ** BigInt(index));
-
-        const shifted =
-          part.toString() + "0".repeat(index);
-
-        return alignRight(shifted, width);
-      });
-
-    if (partials.length === 1) {
-      return [
-        top,
-        bottom,
-        line,
-        alignRight(result.toString(), width)
-      ].join("\n");
-    }
-
-    return [
-      top,
-      bottom,
-      line,
-      ...partials,
-      line,
-      alignRight(result.toString(), width)
-    ].join("\n");
-  }
-
-  // DZIELENIE
-  const quotient = a / b;
-  const remainder = a % b;
-
-  return [
-    `${a} : ${b}`,
-    "────────",
-    `Wynik: ${quotient}`,
-    remainder !== 0n ? `Reszta: ${remainder}` : "Reszta: 0"
-  ].join("\n");
+  if (operator === "*") return `${a} × ${b}\n────────\n${result}`;
+  if (operator === "/") return `${a} : ${b}\n────────\nIloraz: ${a / b}\nReszta: ${a % b}`;
+  return `${a} ${operator} ${b} = ${result}`;
 }
-
-
-// ==========================================
-// WYJAŚNIANIE DZIAŁAŃ
-// ==========================================
 
 function explainCalculation(question) {
   const parsed = parseSimpleArithmetic(question);
-
   if (!parsed) return null;
-
   const { a, b, operator } = parsed;
-
-  if (operator === "/" && b === 0n) {
-    return "Nie można dzielić przez zero.";
-  }
+  if (operator === "/" && b === 0n) return "Nie można dzielić przez zero.";
 
   let result;
+  let name;
   let explanation;
-  let topic;
-
-  switch (operator) {
-    case "*":
-      result = a * b;
-      topic = "Mnożenie";
-
-      explanation =
-        `Mnożenie oznacza wielokrotne dodawanie tej samej liczby.
-
-` +
-        `W naszym przykładzie mamy ${a} × ${b}.
-
-` +
-        (
-          b > 0n && b <= 10n
-            ? `${Array(Number(b)).fill(a.toString()).join(" + ")} = ${result}.`
-            : `Mnożymy ${a} przez ${b}, otrzymując ${result}.`
-        );
-
-      break;
-
-    case "+":
-      result = a + b;
-      topic = "Dodawanie";
-
-      explanation =
-        `Dodawanie polega na łączeniu dwóch wartości.
-
-` +
-        `Zaczynamy od ${a} i dokładamy ${b}.
-
-` +
-        `${a} + ${b} = ${result}.`;
-
-      break;
-
-    case "-":
-      result = a - b;
-      topic = "Odejmowanie";
-
-      explanation =
-        `Odejmowanie pokazuje, ile zostaje po zabraniu części.
-
-` +
-        `Od ${a} odejmujemy ${b}.
-
-` +
-        `${a} - ${b} = ${result}.`;
-
-      break;
-
-    case "/":
-      result = a / b;
-      topic = "Dzielenie";
-
-      explanation =
-        `Dzielenie polega na rozdzieleniu liczby ${a} na ${b} równych części.
-
-` +
-        `Iloraz wynosi ${result}.`;
-
-      break;
-
-    default:
-      return null;
+  if (operator === "+") {
+    result = a + b; name = "Dodawanie";
+    explanation = `Zaczynamy od ${a} i dokładamy ${b}. Otrzymujemy ${result}.`;
+  } else if (operator === "-") {
+    result = a - b; name = "Odejmowanie";
+    explanation = `Od ${a} odejmujemy ${b}. Otrzymujemy ${result}.`;
+  } else if (operator === "*") {
+    result = a * b; name = "Mnożenie";
+    explanation = `Mnożenie oznacza wielokrotne dodawanie tej samej liczby. ${a} × ${b} = ${result}.`;
+  } else {
+    result = a / b; name = "Dzielenie";
+    explanation = `Dzielimy ${a} przez ${b}. Iloraz wynosi ${result}, a reszta ${a % b}.`;
   }
 
-  return `🐨 WYJAŚNIENIE KROK PO KROKU
-
-${topic}
-
-${explanation}
-
-ZAPIS SŁUPKIEM:
-
-${formatColumnWork(a, b, operator, result)}
-
-💡 ZAPAMIĘTAJ:
-Nie chodzi tylko o poznanie wyniku. Ważne jest zrozumienie, dlaczego właśnie taki wynik otrzymaliśmy.
-
-🎓 SPRÓBUJ SAM:
-${operator === "*"
-  ? `${a} × ${b + 1n}`
-  : operator === "+"
-    ? `${a} + ${b + 1n}`
-    : operator === "-"
-      ? `${a} - ${b + 1n}`
-      : `${a} / ${b + 1n}`}
-
-Spróbuj rozwiązać to samodzielnie! 🐨`;
+  return `## 🐨 ${name} krok po kroku\n\n${explanation}\n\n**Zapis działania**\n\n\`\`\`text\n${formatColumnWork(a, b, operator, result)}\n\`\`\`\n\n**Zapamiętaj:** ważne jest nie tylko poznanie wyniku, ale też zrozumienie sposobu obliczania.\n\n**Spróbuj samodzielnie:** ${a} ${operator} ${b + 1n}`;
 }
 
+function calculatePercent(input) {
+  const original = normalize(input).replace(/^(ile to|oblicz|policz) /, "");
+  const match = original.match(/^(-?\d+(?:[.,]\d+)?)\s*(?:%|procent(?:y|ow|a)?)\s*(?:z\s*)?(-?\d+(?:[.,]\d+)?)$/);
+  if (!match) return null;
+  const percentage = Number(match[1].replace(",", "."));
+  const whole = Number(match[2].replace(",", "."));
+  const result = percentage * whole / 100;
+  if (!Number.isFinite(result)) return null;
+  return `## 🐨 Procenty — wynik: ${formatNumber(result)}\n\n1. Zamieniamy procent na ułamek: ${formatNumber(percentage)}% = ${formatNumber(percentage / 100)}.\n2. Mnożymy przez całość: ${formatNumber(percentage / 100)} × ${formatNumber(whole)}.\n3. Otrzymujemy **${formatNumber(result)}**.\n\n💡 Procent oznacza jedną setną całości.`;
+}
 
-// ==========================================
-// BEZPIECZNY PARSER MATEMATYCZNY
-// ==========================================
+function calculate(input) {
+  const expression = cleanMathExpression(input);
+  if (!expression || expression.length > MAX_MATH_LENGTH) return null;
 
-function calculate(text) {
-  const expression = cleanMathExpression(text);
+  const percent = calculatePercent(input);
+  if (percent) return percent;
 
-  if (
-    !expression ||
-    expression.length > MAX_MATH_LENGTH
-  ) {
-    return null;
-  }
-
-  // OBSŁUGA PROCENTÓW
-
-  const original = String(text || "")
-    .toLowerCase()
-    .replace(/ł/g, "l")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/^(ile to(?: jest)?|oblicz|policz(?: mi)?)\s+/, "")
-    .trim();
-
-  const percent = original.match(
-    /^(-?\d+(?:[.,]\d+)?)\s*(?:%|procent(?:y|ow|a)?)\s*(?:z\s*)?(-?\d+(?:[.,]\d+)?)\s*[?]?$/
-  );
-
-  if (percent) {
-    const a = Number(percent[1].replace(",", "."));
-    const b = Number(percent[2].replace(",", "."));
-
-    const result = a * b / 100;
-
-    if (!Number.isFinite(result)) return null;
-
-    return `🐨 WYNIK: ${formatNumber(result)}
-
-KROK 1:
-Zamieniamy procent na ułamek:
-${a}% = ${formatNumber(a / 100)}.
-
-KROK 2:
-Mnożymy przez całość:
-${formatNumber(a / 100)} × ${formatNumber(b)}.
-
-KROK 3:
-Otrzymujemy:
-${formatNumber(result)}.
-
-💡 Procent oznacza jedną setną całości.`;
-  }
-
-  // PROSTE DZIAŁANIA NA DUŻYCH LICZBACH
-
-  const simple = parseSimpleArithmetic(text);
-
+  const simple = parseSimpleArithmetic(input);
   if (simple) {
     const { a, b, operator } = simple;
-
-    if (operator === "/" && b === 0n) {
-      return "Nie można dzielić przez zero.";
-    }
-
-    let result;
-
-    if (operator === "+") {
-      result = a + b;
-    } else if (operator === "-") {
-      result = a - b;
-    } else if (operator === "*") {
-      result = a * b;
-    } else {
-      result = a / b;
-    }
-
-    const column = formatColumnWork(
-      a,
-      b,
-      operator,
-      result
-    );
-
-    const remainder =
-      operator === "/" ? a % b : 0n;
-
-    return `🐨 WYNIK DZIAŁANIA: ${result.toLocaleString("pl-PL")}
-
-ZAPIS SŁUPKIEM:
-
-${column}
-
-${
-  remainder !== 0n
-    ? `Dzielenie daje resztę ${remainder}.`
-    : "Działanie zostało wykonane dokładnie."
-}
-
-💡 Chcesz, żebym wyjaśniła każdy krok? Napisz „wyjaśnij”.`;
+    if (operator === "/" && b === 0n) return "Nie można dzielić przez zero.";
+    const result = operator === "+" ? a + b : operator === "-" ? a - b : operator === "*" ? a * b : a / b;
+    return `## 🐨 Wynik działania: ${result.toString()}\n\n**Zapis słupkiem / działanie**\n\n\`\`\`text\n${formatColumnWork(a, b, operator, result)}\n\`\`\`\n\n${operator === "/" && a % b !== 0n ? `Dzielenie daje resztę ${a % b}.` : "Działanie zostało wykonane dokładnie."}\n\n_Możesz napisać „wyjaśnij krok po kroku”, aby zobaczyć sposób obliczenia._`;
   }
-
-  // DZIAŁANIA Z NAWIASAMI, POTĘGAMI I LICZBAMI DZIESIĘTNYMI
 
   const tokens = [];
-  const tokenPattern =
-    /\s*(\d+(?:\.\d+)?|[()+\-*/^])\s*/gy;
-
+  const tokenPattern = /\s*(\d+(?:\.\d+)?|[()+\-*/^])\s*/gy;
   let position = 0;
-
   while (position < expression.length) {
     tokenPattern.lastIndex = position;
-
     const match = tokenPattern.exec(expression);
-
     if (!match) return null;
-
     tokens.push(match[1]);
-
-    if (tokens.length > MAX_MATH_TOKENS) {
-      return null;
-    }
-
+    if (tokens.length > MAX_MATH_TOKENS) return null;
     position = tokenPattern.lastIndex;
   }
-
   if (!tokens.length) return null;
 
   let index = 0;
-
   function primary() {
     const token = tokens[index];
-
     if (token === "(") {
       index++;
-
       const value = addition();
-
-      if (tokens[index] !== ")") {
-        throw new Error("Brak zamykającego nawiasu.");
-      }
-
+      if (tokens[index] !== ")") throw new Error("Nawias");
       index++;
-
       return value;
     }
-
     if (/^\d/.test(token || "")) {
       index++;
-
       return Number(token);
     }
-
-    throw new Error("Nieprawidłowa liczba.");
+    throw new Error("Liczba");
   }
-
   function unary() {
-    if (tokens[index] === "+") {
-      index++;
-      return unary();
-    }
-
-    if (tokens[index] === "-") {
-      index++;
-      return -unary();
-    }
-
+    if (tokens[index] === "+") { index++; return unary(); }
+    if (tokens[index] === "-") { index++; return -unary(); }
     return primary();
   }
-
   function power() {
     const left = unary();
-
     if (tokens[index] === "^") {
       index++;
-
       const right = power();
-
-      if (Math.abs(right) > 10) {
-        throw new Error("Zbyt duża potęga.");
-      }
-
+      if (Math.abs(right) > 10) throw new Error("Potęga");
       return left ** right;
     }
-
     return left;
   }
-
   function multiplication() {
     let value = power();
-
-    while (
-      ["*", "/"].includes(tokens[index])
-    ) {
+    while (["*", "/"].includes(tokens[index])) {
       const operator = tokens[index++];
       const right = power();
-
-      if (operator === "/" && right === 0) {
-        throw new Error("Dzielenie przez zero.");
-      }
-
-      value = operator === "*"
-        ? value * right
-        : value / right;
+      if (operator === "/" && right === 0) throw new Error("Zero");
+      value = operator === "*" ? value * right : value / right;
     }
-
     return value;
   }
-
   function addition() {
     let value = multiplication();
-
-    while (
-      tokens[index] === "+" ||
-      tokens[index] === "-"
-    ) {
+    while (["+", "-"].includes(tokens[index])) {
       const operator = tokens[index++];
       const right = multiplication();
-
-      value = operator === "+"
-        ? value + right
-        : value - right;
+      value = operator === "+" ? value + right : value - right;
     }
-
     return value;
   }
 
   try {
     const result = addition();
-
-    if (
-      index !== tokens.length ||
-      !Number.isFinite(result)
-    ) {
-      return null;
-    }
-
-    return `🐨 WYNIK: ${formatNumber(result)}
-
-💡 KOLEJNOŚĆ DZIAŁAŃ:
-1. Nawiasy.
-2. Potęgi.
-3. Mnożenie i dzielenie.
-4. Dodawanie i odejmowanie.
-
-Warto znać tę kolejność, ponieważ wpływa ona na prawidłowy wynik.`;
+    if (index !== tokens.length || !Number.isFinite(result)) return null;
+    return `## 🐨 Wynik: ${formatNumber(result)}\n\n**Kolejność działań:**\n1. Nawiasy.\n2. Potęgi.\n3. Mnożenie i dzielenie.\n4. Dodawanie i odejmowanie.`;
   } catch (error) {
-    if (error.message === "Dzielenie przez zero.") {
-      return "Nie można dzielić przez zero.";
-    }
-
+    if (error.message === "Zero") return "Nie można dzielić przez zero.";
     return null;
   }
 }
-// ==========================================
-// GŁÓWNA FUNKCJA ODPOWIEDZI KOALI
-// ==========================================
-
-function isGreetingMessage(question) {
-  const value = normalize(question);
-
-  return /^(hej|czesc|siema|witaj|hello|hi|dzien dobry|dobry wieczor|elo|hejka)[!. ]*$/i
-    .test(value);
-}
-
-
-function isCurrentInformationQuestion(question) {
-  const value = normalize(question);
-
-  return /\b(aktualnie|obecnie|teraz|dzisiaj|wczoraj|jutro|najnowsze|najnowszy|najnowsza|na zywo|aktualne wyniki|co sie dzieje)\b/i
-    .test(value);
-}
-
-
-function getMathInput(question) {
-  return String(question || "")
-    .trim()
-    .replace(
-      /^(?:a\s+)?(?:wyjasnij|wytlumacz|oblicz|policz|rozwiaz)(?:\s+mi)?(?:\s+prosze)?\s+/i,
-      ""
-    )
-    .trim();
-}
-
-
-function createLearningHint(question) {
-  const topic = String(question || "").trim();
-
-  return `🐨 Chętnie pomogę Ci się tego nauczyć!
-
-Nie chcę zgadywać, jeśli nie mam jeszcze wystarczającej wiedzy o tym zagadnieniu.
-
-Możemy zrobić to tak:
-
-1. Najpierw ustalimy, co oznacza temat.
-2. Następnie wyjaśnię go prostymi słowami.
-3. Pokażę przykład.
-4. Na końcu dostaniesz krótkie zadanie do samodzielnego rozwiązania.
-
-Napisz, którą część tematu „${topic}” chcesz zrozumieć, albo wklej zadanie z lekcji.`;
-}
-
-
-// ==========================================
-// BEZPIECZNE PRZETWARZANIE HISTORII
-// ==========================================
-
-function getSafeHistory(history) {
-  if (!Array.isArray(history)) {
-    return [];
-  }
-
-  return history
-    .filter(item => item && typeof item === "object")
-    .slice(-MAX_HISTORY_ITEMS);
-}
-
-
-// ==========================================
-// GŁÓWNA FUNKCJA SILNIKA
-// ==========================================
-// ==========================================
-// KOALA TEACHER — TRYB NAUCZYCIELA
-// ==========================================
-
-const teacherAnswerRules = {
-  "Rzeczownik": {
-    all: ["kot"],
-    hint: "Poszukaj wyrazu nazywającego zwierzę."
-  },
-  "Czasownik": {
-    all: ["graja"],
-    hint: "Szukaj wyrazu, który oznacza wykonywaną czynność."
-  },
-  "Przymiotnik": {
-    all: ["maly"],
-    hint: "Przymiotnik odpowiada między innymi na pytanie: jaki?"
-  },
-  "Przysłówek": {
-    all: ["kiedy"],
-    hint: "Zastanów się, na jakie pytanie odpowiada wyraz „wczoraj”."
-  },
-  "Zaimek": {
-    all: ["ona", "swoja"],
-    hint: "W zdaniu są dwa wyrazy zastępujące inne części mowy."
-  },
-  "Liczby pierwsze": {
-    all: ["3"],
-    hint: "Sprawdź, czy 15 można podzielić przez 3 bez reszty."
-  },
-  "Ułamki zwykłe": {
-    all: ["2", "5"],
-    hint: "Licznik jest nad kreską, a mianownik pod kreską."
-  },
-  "Procenty": {
-    all: ["8"],
-    hint: "10% to jedna dziesiąta liczby. Oblicz jedną dziesiątą z 80."
-  },
-  "Pole kwadratu": {
-    all: ["25"],
-    hint: "Pomnóż długość boku przez samą siebie: 5 × 5."
-  },
-  "Pole prostokąta": {
-    all: ["14"],
-    hint: "Pole obliczamy, mnożąc długości dwóch boków."
-  },
-  "Obwód kwadratu": {
-    all: ["24"],
-    hint: "Kwadrat ma cztery równe boki. Dodaj je."
-  },
-  "Obwód prostokąta": {
-    all: ["24"],
-    hint: "Dodaj wszystkie cztery boki: 8 + 4 + 8 + 4."
-  },
-  "Fotosynteza": {
-    all: ["woda", "dwutlenek wegla"],
-    hint: "Pomyśl, jakie dwa surowce roślina pobiera ze środowiska."
-  },
-  "Oddychanie komórkowe": {
-    all: ["tlen"],
-    hint: "Pomyśl, jaki gaz pobieramy podczas oddychania tlenowego."
-  },
-  "Komórka": {
-    any: ["chloroplast", "sciana komorkowa"],
-    hint: "Pomyśl o strukturach, które odróżniają komórkę roślinną."
-  },
-  "Układ Słoneczny": {
-    all: ["merkury"],
-    hint: "To najmniejsza planeta Układu Słonecznego i znajduje się najbliżej Słońca."
-  },
-  "Grawitacja": {
-    all: ["ziemia", "przyciaga"],
-    hint: "Pomyśl, co sprawia, że puszczona piłka spada na podłoże."
-  },
-  "Atom": {
-    all: ["proton", "neutron"],
-    hint: "W jądrze atomu znajdują się dwa rodzaje cząstek."
-  },
-  "Energia": {
-    all: ["kinetyczna"],
-    hint: "To energia związana z ruchem."
-  },
-  "Demokracja": {
-    all: ["wybory"],
-    hint: "Pomyśl, w jaki sposób obywatele wybierają swoich przedstawicieli."
-  },
-  "Pan Tadeusz": {
-    all: ["adam", "mickiewicz"],
-    hint: "Chodzi o polskiego poetę epoki romantyzmu."
-  },
-  "Druga wojna światowa": {
-    all: ["1939"],
-    hint: "Pomyśl o roku ataku Niemiec na Polskę."
-  },
-  "Najdłuższa rzeka Polski": {
-    any: ["baltyk", "baltyckiego"],
-    hint: "Wisła uchodzi do morza na północy Polski."
-  }
-};
-
-
-// Rozpoczęcie lekcji
-
-function startTeacherLesson(item) {
-  if (!item) return null;
-
-  return `🐨 🧑‍🏫 TRYB NAUCZYCIELA
-
-Temat lekcji: ${item.title}
-
-KROK 1 — POZNAJMY TEMAT
-
-${item.short}
-
-KROK 2 — ZROZUMIENIE
-
-${item.explanation}
-
-KROK 3 — PRZYKŁAD
-
-${item.example}
-
-🧑‍🏫 PYTANIE DO CIEBIE
-
-${item.check}
-
-Odpowiedz własnymi słowami. Nie musisz się spieszyć. Sprawdzę odpowiedź i dam Ci podpowiedź, jeśli będzie potrzebna.`;
-}
-
-
-// Odczyt aktywnej lekcji z historii
 
 function getActiveTeacherTopic(history) {
   const previousAnswer = getPreviousAnswer(history);
-
-  if (
-    !previousAnswer ||
-    (
-      !previousAnswer.includes("🧑‍🏫 PYTANIE DO CIEBIE") &&
-      !previousAnswer.includes("🧑‍🏫 PODPOWIEDŹ")
-    )
-  ) {
-    return null;
-  }
-
-  const match = previousAnswer.match(
-    /Temat lekcji:\s*([^\n]+)/i
-  );
-
+  if (!previousAnswer || !/(pytanie do ciebie|podpowiedz)/i.test(previousAnswer)) return null;
+  const match = previousAnswer.replace(/\*/g, "").match(/Temat lekcji:\s*([^\n]+)/i);
   if (!match) return null;
-
   const title = normalize(match[1]);
-
-  return knowledge.find(
-    item => normalize(item.title) === title
-  ) || null;
+  return knowledge.find(item => normalize(item.title) === title) || null;
 }
-
-
-// Sprawdzanie odpowiedzi ucznia
 
 function evaluateTeacherAnswer(item, answer) {
-  if (!item || typeof answer !== "string") {
-    return null;
-  }
-
+  if (!item || typeof answer !== "string") return null;
   const rules = teacherAnswerRules[item.title];
-
   if (!rules) return null;
-
   const studentAnswer = normalize(answer);
-
   if (!studentAnswer) return null;
 
-  // Jedno hasło lub jedna z kilku poprawnych form.
-  function matchesEntry(entry) {
-    const alternatives = Array.isArray(entry)
-      ? entry
-      : [entry];
-
-    return alternatives.some(term =>
-      containsPhrase(studentAnswer, term)
-    );
-  }
-
-  // Wszystkie wymagane elementy muszą wystąpić.
-  const allCorrect = (rules.all || [])
-    .every(matchesEntry);
-
-  // Wystarczy jedna z dopuszczonych odpowiedzi.
-  const anyCorrect = !rules.any ||
-    rules.any.some(matchesEntry);
+  const matchesEntry = entry => (Array.isArray(entry) ? entry : [entry]).some(term => containsPhrase(studentAnswer, term));
+  const allCorrect = (rules.all || []).every(matchesEntry);
+  const anyCorrect = !rules.any || rules.any.some(matchesEntry);
 
   if (allCorrect && anyCorrect) {
-    return `🐨 🧑‍🏫 BARDZO DOBRZE!
-
-Twoja odpowiedź jest poprawna!
-
-Temat: ${item.title}
-
-Właśnie wykonałeś ważny krok w nauce. Najważniejsze jest to, że samodzielnie spróbowałeś znaleźć odpowiedź.
-
-Zapamiętaj:
-${item.related}
-
-🎓 Lekcja zakończona! Możemy przejść do następnego tematu.`;
+    return `## 🐨 🧑‍🏫 Bardzo dobrze!\n\nTwoja odpowiedź jest poprawna.\n\n**Temat:** ${item.title}\n\n**Zapamiętaj:** ${item.related}\n\n🎓 Lekcja zakończona! Możemy przejść do następnego tematu.`;
   }
-
-  return `🐨 🧑‍🏫 PODPOWIEDŹ
-
-Temat lekcji: ${item.title}
-
-Jeszcze nie całkiem! Ale spokojnie — właśnie na tym polega nauka.
-
-${rules.hint}
-
-Spróbuj odpowiedzieć jeszcze raz własnymi słowami.
-
-Nie podam Ci od razu gotowego rozwiązania. Chcę pomóc Ci samodzielnie je znaleźć.`;
+  return `## 🐨 🧑‍🏫 Mała podpowiedź\n\n**Temat lekcji:** ${item.title}\n\nJeszcze nie całkiem — spróbujmy ponownie.\n\n${rules.hint}\n\nNapisz odpowiedź własnymi słowami. Nie podam od razu gotowego rozwiązania.`;
 }
+
+function startTeacherLesson(item) {
+  if (!item) return null;
+  return `## 🐨 🧑‍🏫 Tryb nauczyciela\n\n**Temat lekcji:** ${item.title}\n\n### Krok 1 — Poznajmy temat\n${item.short}\n\n### Krok 2 — Zrozumienie\n${item.explanation}\n\n### Krok 3 — Przykład\n${item.example}\n\n### 🎓 Pytanie do Ciebie\n${item.check}\n\nOdpowiedz własnymi słowami. Sprawdzę odpowiedź i dam Ci podpowiedź, jeśli będzie potrzebna.`;
+}
+
+function createLearningHint(topic) {
+  return `## 🐨 Zróbmy to razem\n\nNie mam jeszcze wystarczającej wiedzy zapisanej lokalnie o temacie **„${topic}”**. Nie chcę zgadywać.\n\nMożemy zacząć od definicji, prostego wyjaśnienia, przykładu i krótkiego ćwiczenia. Możesz też poprosić mnie o sprawdzenie tematu w dostępnych źródłach internetowych.`;
+}
+
+export function classifyQuestion(question, localAnswer = "", history = []) {
+  const route = getQuestionRoute(question, localAnswer);
+  const activeTeacher = getActiveTeacherTopic(getSafeHistory(history));
+  if (activeTeacher && !isFollowUp(question) && !isGreetingMessage(question)) {
+    return { ...route, kind: "teacher-answer", shouldSearchWeb: false, topic: activeTeacher.title };
+  }
+  return route;
+}
+
 export function answerQuestion(question, history = []) {
   try {
     const text = String(question ?? "").trim();
-
-    if (!text) {
-      return "🐨 Napisz pytanie lub wklej zadanie, a razem je rozwiążemy!";
-    }
-
-    if (text.length > MAX_QUESTION_LENGTH) {
-      return `Twoja wiadomość jest za długa. Skróć ją do maksymalnie ${MAX_QUESTION_LENGTH} znaków i spróbuj ponownie.`;
-    }
+    if (!text) return "🐨 Napisz pytanie lub wklej zadanie, a razem je rozwiążemy!";
+    if (text.length > MAX_QUESTION_LENGTH) return `Twoja wiadomość jest za długa. Skróć ją do maksymalnie ${MAX_QUESTION_LENGTH} znaków i spróbuj ponownie.`;
 
     const safeHistory = getSafeHistory(history);
     const normalized = normalize(text);
     const intent = getIntent(text);
-        // ==========================================
-    // OBSŁUGA ODPOWIEDZI UCZNIA
-    // ==========================================
 
-    const activeTeacherTopic =
-      getActiveTeacherTopic(safeHistory);
-
-    if (
-      activeTeacherTopic &&
-      !isFollowUp(text) &&
-      !isGreetingMessage(text)
-    ) {
-      if (
-        /^(koniec lekcji|zakoncz lekcje|stop)$/i.test(normalized)
-      ) {
-        return "🐨 Lekcja zakończona! Dobra robota. Możemy rozpocząć nowy temat.";
-      }
-
-      const teacherResult = evaluateTeacherAnswer(
-        activeTeacherTopic,
-        text
-      );
-
-      if (teacherResult) {
-        return teacherResult;
-      }
-    }
-
-    // POWITANIE
-
+    // Powitania i krótkie rozmowy obsługujemy PRZED rozpoznaniem wiedzy i internetem.
     if (isGreetingMessage(text)) {
-      return "Hej! 🐨 Jestem Koala!\n\nMogę pomóc Ci z matematyką, językiem polskim, przyrodą i innymi szkolnymi tematami.\n\nMożemy rozwiązywać zadania krok po kroku albo zrobić krótką powtórkę przed sprawdzianem.";
+      return "## 🐨 Hej! Jestem Koala.ai.\n\nMiło Cię widzieć! Mogę pomóc Ci z matematyką, językiem polskim, przyrodą, historią i innymi szkolnymi tematami.\n\nMożemy rozwiązać zadanie krok po kroku, zrobić krótką notatkę albo przeprowadzić mini quiz.\n\n**Co dziś bierzemy na warsztat?**";
+    }
+    if (isThanksMessage(text)) return "Nie ma za co! 🐨 Dobra robota. Gdy będziesz mieć następne pytanie, możemy działać dalej.";
+    if (isSocialMessage(text)) {
+      if (/kim jestes|co potrafisz/.test(normalized)) return "## 🐨 Jestem Koala.ai\n\nJestem lokalnym, edukacyjnym silnikiem regułowym. Pomagam wyjaśniać szkolne tematy, rozwiązywać wybrane działania matematyczne i ćwiczyć wiedzę. Gdy pytanie wymaga aktualnych lub dodatkowych informacji, backend może spróbować wyszukać materiały w skonfigurowanych witrynach.";
+      return "U mnie wszystko dobrze — jestem gotowa do nauki! 🐨 A Ty, nad czym dziś pracujesz?";
     }
 
-    // PYTANIA O AKTUALNE WYDARZENIA
-
-    if (isCurrentInformationQuestion(text)) {
-      return "🐨 Nie mam dostępu do bieżących wiadomości ani danych na żywo. Moja wiedza jest zapisana w lokalnej bazie, więc nie chcę podawać niezweryfikowanych aktualności.\n\nMożesz wkleić artykuł lub informacje, a pomogę Ci je zrozumieć i streścić.";
+    const activeTeacherTopic = getActiveTeacherTopic(safeHistory);
+    if (activeTeacherTopic && !isFollowUp(text)) {
+      if (/^(koniec lekcji|zakoncz lekcje|stop)$/i.test(normalized)) return "🐨 Lekcja zakończona! Dobra robota. Możemy rozpocząć nowy temat.";
+      const result = evaluateTeacherAnswer(activeTeacherTopic, text);
+      if (result) return result;
     }
-
-    // KONTYNUACJA POPRZEDNIEJ ROZMOWY
 
     if (isFollowUp(text)) {
-      const previousQuestion =
-        getPreviousUserQuestion(safeHistory);
-
+      const previousQuestion = getPreviousUserQuestion(safeHistory);
       if (previousQuestion) {
-        const previousCalculation =
-          explainCalculation(previousQuestion);
-
-        if (previousCalculation) {
-          return previousCalculation;
-        }
-
-        const previousKnowledge =
-          findKnowledge(previousQuestion);
-
-        if (previousKnowledge) {
-          return formatKnowledge(
-            previousKnowledge,
-            intent
-          );
-        }
+        const previousCalculation = explainCalculation(previousQuestion);
+        if (previousCalculation) return previousCalculation;
+        const previousTopic = findKnowledge(previousQuestion) || getPreviousTopic(safeHistory);
+        if (previousTopic) return formatKnowledge(previousTopic, intent);
       }
-
-      const previousAnswer =
-        getPreviousAnswer(safeHistory);
-
-      if (previousAnswer) {
-        return `🐨 Jasne, możemy to rozwinąć.\n\nW poprzedniej odpowiedzi pojawił się temat, który warto dokładniej przećwiczyć.\n\nNapisz, czego dokładnie nie rozumiesz, a wyjaśnię to prostszymi słowami i pokażę przykład.`;
-      }
+      const previousAnswer = getPreviousAnswer(safeHistory);
+      if (previousAnswer) return `🐨 Jasne, doprecyzujmy poprzednią odpowiedź. Napisz, którego fragmentu nie rozumiesz, a wyjaśnię go prościej i pokażę kolejny przykład.`;
     }
 
-    // OBLICZENIA MATEMATYCZNE
-
-    const mathInput = getMathInput(text);
-
-    const calculationExplanation =
-      explainCalculation(mathInput);
-
-    if (
-      calculationExplanation &&
-      /\b(wyjasnij|wytlumacz|krok po kroku|dlaczego|jak to zrobic)\b/i.test(normalized)
-    ) {
-      return calculationExplanation;
+    if (isTopicChange(text)) {
+      return "Jasne, zmieniamy temat! 🐨 Napisz, czego teraz chcesz się nauczyć.";
     }
+
+    const mathInput = text.replace(/^(wyjasnij|wytlumacz)\s+/i, "").trim();
+    const calculationExplanation = explainCalculation(mathInput);
+    if (calculationExplanation && /\b(wyjasn\w*|wytlumacz\w*|krok po kroku|dlaczego|jak to zrobic)\b/.test(normalized)) return calculationExplanation;
 
     const calculation = calculate(text);
-
-    if (calculation !== null) {
-      return calculation;
-    }
-
-    // WYSZUKIWANIE W BAZIE WIEDZY
+    if (calculation !== null) return calculation;
 
     const knowledgeItem = findKnowledge(text);
-
-   if (knowledgeItem) {
-  const wantsTeacher =
-    /\b(naucz mnie|nauczysz mnie|tryb nauczyciela|lekcja|lekcje|przepytaj mnie|sprawdz mnie|zrob quiz|quiz)\b/i.test(normalized);
-
-  if (wantsTeacher || intent === "quiz") {
-    return startTeacherLesson(knowledgeItem);
-  }
-
-  return formatKnowledge(
-    knowledgeItem,
-    intent
-  );
-}
-
-    // NAUKA I ĆWICZENIA
-
-    if (
-      /\b(naucz mnie|chce sie nauczyc|nauczysz mnie|zrobmy cwiczenia|przygotuj mnie|przepytaj mnie|sprawdz mnie)\b/i.test(normalized)
-    ) {
-      return `🐨 Zrobimy to razem!
-
-Najpierw wybierz temat, którego chcesz się nauczyć.
-
-Mogę przygotować:
-• proste wyjaśnienie,
-• przykłady,
-• krótką notatkę,
-• pytania sprawdzające,
-• zadania do samodzielnego rozwiązania.
-
-Napisz nazwę tematu, a zaczniemy.`;
+    if (knowledgeItem) {
+      const wantsTeacher = /\b(naucz mnie|nauczysz mnie|tryb nauczyciela|lekcja|lekcje|przepytaj mnie|sprawdz mnie|zrob quiz|quiz)\b/.test(normalized);
+      if (wantsTeacher || intent === "quiz") return startTeacherLesson(knowledgeItem);
+      return formatKnowledge(knowledgeItem, intent);
     }
 
-    // PROŚBA O NOTATKĘ BEZ PODANEGO TEMATU
-
-    if (
-      /\b(notatke|notatka|podsumowanie|streszczenie|quiz|test)\b/i.test(normalized)
-    ) {
-      return "🐨 Jasne! Z jakiego tematu mam przygotować notatkę albo quiz?\n\nPodaj temat lub wklej materiał z lekcji. Na tej podstawie przygotuję pomoc do nauki.";
+    if (/\b(naucz mnie|chce sie nauczyc|nauczysz mnie|zrobmy cwiczenia|przygotuj mnie|przepytaj mnie|sprawdz mnie)\b/.test(normalized)) {
+      return "## 🐨 Zrobimy to razem!\n\nWybierz temat, którego chcesz się nauczyć. Mogę przygotować proste wyjaśnienie, przykłady, krótką notatkę, pytania sprawdzające i zadania do samodzielnego rozwiązania.\n\nNapisz nazwę tematu, a zaczniemy.";
     }
 
-    // PYTANIA, KTÓRYCH NIE MA W BAZIE
+    if (/\b(notatk\w*|podsumowani\w*|streszczeni\w*|quiz|test)\b/.test(normalized)) {
+      return "🐨 Jasne! Z jakiego tematu mam przygotować notatkę albo quiz? Podaj temat lub wklej materiał z lekcji.";
+    }
 
-    return `🐨 Nie znalazłam jeszcze tego zagadnienia w mojej lokalnej bazie wiedzy.
-
-Nie chcę wymyślać odpowiedzi i przedstawiać jej jako pewnej.
-
-Możesz:
-1. Podać więcej szczegółów.
-2. Wkleić treść zadania.
-3. Przesłać fragment notatki z lekcji.
-4. Napisać, którą część zagadnienia chcesz zrozumieć.
-
-Spróbuję pomóc Ci przejść przez temat krok po kroku.`;
-
+    return createLearningHint(text);
   } catch (error) {
+    console.error("Koala engine error:", error?.message || error);
     return "🐨 Coś poszło nie tak podczas przygotowywania odpowiedzi. Spróbuj napisać pytanie inaczej.";
   }
 }
+
+export { knowledge };
