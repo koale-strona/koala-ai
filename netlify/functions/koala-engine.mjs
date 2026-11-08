@@ -1,5 +1,5 @@
 /*
- * Koala.ai — lokalny, edukacyjny silnik regułowy.
+ * Koala.ai v5 — lokalny, edukacyjny silnik regułowy z lepszym routingiem pytań.
  * Bez zewnętrznych modeli AI, kluczy API i dodatkowych zależności.
  * Zachowuje bazę wiedzy, matematykę, historię rozmowy i tryb nauczyciela.
  * To nie jest ogólny model językowy — odpowiedzi wynikają z reguł i wiedzy w pliku.
@@ -341,7 +341,7 @@ function isCurrentInformationQuestion(question) {
 
 function asksToSearchOnline(question) {
   const text = normalize(question);
-  return /\b(w internecie|online|w sieci|wyszukaj|poszukaj|szukaj w internecie|znajdz w internecie|znajdz w sieci|sprawdz w internecie|sprawdz online|zweryfikuj online|potwierdz w zrodlach|podsumuj wydarzenia|podsumuj wiadomosci)\b/.test(text);
+  return /\b(w internecie|online|w sieci|wyszukaj|poszukaj|szukaj w internecie|znajdz w internecie|znajdz w sieci|sprawdz w internecie|sprawdz online|zweryfikuj online|potwierdz w zrodlach|podsumuj wydarzenia|podsumuj wiadomosci|najnowsze wiadomosci|najnowsze wydarzenia)\b/.test(text);
 }
 
 function looksLikeFactualQuestion(question) {
@@ -369,7 +369,7 @@ function getQuestionRoute(question, localAnswer = "") {
   const shouldSearchWeb = explicit || (!topic && !math && looksLikeFactualQuestion(text));
   const normalized = normalize(text);
   const sportsQuestion = /\b(fcbarcelona|fcbarcelony|barcelona|barca|barcelony)\b/.test(normalized) && /\b(mecz|mecze|terminarz|spotkanie|najblizszy|najblizsza|kiedy|kalendarz|gra)\b/.test(normalized);
-  const newsQuestion = /\b(co sie dzieje|wiadomosci|aktualnosci|wydarzenia|na swiecie|ostatnie wydarzenia)\b/.test(normalized);
+  const newsQuestion = /\b(co sie dzieje|co sie wydarzylo|wiadomosci|aktualnosci|wydarzenia|na swiecie|ze swiata|najnowsz|ostatnie wydarzenia|podsumuj)\b/.test(normalized);
   return {
     kind: sportsQuestion ? "sports-search" : (newsQuestion ? "news-search" : (shouldSearchWeb ? "search" : "unknown")),
     shouldSearchWeb: shouldSearchWeb || sportsQuestion || newsQuestion,
