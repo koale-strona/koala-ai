@@ -1,7 +1,7 @@
 import { answerQuestion, classifyQuestion } from "./koala-engine.mjs";
 
 /*
- * Koala.ai — backend + własny crawler.
+ * Koala.ai v5 — backend + selektywny crawler artykułów i terminarzy.
  * - Bez zewnętrznych modeli AI, kluczy API i bibliotek.
  * - Zachowuje interfejs Netlify: POST { message, history } -> { answer }.
  * - Crawler odwiedza wyłącznie jawnie skonfigurowane domeny.
@@ -25,7 +25,7 @@ const CRAWLER_REQUEST_TIMEOUT = 2200;
 const CRAWLER_TOTAL_BUDGET = 8000;
 const CRAWLER_MAX_PAGE_SIZE = 450_000;
 const CRAWLER_MAX_SITEMAP_SIZE = 300_000;
-const CRAWLER_MAX_PAGES_PER_SITE = 5;
+const CRAWLER_MAX_PAGES_PER_SITE = 7;
 const CRAWLER_MAX_SITEMAPS_PER_SITE = 2;
 const CRAWLER_MAX_RESULTS = 8;
 const CRAWLER_MAX_SOURCES = 4;
@@ -206,7 +206,7 @@ const QUERY_EXPANSIONS = [
   { match: /\b(szkoła|szkolny|lekcja|edukacja|zadanie)\b/, terms: ["edukacja", "lekcja", "szkoła", "materiały"] },
   { match: /\b(polska|polski|polskie|urzad|prawo|przepisy|ministerstwo)\b/, terms: ["polska", "polski", "gov"] },
   { match: /\b(historia|historyczny|historyczna)\b/, terms: ["historia", "history", "historyczny"] },
-  { match: /\b(wiadomosci|aktualnosci|wydarzenia|co sie dzieje|co nowego|na swiecie)\b/, terms: ["news", "latest", "world", "current affairs", "breaking"] },
+  { match: /\b(wiadomosci|aktualnosci|wydarzenia|co sie dzieje|co nowego|na swiecie|ze swiata|swiata|podsumuj)\b/, terms: ["news", "latest", "world", "global", "current affairs", "breaking"] },
   { match: /\b(polska|w polsce)\b/, terms: ["poland", "polska", "national"] }
 ];
 
@@ -759,40 +759,121 @@ function extractCrawlerLinks(html, pageUrl, host) {
   );
 }
 
+function getStructuredName(value) {
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) return value.map(getStructuredName).filter(Boolean).join(", ");
+  if (value && typeof value === "object") return String(value.name || value.alternateName || "").trim();
+  return "";
+}
+
+function collectJsonLdNodes(value, output, depth = 0) {
+  if (depth > 8 || value == null) return;
+  if (Array.isArray(value)) {
+    for (const item of value) collectJsonLdNodes(item, output, depth + 1);
+    return;
+  }
+  if (typeof value !== "object") return;
+  output.push(value);
+  for (const key of ["@graph", "mainEntity", "mainEntityOfPage", "hasPart", "itemListElement"]) {
+    if (value[key]) collectJsonLdNodes(value[key], output, depth + 1);
+  }
+}
+
+function extractStructuredData(html) {
+  const nodes = [];
+  const scriptPattern = /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+  while ((match = scriptPattern.exec(String(html || ""))) !== null) {
+    const raw = decodeCrawlerEntities(match[1]).trim().replace(/^<!--|-->$/g, "");
+    try {
+      collectJsonLdNodes(JSON.parse(raw), nodes);
+    } catch {
+      // Błędny JSON-LD pomijamy; zwykły tekst strony nadal może być użyteczny.
+    }
+  }
+
+  const events = [];
+  const articles = [];
+  for (const node of nodes) {
+    const types = Array.isArray(node["@type"]) ? node["@type"] : [node["@type"] || ""];
+    const typeText = types.join(" ").toLowerCase();
+    const homeTeam = getStructuredName(node.homeTeam);
+    const awayTeam = getStructuredName(node.awayTeam);
+    if (typeText.includes("sportsevent") || (homeTeam && awayTeam && node.startDate)) {
+      events.push({
+        name: getStructuredName(node.name),
+        startDate: String(node.startDate || ""),
+        homeTeam,
+        awayTeam,
+        competition: getStructuredName(node.superEvent) || getStructuredName(node.competitor) || getStructuredName(node.sport),
+        eventStatus: getStructuredName(node.eventStatus)
+      });
+    }
+    if (/newsarticle|article|reportagenewsarticle|blogposting/.test(typeText)) {
+      articles.push({
+        headline: getStructuredName(node.headline) || getStructuredName(node.name),
+        datePublished: String(node.datePublished || node.dateCreated || ""),
+        dateModified: String(node.dateModified || ""),
+        articleBody: String(node.articleBody || "").slice(0, 16000),
+        description: String(node.description || "").slice(0, 1200),
+        url: String(node.url || node.mainEntityOfPage?.['@id'] || "")
+      });
+    }
+  }
+  return { events, article: articles.sort((a, b) => (b.articleBody.length + b.headline.length) - (a.articleBody.length + a.headline.length))[0] || null };
+}
+
+function getFirstTimeDate(html) {
+  const match = String(html || "").match(/<time\b[^>]*datetime=["']([^"']+)["'][^>]*>/i);
+  return match ? decodeCrawlerEntities(match[1]).trim() : "";
+}
+
 function extractCrawlerPage(html, pageUrl, host) {
+  const structured = extractStructuredData(html);
   const titleMatch = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
   const title = titleMatch ? cleanCrawlerHtml(titleMatch[1]) : "Strona internetowa";
   const description =
     getMetaContent(html, "description") ||
     getMetaContent(html, "og:description") ||
-    getMetaContent(html, "twitter:description");
+    getMetaContent(html, "twitter:description") ||
+    structured.article?.description || "";
   const date =
     getMetaContent(html, "article:published_time") ||
     getMetaContent(html, "datePublished") ||
     getMetaContent(html, "date") ||
-    getMetaContent(html, "dc.date");
+    getMetaContent(html, "dc.date") ||
+    structured.article?.datePublished ||
+    getFirstTimeDate(html);
+  const ogType = getMetaContent(html, "og:type").toLowerCase();
 
   const mainMatch = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i);
   const articleMatch = html.match(/<article\b[^>]*>([\s\S]*?)<\/article>/i);
-  const content = mainMatch?.[1] || articleMatch?.[1] || html;
+  const content = articleMatch?.[1] || mainMatch?.[1] || html;
   const paragraphMatches = content.match(/<(?:p|h1|h2|h3|h4|li)\b[^>]*>[\s\S]*?<\/(?:p|h1|h2|h3|h4|li)>/gi) || [];
   const paragraphs = paragraphMatches
     .map(cleanCrawlerHtml)
     .flatMap(value => value.split(/\n+/))
     .map(value => value.trim())
-    .filter(text => text.length > 35)
-    .slice(0, 140);
-  const text = cleanCrawlerHtml(content).slice(0, 18_000);
+    .filter(text => text.length > 45)
+    .slice(0, 160);
+  let text = cleanCrawlerHtml(content).slice(0, 22000);
+  if (structured.article?.articleBody && structured.article.articleBody.length > text.length) {
+    text = cleanCrawlerHtml(structured.article.articleBody).slice(0, 22000);
+  }
   const tableRows = extractTableRows(content);
+  const links = extractCrawlerLinks(html, pageUrl, host);
 
   return {
-    title: title.slice(0, 300),
-    description: description.slice(0, 700),
-    date: date.slice(0, 80),
+    title: (structured.article?.headline || title).slice(0, 300),
+    description: description.slice(0, 900),
+    date: String(date || "").slice(0, 100),
+    ogType,
     text,
-    paragraphs,
+    paragraphs: paragraphs.length ? paragraphs : text.split(/(?<=[.!?])\s+/).filter(value => value.length > 45).slice(0, 100),
     tableRows,
-    links: extractCrawlerLinks(html, pageUrl, host)
+    structuredEvents: structured.events,
+    structuredArticle: structured.article,
+    links
   };
 }
 
@@ -805,20 +886,22 @@ function selectCrawlerSources(question) {
   const has = pattern => pattern.test(text);
 
   const sports = has(/\b(mecz|mecze|spotkanie|terminarz|fcbarcelona|fcbarcelony|barcelona|barcelony|barca|liga|pilka|pilkarski|uefa|najblizszy mecz)\b/);
-  const news = has(/\b(co sie dzieje|co sie wydarzylo|wiadomosci|wiadomosciami|aktualnosci|newsy|wydarzenia|na swiecie|w polsce|dzisiejsze informacje|ostatnie wydarzenia|co nowego)\b/);
+  const news = has(/\b(co sie dzieje|co sie wydarzylo|wiadomosci|wiadomosciami|aktualnosci|newsy|wydarzenia|na swiecie|ze swiata|swiata|w polsce|dzisiejsze informacje|ostatnie wydarzenia|co nowego|podsumuj)\b/);
   const astronomy = has(/\b(kosmos|kosmosu|astronomia|planeta|planety|nasa|eksploracji kosmosu|misja kosmiczna)\b/);
   const science = has(/\b(nauka|naukowy|badania|biologia|fizyka|chemia|fotosynteza|chlorofil)\b/);
   const education = has(/\b(szkoła|szkolny|lekcja|edukacja|zadanie|egzamin|matura|podstawa programowa)\b/);
   const officialPoland = has(/\b(gov|urzad|ministerstwo|ustawa|prawo|przepisy|wniosek|swiadczenie|podatki|sejm|senat)\b/);
+  const PolandFocus = has(/\b(w polsce|polska|polski|polskie|polskich)\b/);
 
   let categories;
   if (sports) categories = ["sport"];
-  else if (news) categories = ["news", "poland"];
+  else if (news && PolandFocus && officialPoland) categories = ["news", "poland"];
+  else if (news) categories = ["news"];
   else if (astronomy) categories = ["science", "general"];
-  else if (science) categories = ["education", "general", "science"];
+  else if (science) categories = ["education", "science", "general"];
   else if (education) categories = ["education", "general"];
-  else if (officialPoland) categories = ["poland", "news", "general"];
-  else categories = ["news", "general", "education"];
+  else if (officialPoland) categories = ["poland", "news"];
+  else categories = ["general", "education"];
 
   return CRAWLER_SOURCES
     .filter(source => categories.includes(source.category))
@@ -844,6 +927,54 @@ function extractAllowedSourceFromMessage(message) {
 // CRAWLER JEDNEJ WITRYNY
 // ---------------------------------------------------------------------------
 
+function isLikelyNewsArticleUrl(source, rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    const path = url.pathname.toLowerCase().replace(/\/+$/, "");
+    const host = url.hostname;
+    if (host === "www.bbc.com") return /\/news\/articles\//.test(path);
+    if (host === "apnews.com") return /\/article\//.test(path);
+    if (host === "www.pap.pl") return /^\/aktualnosci\/.+/.test(path) && path !== "/aktualnosci";
+    if (host === "www.gov.pl") {
+      const parts = path.split("/").filter(Boolean);
+      return parts.length >= 3 && !/^(wiadomosci|aktualnosci|strona-glowna|kontakt)$/.test(parts[2]);
+    }
+    return /\/(article|articles|news|story|stories)\/[^/]+/.test(path);
+  } catch {
+    return false;
+  }
+}
+
+function parsePublishedDate(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime()) ? parsed : null;
+}
+
+function isFreshNewsDate(value, maxAgeDays = 14) {
+  const date = parsePublishedDate(value);
+  if (!date) return false;
+  const age = Date.now() - date.getTime();
+  return age >= -6 * 60 * 60 * 1000 && age <= maxAgeDays * 24 * 60 * 60 * 1000;
+}
+
+function articleUrlPriority(source, rawUrl, label = "") {
+  if (!isLikelyNewsArticleUrl(source, rawUrl)) return 0;
+  const host = new URL(rawUrl).hostname;
+  if (host === "www.bbc.com" || host === "apnews.com" || host === "www.pap.pl") return 60 + Math.min(label.length / 25, 5);
+  return 35 + Math.min(label.length / 30, 4);
+}
+
+function isNewsArticlePage(source, pageUrl, page) {
+  const article = page.structuredArticle;
+  const hasStructuredArticle = Boolean(article?.headline && (article?.datePublished || article?.articleBody));
+  const articleLike = hasStructuredArticle || page.ogType === "article" || isLikelyNewsArticleUrl(source, pageUrl);
+  const published = article?.datePublished || page.date;
+  return articleLike && Boolean(parsePublishedDate(published)) &&
+    (page.text || "").length >= 220 &&
+    !/\/(news|world|world-news|aktualnosci|wiadomosci)\/?$/i.test(new URL(pageUrl).pathname);
+}
+
 async function crawlPublicSite(source, question, terms, deadline) {
   const results = [];
   const visited = new Set();
@@ -855,32 +986,19 @@ async function crawlPublicSite(source, question, terms, deadline) {
     if (!robots || Date.now() >= deadline) return results;
 
     const sitemapPages = await getSitemapPages(
-      seed.origin,
-      host,
-      robots,
-      [...terms, ...(source.hints || [])],
-      deadline
+      seed.origin, host, robots, [...terms, ...(source.hints || [])], deadline
     );
 
-    // Wikipedia ma własną publiczną stronę wyszukiwania. Korzystamy z niej
-    // jako strony startowej, a wyniki dalej pobieramy i oceniamy samodzielnie.
-    const discoveryUrls = [];
-    if (host === "pl.wikipedia.org") {
-      const searchUrl = new URL("https://pl.wikipedia.org/w/index.php");
-      searchUrl.searchParams.set("search", String(question).slice(0, 180));
-      discoveryUrls.push(searchUrl.href);
-    } else if (host === "www.nasa.gov") {
-      // NASA wykorzystuje wyszukiwanie w swojej witrynie; pobieramy jego stronę
-      // wyników, a następnie sami oceniamy i pobieramy znalezione podstrony.
-      const searchUrl = new URL("https://www.nasa.gov/");
-      searchUrl.searchParams.set("s", String(question).slice(0, 180));
-      discoveryUrls.push(searchUrl.href);
-    }
+    const orderedSitemap = sitemapPages
+      .map(url => ({ url, priority: source.category === "news"
+        ? articleUrlPriority(source, url)
+        : (source.category === "sport" && /schedule|fixtures|matches|match|calendar/i.test(url) ? 65 : 0) }))
+      .sort((a, b) => b.priority - a.priority)
+      .map(item => item.url);
 
-    const preferredUrls = source.category === "sport"
-      ? [seed.href, ...discoveryUrls, ...sitemapPages]
-      : [...discoveryUrls, ...sitemapPages, seed.href];
-    const queue = unique(preferredUrls).slice(0, 100);
+    // Najpierw strona startowa, bo z niej zwykle da się znaleźć bezpośrednie
+    // linki do artykułów lub terminarza. Dopiero potem korzystamy z sitemap.
+    const queue = unique([seed.href, ...orderedSitemap]).slice(0, 120);
 
     while (queue.length && visited.size < CRAWLER_MAX_PAGES_PER_SITE && Date.now() < deadline) {
       const url = queue.shift();
@@ -888,63 +1006,74 @@ async function crawlPublicSite(source, question, terms, deadline) {
       visited.add(url);
 
       let page = cacheGet(PAGE_CACHE, url);
+      let finalUrl = url;
       if (!page) {
         const response = await requestSiteText(
-          url,
-          host,
-          "text/html,application/xhtml+xml",
-          CRAWLER_MAX_PAGE_SIZE,
-          deadline
+          url, host, "text/html,application/xhtml+xml", CRAWLER_MAX_PAGE_SIZE, deadline
         );
         if (!response?.text) continue;
-        page = extractCrawlerPage(response.text, response.url, host);
+        finalUrl = response.url || url;
+        page = extractCrawlerPage(response.text, finalUrl, host);
         cacheSet(PAGE_CACHE, url, page, PAGE_CACHE_TTL, PAGE_CACHE_LIMIT);
       }
 
-      const isSearchLanding = /[?&](search|s)=/i.test(url) || /wyniki wyszukiwania|search results/i.test(page.title);
-      if (page.text.length < 80 && page.description.length < 30 && !isSearchLanding) continue;
+      const path = new URL(finalUrl).pathname.toLowerCase();
+      const isLanding = /^\/(en\/|news|world|world-news|aktualnosci|wiadomosci)?\/?$/i.test(path);
+      if (page.text.length < 80 && page.description.length < 30) continue;
 
-      const looksLikeCategory = /\/wiki\/(kategoria:|dyskusja|specjalna:)/i.test(url) || /^(kategoria:|dyskusja kategorii:)/i.test(page.title);
-      const relevance = getDocumentRelevance(page, url, terms);
-      const isSportsSchedule = source.category === "sport" &&
-        /barcelona/i.test(page.text) &&
-        /(schedule|calendar|fixture|next matches|matches|terminarz|matchday)/i.test(`${page.title} ${url} ${page.text.slice(0, 1200)}`);
-
-      // Nie prezentujemy strony wyników wyszukiwania, stron dyskusji ani samych
-      // kategorii jako rzekomo merytorycznych źródeł.
-      if (!isSearchLanding && !looksLikeCategory && ((relevance.strongMatch && relevance.score >= 5.5) || isSportsSchedule)) {
-        const snippet = getCrawlerSnippet(page, terms);
-        const snippetScore = scoreCrawlerText(snippet, terms);
-        if (snippet.length >= 45 && (snippetScore > 0 || relevance.titleScore > 0 || relevance.descriptionScore > 0 || isSportsSchedule)) {
+      if (source.category === "sport") {
+        const probe = {
+          ...page, url: finalUrl, source: source.name,
+          sourceTrust: source.trust || 5,
+          timeZone: source.timeZone || "Europe/Warsaw"
+        };
+        const parsedFixtures = parseSportsFixtures(probe);
+        // Nie pokazujemy sklepu, strony głównej, hokeja młodzieżowego ani
+        // ogólnej strony klubu jako odpowiedzi na pytanie o pierwszy zespół.
+        if (parsedFixtures.length > 0) {
+          results.push({ ...probe, title: page.title, text: page.text.slice(0, 18000),
+            fullText: page.text, tableRows: page.tableRows || [], score: 30 + parsedFixtures.length * 5,
+            fixtures: parsedFixtures });
+        }
+      } else if (source.category === "news") {
+        if (isNewsArticlePage(source, finalUrl, page) && isFreshNewsDate(page.structuredArticle?.datePublished || page.date)) {
+          const published = page.structuredArticle?.datePublished || page.date;
+          const ageHours = Math.max(0, (Date.now() - new Date(published).getTime()) / 3600000);
+          const relevance = getDocumentRelevance(page, finalUrl, terms);
+          const articleBody = page.structuredArticle?.articleBody || page.text;
           results.push({
-            source: source.name,
-            sourceTrust: source.trust || 5,
-            timeZone: source.timeZone || "Europe/Warsaw",
-            title: page.title,
-            url,
-            description: page.description,
-            date: page.date,
-            text: snippet,
-            fullText: page.text,
-            tableRows: page.tableRows || [],
-            score: Math.max(relevance.score, isSportsSchedule ? 12 : 0),
-            relevance: relevance.titleScore > 0 ? "Wysokie" : (isSportsSchedule ? "Terminarz" : "Dobre")
+            source: source.name, sourceTrust: source.trust || 5,
+            title: page.structuredArticle?.headline || page.title,
+            url: finalUrl, description: page.structuredArticle?.description || page.description,
+            date: published, publishedAt: new Date(published).getTime(),
+            text: cleanCrawlerHtml(articleBody).slice(0, 8000),
+            score: 18 + relevance.score + Math.max(0, 10 - ageHours / 12),
+            category: "news"
           });
+        }
+      } else {
+        const looksLikeCategory = /\/(kategoria:|dyskusja|specjalna:)/i.test(finalUrl) || /^(kategoria:|dyskusja kategorii:)/i.test(page.title);
+        const relevance = getDocumentRelevance(page, finalUrl, terms);
+        if (!isLanding && !looksLikeCategory && relevance.strongMatch && relevance.score >= 7) {
+          const snippet = getCrawlerSnippet(page, terms);
+          if (snippet.length >= 60) {
+            results.push({ source: source.name, sourceTrust: source.trust || 5,
+              title: page.title, url: finalUrl, description: page.description, date: page.date,
+              text: snippet, fullText: page.text, score: relevance.score, category: source.category });
+          }
         }
       }
 
-      const candidates = (page.links || [])
-        .map(link => ({
-          ...link,
-          score: scoreCrawlerText(`${link.label} ${link.url}`, terms) * 3 + scoreCrawlerText(link.label, source.hints || [])
-        }))
-        .filter(link => link.score >= 2 && !visited.has(link.url) && !queue.includes(link.url))
-        .sort((a, b) => b.score - a.score);
+      const candidates = (page.links || []).map(link => {
+        const newsPriority = source.category === "news" ? articleUrlPriority(source, link.url, link.label) : 0;
+        const sportPriority = source.category === "sport" && /schedule|fixtures|matches|match|calendar/i.test(`${link.url} ${link.label}`) ? 45 : 0;
+        const topical = scoreCrawlerText(`${link.label} ${link.url}`, terms) * 3;
+        return { ...link, score: Math.max(newsPriority, sportPriority) + topical };
+      }).filter(link => link.score >= (source.category === "news" ? 25 : 2) && !visited.has(link.url) && !queue.includes(link.url));
 
-      // Wstawiamy najbardziej obiecujące linki przed dalszymi pozycjami mapy
-      // witryny, aby limit stron nie był zużywany na przypadkowe adresy.
-      for (const link of candidates.slice(0, 10).reverse()) {
-        if (queue.length < 100) queue.unshift(link.url);
+      candidates.sort((a, b) => b.score - a.score);
+      for (const link of candidates.slice(0, 15).reverse()) {
+        if (queue.length < 120) queue.unshift(link.url);
       }
     }
   } catch (error) {
@@ -1079,56 +1208,117 @@ function canonicalTeamKey(name) {
     .trim();
 }
 
+function parseEventDateTime(value, timeZone) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  // ISO con offset/Z = instante preciso. ISO senza offset = ora locale del torneo.
+  if (/(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw)) {
+    const absolute = new Date(raw);
+    return Number.isFinite(absolute.getTime()) ? absolute : null;
+  }
+  const iso = raw.match(/^(20\d{2})-(\d{2})-(\d{2})(?:[T ](\d{1,2}):(\d{2}))?/);
+  if (iso) {
+    return wallTimeToDate(Number(iso[1]), Number(iso[2]), Number(iso[3]), Number(iso[4] || 0), Number(iso[5] || 0), timeZone);
+  }
+  const parsed = new Date(raw);
+  return Number.isFinite(parsed.getTime()) ? parsed : null;
+}
+
+function teamFromStructured(value) {
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) return value.map(teamFromStructured).filter(Boolean).join(" ");
+  if (value && typeof value === "object") return String(value.name || value.alternateName || "").trim();
+  return "";
+}
+
 export function parseSportsFixtures(result) {
-  const fullText = String(result.fullText || result.text || "");
-  const rows = (result.tableRows || []).map(cells => cells.join(" | "));
-  const lines = [...rows, ...fullText.split(/\n+/)];
   const fixtures = [];
   const seen = new Set();
+  const timezone = result.timeZone || "Europe/Madrid";
+  const now = Date.now();
 
-  for (const line of lines) {
-    if (!/barcelona|barca/i.test(line)) continue;
-    const vsMatch = line.match(/\b(.{2,160}?)\s+(?:vs\.?|v\.?|–|—)\s+(.{2,160}?)(?=\s*\||$)/i);
-    if (!vsMatch) continue;
-
-    const date = parseFixtureDate(line, fullText, Math.max(0, fullText.indexOf(line)));
-    if (!date) continue;
-
-    const timeMatch = line.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
-    if (!timeMatch) continue; // Nie zgadujemy godziny, jeśli strona jej nie podaje.
-
-    const leftRaw = vsMatch[1];
-    const rightRaw = vsMatch[2];
-    const left = extractKnownTeam(leftRaw);
-    const right = extractKnownTeam(rightRaw);
-    if (!/barcelona/i.test(`${left} ${right}`)) continue;
-
-    const timeZone = result.timeZone || "Europe/Warsaw";
-    let dateTime;
-    try {
-      dateTime = wallTimeToDate(date.year, date.month, date.day, Number(timeMatch[1]), Number(timeMatch[2]), timeZone);
-    } catch {
-      continue;
+  for (const event of result.structuredEvents || []) {
+    let home = teamFromStructured(event.homeTeam);
+    let away = teamFromStructured(event.awayTeam);
+    if ((!home || !away) && event.name) {
+      const pair = String(event.name).match(/(.{2,90}?)\s+(?:vs?\.?|–|—)\s+(.{2,90})/i);
+      if (pair) { home = pair[1]; away = pair[2]; }
     }
-
-    const now = Date.now();
-    if (dateTime.getTime() < now - 2 * 60 * 60 * 1000) continue;
-
-    const competition = /champions league|uefa/i.test(line) || /UEFA/i.test(result.source)
-      ? "Liga Mistrzów"
-      : (/laliga|la liga|matchday/i.test(line) || /LaLiga/i.test(result.source) ? "LaLiga" : "Rozgrywki do potwierdzenia");
-    const home = left;
-    const away = right;
-    const key = `${date.year}-${date.month}-${date.day}-${normalizeSearchText(home)}-${normalizeSearchText(away)}`;
+    if (!home || !away || !/barcelona|barca/i.test(`${home} ${away}`)) continue;
+    const dateTime = parseEventDateTime(event.startDate, timezone);
+    if (!dateTime || dateTime.getTime() < now - 2 * 60 * 60 * 1000) continue;
+    const key = `${dateTime.toISOString().slice(0, 16)}-${canonicalTeamKey(home)}-${canonicalTeamKey(away)}`;
     if (seen.has(key)) continue;
     seen.add(key);
-
     fixtures.push({
-      home, away, dateTime, competition,
-      source: result.source,
-      sourceUrl: result.url,
+      home: /barcelona|barca/i.test(home) ? "FC Barcelona" : cleanDisplayText(home, 90),
+      away: /barcelona|barca/i.test(away) ? "FC Barcelona" : cleanDisplayText(away, 90),
+      dateTime,
+      competition: cleanDisplayText(event.competition || event.name || "Do potwierdzenia", 100),
+      source: result.source, sourceUrl: result.url,
       sourceTrust: result.sourceTrust || 5,
-      sourceTimeZone: timeZone
+      sourceTimeZone: timezone
+    });
+  }
+
+  // Wiele terminarzy rozdziela gospodarza, gościa, datę i godzinę na osobne
+  // komórki tabeli. Odczytujemy taki wiersz tylko wtedy, gdy wszystkie dane są
+  // w tej samej tabeli — nie łączymy przypadkowych dat z innych fragmentów strony.
+  for (const cells of result.tableRows || []) {
+    const rowText = cells.join(" | ");
+    if (!/barcelona|barca/i.test(rowText)) continue;
+    const date = parseFixtureDate(rowText, String(result.fullText || ""), Math.max(0, String(result.fullText || "").indexOf(rowText)));
+    const timeMatch = rowText.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
+    if (!date || !timeMatch) continue;
+    const teamCells = cells.filter(cell => {
+      const normalizedCell = normalizeSearchText(cell);
+      return /barcelona|barca/i.test(normalizedCell) || KNOWN_FC_OPPONENTS.some(name => normalizedCell.includes(normalizeSearchText(name)));
+    });
+    if (teamCells.length < 2) continue;
+    const left = extractKnownTeam(teamCells[0]);
+    const right = extractKnownTeam(teamCells[1]);
+    if (!/barcelona|barca/i.test(`${left} ${right}`)) continue;
+    const dateTime = wallTimeToDate(date.year, date.month, date.day, Number(timeMatch[1]), Number(timeMatch[2]), timezone);
+    if (dateTime.getTime() < now - 2 * 60 * 60 * 1000) continue;
+    const key = `${dateTime.toISOString().slice(0, 16)}-${canonicalTeamKey(left)}-${canonicalTeamKey(right)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    fixtures.push({
+      home: /barcelona|barca/i.test(left) ? "FC Barcelona" : left,
+      away: /barcelona|barca/i.test(right) ? "FC Barcelona" : right,
+      dateTime, competition: /uefa/i.test(result.source) ? "Liga Mistrzów" : /laliga/i.test(result.source) ? "LaLiga" : "Do potwierdzenia",
+      source: result.source, sourceUrl: result.url, sourceTrust: result.sourceTrust || 5,
+      sourceTimeZone: timezone
+    });
+  }
+
+  // Ostrożny fallback tekstowy: akceptujemy tylko wiersze zawierające Barcelonę,
+  // datę, godzinę i jawny zapis meczu. Nie próbujemy zgadywać brakujących danych.
+  const rows = (result.tableRows || []).map(cells => cells.join(" | "));
+  const lines = [...rows, ...(result.paragraphs || []), ...String(result.fullText || result.text || "").split(/\n+/)];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!/barcelona|barca/i.test(line)) continue;
+    const context = lines.slice(Math.max(0, i - 1), Math.min(lines.length, i + 2)).join(" | ");
+    const pair = context.match(/(.{2,100}?)\s+(?:vs?\.?|–|—)\s+(.{2,100}?)(?=\s*\||$)/i);
+    if (!pair || !/barcelona|barca/i.test(`${pair[1]} ${pair[2]}`)) continue;
+    const date = parseFixtureDate(context, String(result.fullText || ""), Math.max(0, String(result.fullText || "").indexOf(context)));
+    const timeMatch = context.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
+    if (!date || !timeMatch) continue;
+    const left = extractKnownTeam(pair[1]);
+    const right = extractKnownTeam(pair[2]);
+    if (!/barcelona|barca/i.test(`${left} ${right}`)) continue;
+    const dateTime = wallTimeToDate(date.year, date.month, date.day, Number(timeMatch[1]), Number(timeMatch[2]), timezone);
+    if (dateTime.getTime() < now - 2 * 60 * 60 * 1000) continue;
+    const key = `${dateTime.toISOString().slice(0, 16)}-${canonicalTeamKey(left)}-${canonicalTeamKey(right)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    fixtures.push({
+      home: /barcelona|barca/i.test(left) ? "FC Barcelona" : left,
+      away: /barcelona|barca/i.test(right) ? "FC Barcelona" : right,
+      dateTime, competition: /uefa/i.test(result.source) ? "Liga Mistrzów" : /laliga/i.test(result.source) ? "LaLiga" : "Do potwierdzenia",
+      source: result.source, sourceUrl: result.url, sourceTrust: result.sourceTrust || 5,
+      sourceTimeZone: timezone
     });
   }
   return fixtures;
@@ -1140,85 +1330,102 @@ export function buildSportsAnswer(results) {
 
   const grouped = new Map();
   for (const fixture of fixtures) {
-    const key = `${fixture.dateTime.toISOString().slice(0, 10)}-${canonicalTeamKey(fixture.home)}-${canonicalTeamKey(fixture.away)}`;
+    const day = fixture.dateTime.toISOString().slice(0, 10);
+    const pair = [canonicalTeamKey(fixture.home), canonicalTeamKey(fixture.away)].sort().join("-");
+    const key = `${day}-${pair}`;
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key).push(fixture);
   }
-
   const candidates = [...grouped.values()]
     .map(group => group.sort((a, b) => b.sourceTrust - a.sourceTrust))
     .sort((a, b) => a[0].dateTime - b[0].dateTime);
-  const nextGroup = candidates[0];
-  const primary = nextGroup[0];
-  const sourceTimes = new Map();
-  for (const item of nextGroup) {
+  const primaryGroup = candidates[0];
+  const primary = primaryGroup[0];
+  const times = new Map();
+  for (const item of primaryGroup) {
     const time = new Intl.DateTimeFormat("pl-PL", {
       timeZone: "Europe/Warsaw", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
     }).format(item.dateTime);
-    if (!sourceTimes.has(time)) sourceTimes.set(time, []);
-    sourceTimes.get(time).push(item);
+    if (!times.has(time)) times.set(time, []);
+    times.get(time).push(item);
   }
-
-  const distinctTimes = [...sourceTimes.keys()];
-  const timeLabel = distinctTimes.length === 1
+  const distinctTimes = [...times.keys()];
+  const uniqueSources = primaryGroup.filter((item, i, arr) => arr.findIndex(other => other.source === item.source) === i);
+  const sourceList = uniqueSources.map(item => `- [${cleanDisplayText(item.source, 100)}](${safeSourceUrl(item.sourceUrl)})`).join("\n");
+  const timeLabel = distinctTimes.length === 1 && distinctTimes[0]
     ? `**${formatWarsawDateTime(primary.dateTime)} czasu polskiego**`
-    : `**Godzina wymaga potwierdzenia** — źródła podają: ${distinctTimes.join(" oraz ")}.`;
-
-  const uniqueSources = nextGroup
-    .filter((item, index, array) => array.findIndex(other => other.source === item.source) === index);
-  const sourceList = uniqueSources
-    .map(item => `- [${cleanDisplayText(item.source, 100)}](${safeSourceUrl(item.sourceUrl)})`)
-    .join("\n");
-
-  const discrepancy = distinctTimes.length > 1
-    ? "\n\n⚠️ **Rozbieżność źródeł:** nie wybieram po cichu jednej godziny. Sprawdź oficjalny terminarz przed meczem."
-    : `\n\nGodzinę znaleziono w ${uniqueSources.length} ${uniqueSources.length === 1 ? "źródle" : "źródłach"}.`;
-
+    : `**Godzina wymaga potwierdzenia.** Źródła podają: ${distinctTimes.join(" oraz ")}.`;
   const nextMatches = candidates.slice(1, 4).map(group => {
     const item = group[0];
     return `- ${formatWarsawDateTime(item.dateTime)} · ${item.home} – ${item.away}`;
   }).join("\n");
+  const corroboration = uniqueSources.length >= 2
+    ? `Potwierdzenie: ${uniqueSources.length} niezależne źródła.`
+    : "Uwaga: termin znaleziono tylko w jednym źródle. Warto sprawdzić go ponownie przed meczem.";
+  const discrepancy = distinctTimes.length > 1
+    ? "\n\n⚠️ Źródła różnią się godziną. Koala nie wybiera jednej bez potwierdzenia."
+    : "";
+  return `## 🐨 Najbliższy mecz FC Barcelony\n\n### ${primary.home} – ${primary.away}\n\n${timeLabel}\n\n**Rozgrywki:** ${primary.competition}\n\n${corroboration}${discrepancy}\n\n${nextMatches ? `### Kolejne znalezione mecze\n${nextMatches}\n\n` : ""}### Źródła\n${sourceList}\n\n_Stan sprawdzenia: ${new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", dateStyle: "short", timeStyle: "short" }).format(new Date())} czasu polskiego._`;
+}
 
-  return `## 🐨 Najbliższy mecz FC Barcelony\n\n### ${primary.home} – ${primary.away}\n\n${timeLabel}\n\n**Rozgrywki:** ${primary.competition}${discrepancy}\n\n${nextMatches ? `### Kolejne znalezione mecze\n${nextMatches}\n\n` : ""}### Źródła\n${sourceList}\n\n_Stan sprawdzenia: ${new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", dateStyle: "short", timeStyle: "short" }).format(new Date())}._`;
+function buildSportsNoDataAnswer() {
+  const links = CRAWLER_SOURCES.filter(source => source.category === "sport")
+    .map(source => `- [${source.name}](${safeSourceUrl(source.url)})`).join("\n");
+  return `## 🐨 Nie udało się potwierdzić terminu meczu\n\nZnalazłam strony terminarzy, ale nie udało mi się wiarygodnie odczytać z nich daty i godziny najbliższego spotkania. Nie będę zgadywać ani podawać przypadkowego meczu z innej sekcji klubu.\n\n### Oficjalne terminarze\n${links}\n\nMożesz otworzyć źródła powyżej. Koala spróbuje ponownie przy następnym zapytaniu.`;
 }
 
 function summarizeResultText(result, terms) {
-  const paragraphs = (result.text || result.description || result.fullText || "")
-    .split(/\n+/)
-    .map(value => cleanDisplayText(value, 700))
-    .filter(value => value.length >= 65);
-  const ranked = paragraphs
-    .map(text => ({ text, score: scoreCrawlerText(text, terms) + Math.min(text.length / 280, 1) }))
-    .sort((a, b) => b.score - a.score);
-  const bestParagraph = ranked[0]?.text || cleanDisplayText(result.description || result.text, 500);
-  const sentences = bestParagraph.match(/[^.!?]+[.!?]?/g) || [bestParagraph];
-  return sentences.slice(0, 2).join(" ").replace(/\s+/g, " ").trim().slice(0, 520);
+  const raw = result.text || result.description || result.fullText || "";
+  const paragraphs = raw.split(/\n+/)
+    .map(value => cleanDisplayText(value, 900))
+    .filter(value => value.length >= 75 && !/^(home|menu|subscribe|sign in|read more|latest news)$/i.test(value));
+  const ranked = paragraphs.map(text => ({
+    text,
+    score: scoreCrawlerText(text, terms) + Math.min(text.length / 350, 1.5)
+  })).sort((a, b) => b.score - a.score);
+  const text = ranked[0]?.text || cleanDisplayText(result.description || raw, 600);
+  const sentences = text.match(/[^.!?]+[.!?]?/g) || [text];
+  return sentences.slice(0, 2).join(" ").replace(/\s+/g, " ").trim().slice(0, 600);
 }
 
 function buildResearchSummary(question, results, terms) {
+  const newsMode = results.some(result => result.category === "news");
   const picked = [];
-  const seenSentences = new Set();
+  const seenArticles = new Set();
+  const domainCounts = new Map();
   for (const result of results) {
     const summary = summarizeResultText(result, terms);
-    const key = normalizeSearchText(summary).slice(0, 160);
-    if (!summary || seenSentences.has(key)) continue;
-    seenSentences.add(key);
+    const key = normalizeSearchText(`${result.title} ${summary}`).slice(0, 220);
+    if (!summary || seenArticles.has(key)) continue;
+    const domain = new URL(result.url).hostname;
+    if ((domainCounts.get(domain) || 0) >= 2) continue;
+    seenArticles.add(key);
+    domainCounts.set(domain, (domainCounts.get(domain) || 0) + 1);
     picked.push({ result, summary });
   }
 
-  const bullets = picked.slice(0, 5).map(({ result, summary }) => {
-    const date = result.date ? ` _Data strony: ${cleanDisplayText(result.date, 40)}._` : "";
-    return `- **${cleanDisplayText(result.title, 140)}:** ${summary}${date} ([źródło](${safeSourceUrl(result.url)}))`;
+  if (newsMode) picked.sort((a, b) => (b.result.publishedAt || 0) - (a.result.publishedAt || 0));
+  const bullets = picked.slice(0, 6).map(({ result, summary }) => {
+    const date = result.date ? ` · **Publikacja:** ${cleanDisplayText(result.date, 40)}` : "";
+    return `- **${cleanDisplayText(result.title, 160)}** — ${summary}${date} ([${cleanDisplayText(result.source, 70)}](${safeSourceUrl(result.url)}))`;
   }).join("\n");
-  const sourceLines = results.slice(0, 8).map((result, index) =>
-    `${index + 1}. [${cleanDisplayText(result.source, 90)} — ${cleanDisplayText(result.title, 130)}](${safeSourceUrl(result.url)})`
+  const sourceLines = picked.slice(0, 8).map(({ result }, index) =>
+    `${index + 1}. [${cleanDisplayText(result.source, 90)} — ${cleanDisplayText(result.title, 140)}](${safeSourceUrl(result.url)})`
   ).join("\n");
-  const siteCount = new Set(results.map(result => result.source)).size;
+  const siteCount = new Set(picked.map(item => new URL(item.result.url).hostname)).size;
   const checkedAt = new Intl.DateTimeFormat("pl-PL", {
     timeZone: "Europe/Warsaw", dateStyle: "short", timeStyle: "short"
   }).format(new Date());
 
-  return `## 🐨 Podsumowanie Koali\n\nSprawdziłam **${results.length} pasujących stron z ${siteCount} witryn**. Poniżej najważniejsze znalezione informacje.\n\n### W skrócie\n${bullets || "Nie udało się wyodrębnić krótkich fragmentów."}\n\n### Źródła do przeczytania\n${sourceLines}\n\n_Stan sprawdzenia: ${checkedAt} czasu polskiego._\n\n_Uwaga: to automatyczne streszczenie znalezionych fragmentów, a nie niezależna weryfikacja każdego twierdzenia. Gdy strony podają różne informacje, należy porównać ich treść i daty._`;
+  const heading = newsMode ? "## 🐨 Przegląd najnowszych wiadomości" : "## 🐨 Zebrane materiały";
+  const intro = newsMode
+    ? `Znalazłam **${picked.length} artykułów z ${siteCount} witryn**. Uporządkowałam je według dat publikacji.`
+    : `Znalazłam **${picked.length} stron z ${siteCount} witryn**, które pasują do pytania.`;
+  const limitation = newsMode
+    ? "_To krótkie omówienia fragmentów artykułów, a nie pełna synteza wszystkich wydarzeń. Fragmenty mogą pozostać w języku oryginalnym strony._"
+    : "_To wybrane fragmenty publicznych stron. Sprawdź źródła, jeśli potrzebujesz pełnego kontekstu._";
+
+  return `${heading}\n\n${intro}\n\n### Najważniejsze znalezione materiały\n${bullets || "Nie udało się wyodrębnić treści artykułów."}\n\n### Źródła do przeczytania\n${sourceLines}\n\n_Stan sprawdzenia: ${checkedAt} czasu polskiego._\n\n${limitation}`;
 }
 
 function isBarcaFixtureQuestion(question) {
@@ -1235,7 +1442,6 @@ async function searchAllSources(question) {
 
   const terms = getCrawlerTerms(question);
   if (!terms.length) return null;
-
   const deadline = Date.now() + CRAWLER_TOTAL_BUDGET;
   const preferredSource = extractAllowedSourceFromMessage(question);
   let sources = selectCrawlerSources(question);
@@ -1245,49 +1451,46 @@ async function searchAllSources(question) {
     .filter(Boolean)
     .slice(0, CRAWLER_MAX_SOURCES);
 
-  const resultsBySite = await Promise.all(
-    sources.map(source => crawlPublicSite(source, question, terms, deadline))
-  );
-
+  const resultsBySite = await Promise.all(sources.map(source => crawlPublicSite(source, question, terms, deadline)));
+  const allResults = resultsBySite.flat();
   const seen = new Set();
-  const rankedResults = resultsBySite.flat()
-    .filter(result => {
-      const url = safeSourceUrl(result.url);
-      if (!url || seen.has(url)) return false;
-      seen.add(url);
-      return true;
-    })
-    .sort((a, b) => (b.score + (b.sourceTrust || 0) * 0.15) - (a.score + (a.sourceTrust || 0) * 0.15));
-
-  // Najpierw bierzemy co najmniej jedną stronę z każdej witryny, a dopiero
-  // potem dokładamy następne trafienia. Dzięki temu źródła nie są zdominowane
-  // przez kilka podstron jednego serwisu.
-  const results = [];
-  const usedSources = new Set();
-  for (const result of rankedResults) {
-    if (!usedSources.has(result.source)) {
-      results.push(result);
-      usedSources.add(result.source);
-    }
-  }
-  for (const result of rankedResults) {
-    if (results.length >= CRAWLER_MAX_RESULTS) break;
-    if (!results.includes(result)) results.push(result);
-  }
-  results.length = Math.min(results.length, CRAWLER_MAX_RESULTS);
-
-  if (!results.length) return null;
+  const uniqueResults = allResults.filter(result => {
+    const safeUrl = safeSourceUrl(result.url);
+    if (!safeUrl || seen.has(safeUrl)) return false;
+    seen.add(safeUrl);
+    return true;
+  });
 
   if (isBarcaFixtureQuestion(question)) {
-    const sportsAnswer = buildSportsAnswer(results.filter(result => /Barcelona|LaLiga|UEFA/i.test(result.source)));
-    if (sportsAnswer) {
-      cacheSet(SEARCH_CACHE, cacheKey, sportsAnswer, SEARCH_CACHE_TTL, SEARCH_CACHE_LIMIT);
-      return sportsAnswer;
-    }
+    const sportResults = uniqueResults.filter(result => result.fixtures?.length || result.category !== "news");
+    const sportsAnswer = buildSportsAnswer(sportResults);
+    const answer = sportsAnswer || buildSportsNoDataAnswer();
+    cacheSet(SEARCH_CACHE, cacheKey, answer, SEARCH_CACHE_TTL, SEARCH_CACHE_LIMIT);
+    return answer;
   }
 
-  const answer = buildResearchSummary(question, results, terms);
+  const isNewsRequest = /\b(wiadomosci|aktualnosci|wydarzenia|co sie dzieje|co sie wydarzylo|co nowego|na swiecie|ze swiata|najnowsz|podsumuj|w polsce)\b/.test(normalizedQuestion);
+  let rankedResults = uniqueResults;
+  if (isNewsRequest) {
+    rankedResults = uniqueResults.filter(result => result.category === "news" && result.publishedAt);
+    rankedResults.sort((a, b) => (b.publishedAt - a.publishedAt) || (b.score - a.score));
+  } else {
+    rankedResults.sort((a, b) => (b.score + (b.sourceTrust || 0) * 0.15) - (a.score + (a.sourceTrust || 0) * 0.15));
+  }
 
+  const results = [];
+  const domainCounts = new Map();
+  for (const result of rankedResults) {
+    const domain = new URL(result.url).hostname;
+    const maxPerDomain = isNewsRequest ? 2 : 3;
+    if ((domainCounts.get(domain) || 0) >= maxPerDomain) continue;
+    domainCounts.set(domain, (domainCounts.get(domain) || 0) + 1);
+    results.push(result);
+    if (results.length >= CRAWLER_MAX_RESULTS) break;
+  }
+
+  if (!results.length) return null;
+  const answer = buildResearchSummary(question, results, terms);
   cacheSet(SEARCH_CACHE, cacheKey, answer, SEARCH_CACHE_TTL, SEARCH_CACHE_LIMIT);
   return answer;
 }
