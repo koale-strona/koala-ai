@@ -1700,8 +1700,8 @@ export default async function handler(request) {
     const onlineSearch = shouldSearchOnline(message, finalAnswer, history);
 
     if (onlineSearch && !["greeting", "thanks", "social", "math", "knowledge", "teacher-answer"].includes(route.kind)) {
-      const internetAnswer = await searchAllSources(message);
-      const searchIsPrimary = !route.topic || localUnknown || asksForCurrentInformation(message);
+      const internetAnswer = await searchAllSources(route.searchQuery || message);
+      const searchIsPrimary = !route.topic || localUnknown || asksForCurrentInformation(message) || Boolean(route.searchQuery);
       if (internetAnswer) {
         if (searchIsPrimary) {
           finalAnswer = internetAnswer;
