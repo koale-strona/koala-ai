@@ -1,5 +1,5 @@
 /*
- * Koala.ai v6 — Brain — lokalny, edukacyjny silnik regułowy z lepszym routingiem pytań.
+ * Koala.ai v7 — Brain — lokalny, edukacyjny silnik regułowy z kontekstem i dodatkową wiedzą historyczną.
  * Bez zewnętrznych modeli AI, kluczy API i dodatkowych zależności.
  * Zachowuje bazę wiedzy, matematykę, historię rozmowy i tryb nauczyciela.
  * To nie jest ogólny model językowy — odpowiedzi wynikają z reguł i wiedzy w pliku.
@@ -232,6 +232,21 @@ const knowledge = [
     check: "W którym roku rozpoczęła się II wojna światowa?"
   },
   {
+    title: "Powstanie styczniowe",
+    keywords: [
+      "powstanie styczniowe",
+      "kiedy było powstanie styczniowe",
+      "kiedy wybuchło powstanie styczniowe",
+      "data powstania styczniowego"
+    ],
+    aliases: ["powstania styczniowego", "powstaniu styczniowym", "powstanie styczniowe"],
+    short: "Powstanie styczniowe wybuchło 22 stycznia 1863 roku.",
+    explanation: "Było to polskie powstanie przeciwko Imperium Rosyjskiemu. Rozpoczęło się 22 stycznia 1863 roku i miało charakter głównie partyzancki. Walki i działalność oddziałów powstańczych trwały do jesieni 1864 roku.",
+    example: "Najważniejsza data do zapamiętania: 22 stycznia 1863 roku — początek powstania styczniowego.",
+    related: "Powstanie było największym polskim powstaniem narodowym XIX wieku. Jego klęska przyniosła represje i ograniczenie autonomii Królestwa Polskiego.",
+    check: "W którym dniu i roku wybuchło powstanie styczniowe?"
+  },
+  {
     title: "Najdłuższa rzeka Polski",
     keywords: ["najdłuższa rzeka polski", "najdluzsza rzeka polski", "wisła", "wisla"],
     aliases: ["najdłuższej rzeki polski"],
@@ -372,7 +387,7 @@ function isCurrentInformationQuestion(question) {
 
 function asksToSearchOnline(question) {
   const text = normalize(question);
-  return /\b(w internecie|online|w sieci|wyszukaj|poszukaj|szukaj w internecie|znajdz w internecie|znajdz w sieci|sprawdz w internecie|sprawdz online|zweryfikuj online|potwierdz w zrodlach|podsumuj wydarzenia|podsumuj wiadomosci|najnowsze wiadomosci|najnowsze wydarzenia)\b/.test(text);
+  return /\b(w internecie|online|w sieci|wyszukaj|poszukaj|szukaj w internecie|znajdz w internecie|znajdz w sieci|sprawdz w internecie|sprawdz online|zweryfikuj online|potwierdz w zrodlach|podsumuj wydarzenia|podsumuj wiadomosci|najnowsze wiadomosci|najnowsze wydarzenia|wikipedi\w*|wiki)\b/.test(text);
 }
 
 function looksLikeFactualQuestion(question) {
@@ -396,6 +411,9 @@ function getQuestionRoute(question, localAnswer = "", history = []) {
   const followUpQuery = buildFollowUpSearchQuery(text, history);
   if (followUpQuery) {
     const anchor = getContextAnchorQuestion(history) || "";
+    if (isWikipediaLookupFollowUp(text)) {
+      return { kind: "search", shouldSearchWeb: true, topic: null, searchQuery: followUpQuery, preferredSource: "wikipedia" };
+    }
     if (isSportsQuestion(anchor)) return { kind: "sports-search", shouldSearchWeb: true, searchQuery: followUpQuery };
     if (isNewsQuestion(anchor)) return { kind: "news-search", shouldSearchWeb: true, searchQuery: followUpQuery };
   }
@@ -415,6 +433,9 @@ function getQuestionRoute(question, localAnswer = "", history = []) {
 
   if (isSportsQuestion(text)) return { kind: "sports-search", shouldSearchWeb: true, topic: null };
   if (isNewsQuestion(text)) return { kind: "news-search", shouldSearchWeb: true, topic: null };
+  if (/\b(wikipedi\w*|wiki)\b/.test(normalized) && shouldSearchWeb) {
+    return { kind: "search", shouldSearchWeb: true, topic: null, searchQuery: text, preferredSource: "wikipedia" };
+  }
   return { kind: shouldSearchWeb ? "search" : "unknown", shouldSearchWeb, topic: topic?.title || null };
 }
 
@@ -433,13 +454,23 @@ function getIntent(question) {
 function isFollowUp(question) {
   const text = normalize(question).replace(/[?.!,]+$/g, '').trim();
   return /^(a\s+)?(dlaczego|czemu|jak to|co to|co z tym|a co z|a jak|a kiedy|a gdzie|a kto|a ile|rozwin\w*|rozszerz\w*|dokladniej|wiecej|jeszcze|kolejne|nastepne|inny przyklad|przyklad|podaj przyklad|daj przyklad|prosciej|latwiej|nie rozumiem|podsumuj|skroc|sprawdz mnie|przepytaj mnie|zrob quiz|pokaz zrodla|inne zrodla|porownaj)\b/.test(text)
+    || /^(wyjasnij|wytlumacz|pokaz mi|rozwin|podsumuj|skroc|przyklad)$/.test(text)
     || /^(a\s+)?(mozesz|czy mozesz)\s+(to\s+)?(wyjasnic|wytlumaczyc|rozwinac|skrocic|podsumowac|podac przyklad|pokazac)/.test(text)
-    || /^(wyjasnij|wytlumacz)\s+(to|ten temat|to prosciej|mi to)/.test(text);
+    || /^(wyjasnij|wytlumacz)\s+(to|ten temat|to prosciej|mi to)/.test(text)
+    || isWikipediaLookupFollowUp(question);
+}
+
+function isWikipediaLookupFollowUp(question) {
+  const text = normalize(question).replace(/[?.!,]+$/g, "").trim();
+  const mentionsWikipedia = /\b(wikipedi\w*|wiki)\b/.test(text);
+  const asksToLook = /\b(zobaczysz|zobaczyc|sprawdzisz|sprawdzic|poszukasz|poszukac|wyszukasz|wyszukac|znajdziesz|znalezc|zerkniesz|czytasz|czy mozesz|mozesz)\b/.test(text);
+  return mentionsWikipedia && asksToLook;
 }
 
 function isContextualFollowUp(question) {
   const text = normalize(question).replace(/[?.!,]+$/g, '').trim();
-  return /^(a\s+)?(co jeszcze|a co jeszcze|a co dalej|a nastepne|nastepne|kolejne|wiecej|jeszcze wiecej|inne zrodla|pokaz zrodla|a wynik|a kiedy|a gdzie|a kto|a dlaczego|a czemu|a jak|rozwin|skroc|prosciej|latwiej|dokladniej|podaj przyklad|daj przyklad|pokaz kolejne)/.test(text);
+  return /^(a\s+)?(co jeszcze|a co jeszcze|a co dalej|a nastepne|nastepne|kolejne|wiecej|jeszcze wiecej|inne zrodla|pokaz zrodla|a wynik|a kiedy|a gdzie|a kto|a dlaczego|a czemu|a jak|rozwin|skroc|prosciej|latwiej|dokladniej|podaj przyklad|daj przyklad|pokaz kolejne)/.test(text)
+    || isWikipediaLookupFollowUp(question);
 }
 
 function isTopicChange(question) {
@@ -535,12 +566,60 @@ function alignRight(value, width) {
 }
 
 function formatColumnWork(a, b, operator, result) {
+  // Dodawanie i odejmowanie pisemne.
   if (["+", "-"].includes(operator) && a >= 0n && b >= 0n) {
-    const width = Math.max(a.toString().length, (operator + b.toString()).length, result.toString().length);
-    return [alignRight(a, width), alignRight(operator + b.toString(), width), "─".repeat(width), alignRight(result, width)].join("\n");
+    const width = Math.max(
+      a.toString().length,
+      (operator + b.toString()).length,
+      result.toString().length
+    );
+    return [
+      alignRight(a, width),
+      alignRight(operator + b.toString(), width),
+      "─".repeat(width),
+      alignRight(result, width)
+    ].join("\n");
   }
-  if (operator === "*") return `${a} × ${b}\n────────\n${result}`;
-  if (operator === "/") return `${a} : ${b}\n────────\nIloraz: ${a / b}\nReszta: ${a % b}`;
+
+  // Pełne mnożenie pisemne: osobny wiersz dla każdej cyfry drugiego czynnika.
+  if (operator === "*") {
+    const absA = a < 0n ? -a : a;
+    const absB = b < 0n ? -b : b;
+    const absResult = absA * absB;
+    const digits = absB.toString().split("").reverse();
+    const partials = digits.map((digit, index) =>
+      (absA * BigInt(digit) * (10n ** BigInt(index))).toString()
+    );
+    const signedResult = result.toString();
+    const width = Math.max(
+      absA.toString().length,
+      (`× ${absB}`).length,
+      absResult.toString().length,
+      ...partials.map(line => line.length),
+      signedResult.length
+    );
+
+    const lines = [
+      alignRight(absA.toString(), width),
+      alignRight(`× ${absB.toString()}`, width),
+      "─".repeat(width),
+      ...partials.map(line => alignRight(line, width))
+    ];
+
+    if (partials.length > 1) lines.push("─".repeat(width));
+    lines.push(alignRight(signedResult, width));
+
+    if ((a < 0n) !== (b < 0n)) {
+      lines.push("Wynik jest ujemny, ponieważ czynniki mają różne znaki.");
+    }
+
+    return lines.join("\n");
+  }
+
+  if (operator === "/") {
+    return `${a} : ${b}\n────────\nIloraz: ${a / b}\nReszta: ${a % b}`;
+  }
+
   return `${a} ${operator} ${b} = ${result}`;
 }
 
@@ -602,7 +681,14 @@ function isNewsQuestion(question) {
 
 function buildFollowUpSearchQuery(question, history) {
   const anchor = getContextAnchorQuestion(history);
-  if (!anchor || !isContextualFollowUp(question)) return null;
+  const wikiFollowUp = isWikipediaLookupFollowUp(question);
+  if (!anchor || (!isContextualFollowUp(question) && !wikiFollowUp)) return null;
+
+  if (wikiFollowUp) {
+    return `${anchor}. Znajdź konkretny artykuł w polskiej Wikipedii dotyczący dokładnie tego tematu.`
+      .slice(0, MAX_QUESTION_LENGTH);
+  }
+
   const follow = normalize(question);
   let refinement = question.trim();
   if (/\b(kolejne|nastepne|wiecej|jeszcze)\b/.test(follow) && isSportsQuestion(anchor)) {
@@ -638,7 +724,19 @@ function calculate(input) {
     const { a, b, operator } = simple;
     if (operator === "/" && b === 0n) return "Nie można dzielić przez zero.";
     const result = operator === "+" ? a + b : operator === "-" ? a - b : operator === "*" ? a * b : a / b;
-    return `## 🐨 Wynik działania: ${result.toString()}\n\n**Zapis słupkiem / działanie**\n\n\`\`\`text\n${formatColumnWork(a, b, operator, result)}\n\`\`\`\n\n${operator === "/" && a % b !== 0n ? `Dzielenie daje resztę ${a % b}.` : "Działanie zostało wykonane dokładnie."}\n\n_Możesz napisać „wyjaśnij krok po kroku”, aby zobaczyć sposób obliczenia._`;
+    const formattedResult = new Intl.NumberFormat("pl-PL").format(result);
+    const workTitle = operator === "*"
+      ? "Mnożenie pisemne"
+      : operator === "+"
+        ? "Dodawanie pisemne"
+        : operator === "-"
+          ? "Odejmowanie pisemne"
+          : "Dzielenie";
+    const multiplicationNote = operator === "*"
+      ? "Każdy kolejny wiersz pokazuje mnożenie przez jedną cyfrę drugiego czynnika, z odpowiednim przesunięciem miejsca."
+      : "";
+
+    return `## 🐨 Wynik działania\n\n**${formattedResult}**\n\n**${workTitle}**\n\n\`\`\`text\n${formatColumnWork(a, b, operator, result)}\n\`\`\`\n\n${multiplicationNote ? `${multiplicationNote}\n\n` : ""}${operator === "/" && a % b !== 0n ? `Dzielenie daje resztę ${a % b}.` : "Działanie zostało wykonane dokładnie."}\n\n_Możesz napisać „wyjaśnij krok po kroku”, aby zobaczyć sposób obliczenia._`;
   }
 
   const tokens = [];
@@ -838,10 +936,14 @@ export function answerQuestion(question, history = []) {
       return formatKnowledge(knowledgeItem, intent);
     }
 
-    // Matematyka.
-    const mathInput = text.replace(/^(wyjasnij|wytlumacz)\s+/i, "").trim();
+    // Matematyka — usuń polecenie, aby parser dostał samo działanie.
+    const mathInput = text
+      .replace(/^\s*(?:prosz[eę]\s+)?(?:wyja[sś]nij|wyt[lł]umacz|poka[zż]|oblicz|policz|rozwi[aą][zż])\s+(?:mi\s+)?/i, "")
+      .replace(/^krok\s+po\s+kroku\s*[:,]?\s*/i, "")
+      .replace(/^to\s*[:,]?\s*/i, "")
+      .trim();
     const calculationExplanation = explainCalculation(mathInput);
-    if (calculationExplanation && /\b(wyjasn\w*|wytlumacz\w*|krok po kroku|dlaczego|jak to zrobic)\b/.test(normalized)) {
+    if (calculationExplanation && /\b(wyjasn\w*|wytlumacz\w*|pokaz\w*|krok po kroku|dlaczego|jak to zrobic)\b/.test(normalized)) {
       return calculationExplanation;
     }
     const calculation = calculate(text);
