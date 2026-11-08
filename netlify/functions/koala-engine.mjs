@@ -1,5 +1,5 @@
 /*
- * Koala.ai v5 — lokalny, edukacyjny silnik regułowy z lepszym routingiem pytań.
+ * Koala.ai v6 — Brain — lokalny, edukacyjny silnik regułowy z lepszym routingiem pytań.
  * Bez zewnętrznych modeli AI, kluczy API i dodatkowych zależności.
  * Zachowuje bazę wiedzy, matematykę, historię rozmowy i tryb nauczyciela.
  * To nie jest ogólny model językowy — odpowiedzi wynikają z reguł i wiedzy w pliku.
@@ -296,26 +296,57 @@ function containsPhrase(text, phrase) {
   return (` ${normalizedText} `).includes(` ${normalizedPhrase} `);
 }
 
-function findKnowledge(question) {
-  const text = normalize(question);
-  let best = null;
-  let bestScore = 0;
+function lexicalTokens(value) {
+  return normalize(value).split(/\s+/).filter(Boolean);
+}
+
+function tokenStemMatch(left, right) {
+  if (left === right) return true;
+  if (Math.min(left.length, right.length) < 5) return false;
+  const common = Math.min(left.length, right.length, 7);
+  return left.slice(0, common) === right.slice(0, common);
+}
+
+function phraseMatchScore(questionTokens, phrase) {
+  const phraseTokens = lexicalTokens(phrase);
+  if (!phraseTokens.length) return 0;
+  const joined = questionTokens.join(' ');
+  const normalizedPhrase = normalize(phrase);
+  if ((` ${joined} `).includes(` ${normalizedPhrase} `)) return 100 + normalizedPhrase.length;
+
+  let matched = 0;
+  for (const part of phraseTokens) {
+    if (questionTokens.some(token => tokenStemMatch(token, part))) matched++;
+  }
+  if (matched === phraseTokens.length) return 45 + normalizedPhrase.length;
+  if (phraseTokens.length === 1 && matched === 1) return 25 + phraseTokens[0].length;
+  return matched ? (matched / phraseTokens.length) * 12 : 0;
+}
+
+function findKnowledgeMatches(question) {
+  const questionTokens = lexicalTokens(question);
+  if (!questionTokens.length) return [];
+  const matches = [];
 
   for (const item of knowledge) {
     const phrases = [...(item.keywords || []), ...(item.aliases || [])];
+    let score = 0;
+    let matchedPhrase = '';
     for (const phrase of phrases) {
-      const key = normalize(phrase);
-      if (!key) continue;
-      let score = 0;
-      if (containsPhrase(text, key)) score = 10 + key.length;
-      else if (key.length >= 6 && text.includes(key)) score = 3 + key.length / 10;
-      if (score > bestScore) {
-        best = item;
-        bestScore = score;
+      const candidate = phraseMatchScore(questionTokens, phrase);
+      if (candidate > score) {
+        score = candidate;
+        matchedPhrase = phrase;
       }
     }
+    if (score >= 25) matches.push({ item, score, matchedPhrase });
   }
-  return best;
+
+  return matches.sort((a, b) => b.score - a.score);
+}
+
+function findKnowledge(question) {
+  return findKnowledgeMatches(question)[0]?.item || null;
 }
 
 function isGreetingMessage(question) {
@@ -350,48 +381,65 @@ function looksLikeFactualQuestion(question) {
   return /\b(co to jest|czym jest|kto jest|kto byl|kto|gdzie|kiedy|ile|jak dziala|jak powstal|jak powstala|dlaczego|czemu|wymien|podaj informacje|opowiedz o|wyjasnij|co oznacza|co nowego|co wiadomo|najnowsze informacje|informacje o|historia|biografia|definicja|znaczenie|czy)\b/.test(text);
 }
 
-function getQuestionRoute(question, localAnswer = "") {
+function getQuestionRoute(question, localAnswer = "", history = []) {
   const text = String(question ?? "").trim();
   if (!text) return { kind: "empty", shouldSearchWeb: false };
   if (isGreetingMessage(text)) return { kind: "greeting", shouldSearchWeb: false };
   if (isThanksMessage(text)) return { kind: "thanks", shouldSearchWeb: false };
   if (isSocialMessage(text)) return { kind: "social", shouldSearchWeb: false };
 
+  const normalized = normalize(text);
   const topic = findKnowledge(text);
   const math = calculate(text) !== null;
   if (math) return { kind: "math", shouldSearchWeb: false };
-  if (topic && !asksToSearchOnline(text) && !isCurrentInformationQuestion(text)) {
+
+  const followUpQuery = buildFollowUpSearchQuery(text, history);
+  if (followUpQuery) {
+    const anchor = getContextAnchorQuestion(history) || "";
+    if (isSportsQuestion(anchor)) return { kind: "sports-search", shouldSearchWeb: true, searchQuery: followUpQuery };
+    if (isNewsQuestion(anchor)) return { kind: "news-search", shouldSearchWeb: true, searchQuery: followUpQuery };
+  }
+
+  if (topic && !asksToSearchOnline(text) && !isCurrentInformationQuestion(text) && !isFollowUp(text)) {
+    const matches = findKnowledgeMatches(text);
+    if (getIntent(text) === "compare" && matches.length >= 2) {
+      return { kind: "knowledge-comparison", shouldSearchWeb: false, topic: matches.slice(0, 3).map(item => item.item.title) };
+    }
     return { kind: "knowledge", shouldSearchWeb: false, topic: topic.title };
   }
 
   const explicit = asksToSearchOnline(text) || isCurrentInformationQuestion(text);
-  const unknownLocal = normalize(localAnswer).includes("nie znalazlam jeszcze tego zagadnienia");
-  const shouldSearchWeb = explicit || (!topic && !math && looksLikeFactualQuestion(text));
-  const normalized = normalize(text);
-  const sportsQuestion = /\b(fcbarcelona|fcbarcelony|barcelona|barca|barcelony)\b/.test(normalized) && /\b(mecz|mecze|terminarz|spotkanie|najblizszy|najblizsza|kiedy|kalendarz|gra)\b/.test(normalized);
-  const newsQuestion = /\b(co sie dzieje|co sie wydarzylo|wiadomosci|aktualnosci|wydarzenia|na swiecie|ze swiata|najnowsz|ostatnie wydarzenia|podsumuj)\b/.test(normalized);
-  return {
-    kind: sportsQuestion ? "sports-search" : (newsQuestion ? "news-search" : (shouldSearchWeb ? "search" : "unknown")),
-    shouldSearchWeb: shouldSearchWeb || sportsQuestion || newsQuestion,
-    topic: topic?.title || null
-  };
+  const unknownLocal = normalize(localAnswer).includes("nie mam jeszcze wystarczajacej wiedzy")
+    || normalize(localAnswer).includes("nie znalazlam jeszcze tego zagadnienia");
+  const shouldSearchWeb = explicit || (!topic && !math && looksLikeFactualQuestion(text)) || unknownLocal;
+
+  if (isSportsQuestion(text)) return { kind: "sports-search", shouldSearchWeb: true, topic: null };
+  if (isNewsQuestion(text)) return { kind: "news-search", shouldSearchWeb: true, topic: null };
+  return { kind: shouldSearchWeb ? "search" : "unknown", shouldSearchWeb, topic: topic?.title || null };
 }
 
 function getIntent(question) {
   const text = normalize(question);
   if (/\b(notatk\w*|podsumuj\w*|podsumowani\w*|skroc\w*|najwazniejsz\w*)\b/.test(text)) return "summary";
+  if (/\b(porownaj|roznica miedzy|czym sie rozni|podobienstwa)\b/.test(text)) return "compare";
   if (/\b(przyklad\w*|podaj przyklad|daj przyklad)\b/.test(text)) return "example";
   if (/\b(prosciej|latwiej|nie rozumiem|wytlumacz\w*|wyjasn\w*|po ludzku)\b/.test(text)) return "simple";
   if (/\b(dlaczego|czemu|z jakiego powodu)\b/.test(text)) return "why";
   if (/\b(rozwin\w*|rozszerz\w*|dokladniej|wiecej|opowiedz wiecej|szerzej)\b/.test(text)) return "expand";
-  if (/\b(sprawdz mnie|zrob quiz|przepytaj mnie|pytanie sprawdzajace)\b/.test(text)) return "quiz";
+  if (/\b(sprawdz mnie|zrob quiz|przepytaj mnie|pytanie sprawdzajace|quiz)\b/.test(text)) return "quiz";
   return "normal";
 }
 
 function isFollowUp(question) {
-  const text = normalize(question);
-  return /^(a )?(mozesz mi to )?(wyjasn\w*|wytlumacz\w*|dlaczego|czemu|jak to|rozwin\w*|rozszerz\w*|dokladniej|wiecej|przyklad|podaj przyklad|daj przyklad|prosciej|latwiej|nie rozumiem|zrob notatk\w*|podsumuj\w*|sprawdz mnie|przepytaj mnie)( .*)?$/.test(text)
-    || /\b(notatk\w*|podsumuj\w*|podsumowani\w*)\b/.test(text);
+  const text = normalize(question).replace(/[?.!,]+$/g, '').trim();
+  return /^(a\s+)?(dlaczego|czemu|jak to|co to|co z tym|a co z|a jak|a kiedy|a gdzie|a kto|a ile|rozwin\w*|rozszerz\w*|dokladniej|wiecej|jeszcze|kolejne|nastepne|inny przyklad|przyklad|podaj przyklad|daj przyklad|prosciej|latwiej|nie rozumiem|podsumuj|skroc|sprawdz mnie|przepytaj mnie|zrob quiz|pokaz zrodla|inne zrodla|porownaj)\b/.test(text)
+    || /^(a\s+)?(mozesz|czy mozesz)\s+(to\s+)?(wyjasnic|wytlumaczyc|rozwinac|skrocic|podsumowac|podac przyklad|pokazac)/.test(text)
+    || /^(wyjasnij|wytlumacz)\s+(to|ten temat|to prosciej|mi to)/.test(text);
+}
+
+function isContextualFollowUp(question) {
+  const text = normalize(question).replace(/[?.!,]+$/g, '').trim();
+  return /^(a\s+)?(co jeszcze|a co jeszcze|a co dalej|a nastepne|nastepne|kolejne|wiecej|jeszcze wiecej|inne zrodla|pokaz zrodla|a wynik|a kiedy|a gdzie|a kto|a dlaczego|a czemu|a jak|rozwin|skroc|prosciej|latwiej|dokladniej|podaj przyklad|daj przyklad|pokaz kolejne)/.test(text);
 }
 
 function isTopicChange(question) {
@@ -520,6 +568,51 @@ function explainCalculation(question) {
   }
 
   return `## 🐨 ${name} krok po kroku\n\n${explanation}\n\n**Zapis działania**\n\n\`\`\`text\n${formatColumnWork(a, b, operator, result)}\n\`\`\`\n\n**Zapamiętaj:** ważne jest nie tylko poznanie wyniku, ale też zrozumienie sposobu obliczania.\n\n**Spróbuj samodzielnie:** ${a} ${operator} ${b + 1n}`;
+}
+
+function formatKnowledgeComparison(items) {
+  const uniqueItems = [...new Map(items.map(item => [item.title, item])).values()].slice(0, 3);
+  if (uniqueItems.length < 2) return null;
+  const sections = uniqueItems.map(item => `### ${item.title}\n${item.short}\n\n**Przykład:** ${item.example}`);
+  return `## 🐨 Porównajmy pojęcia\n\n${sections.join("\n\n---\n\n")}\n\n**Najważniejsza wskazówka:** zwróć uwagę na to, co każde pojęcie opisuje i do czego służy.`;
+}
+
+function getContextAnchorQuestion(history) {
+  const safe = getSafeHistory(history);
+  for (let i = safe.length - 1; i >= 0; i--) {
+    const item = safe[i];
+    if (item.role !== "user") continue;
+    const candidate = item.text.trim();
+    if (!candidate || isGreetingMessage(candidate) || isThanksMessage(candidate) || isContextualFollowUp(candidate)) continue;
+    return candidate;
+  }
+  return null;
+}
+
+function isSportsQuestion(question) {
+  const text = normalize(question);
+  return /\b(fcbarcelona|fcbarcelony|barcelona|barca|barcelony)\b/.test(text)
+    && /\b(mecz|mecze|terminarz|spotkanie|najblizszy|najblizsza|najblizsze|kiedy|kalendarz|gra|wynik)\b/.test(text);
+}
+
+function isNewsQuestion(question) {
+  const text = normalize(question);
+  return /\b(wiadomosci|aktualnosci|wydarzenia|co sie dzieje|co sie wydarzylo|co nowego|na swiecie|ze swiata|najnowsz|ostatnie wydarzenia|podsumuj|w polsce)\b/.test(text);
+}
+
+function buildFollowUpSearchQuery(question, history) {
+  const anchor = getContextAnchorQuestion(history);
+  if (!anchor || !isContextualFollowUp(question)) return null;
+  const follow = normalize(question);
+  let refinement = question.trim();
+  if (/\b(kolejne|nastepne|wiecej|jeszcze)\b/.test(follow) && isSportsQuestion(anchor)) {
+    refinement = "kolejne najbliższe mecze i terminarz";
+  } else if (/\b(zrodla|inne zrodla|pokaz zrodla)\b/.test(follow)) {
+    refinement = "oficjalne źródła i potwierdzenie informacji";
+  } else if (/\b(wynik|rezultat)\b/.test(follow)) {
+    refinement = "wynik i rezultat";
+  }
+  return `${anchor}. ${refinement}`.slice(0, MAX_QUESTION_LENGTH);
 }
 
 function calculatePercent(input) {
@@ -658,11 +751,21 @@ function createLearningHint(topic) {
 }
 
 export function classifyQuestion(question, localAnswer = "", history = []) {
-  const route = getQuestionRoute(question, localAnswer);
-  const activeTeacher = getActiveTeacherTopic(getSafeHistory(history));
-  if (activeTeacher && !isFollowUp(question) && !isGreetingMessage(question)) {
-    return { ...route, kind: "teacher-answer", shouldSearchWeb: false, topic: activeTeacher.title };
+  const safeHistory = getSafeHistory(history);
+  const route = getQuestionRoute(question, localAnswer, safeHistory);
+  const activeTeacher = getActiveTeacherTopic(safeHistory);
+
+  if (activeTeacher && !isFollowUp(question) && !isGreetingMessage(question) && !isThanksMessage(question)) {
+    return { ...route, kind: "teacher-answer", shouldSearchWeb: false, topic: activeTeacher.title, searchQuery: null };
   }
+
+  if (route.kind === "unknown" && isFollowUp(question)) {
+    const previousTopic = getPreviousTopic(safeHistory);
+    if (previousTopic) {
+      return { kind: "knowledge", shouldSearchWeb: false, topic: previousTopic.title, searchQuery: null };
+    }
+  }
+
   return route;
 }
 
@@ -670,52 +773,64 @@ export function answerQuestion(question, history = []) {
   try {
     const text = String(question ?? "").trim();
     if (!text) return "🐨 Napisz pytanie lub wklej zadanie, a razem je rozwiążemy!";
-    if (text.length > MAX_QUESTION_LENGTH) return `Twoja wiadomość jest za długa. Skróć ją do maksymalnie ${MAX_QUESTION_LENGTH} znaków i spróbuj ponownie.`;
+    if (text.length > MAX_QUESTION_LENGTH) {
+      return `Twoja wiadomość jest za długa. Skróć ją do maksymalnie ${MAX_QUESTION_LENGTH} znaków.`;
+    }
 
     const safeHistory = getSafeHistory(history);
     const normalized = normalize(text);
     const intent = getIntent(text);
 
-    // Powitania i krótkie rozmowy obsługujemy PRZED rozpoznaniem wiedzy i internetem.
+    // Krótkie rozmowy nigdy nie uruchamiają wyszukiwarki.
     if (isGreetingMessage(text)) {
-      return "## 🐨 Hej! Jestem Koala.ai.\n\nMiło Cię widzieć! Mogę pomóc Ci z matematyką, językiem polskim, przyrodą, historią i innymi szkolnymi tematami.\n\nMożemy rozwiązać zadanie krok po kroku, zrobić krótką notatkę albo przeprowadzić mini quiz.\n\n**Co dziś bierzemy na warsztat?**";
+      return "## 🐨 Hej! Jestem Koala.ai.\n\nMogę pomóc Ci z matematyką, językiem polskim, przyrodą, historią i innymi szkolnymi tematami. Wyjaśnię zagadnienie, pokażę przykład albo przeprowadzę Cię przez zadanie krok po kroku.\n\n**Co dziś chcesz zrozumieć?**";
     }
-    if (isThanksMessage(text)) return "Nie ma za co! 🐨 Dobra robota. Gdy będziesz mieć następne pytanie, możemy działać dalej.";
+    if (isThanksMessage(text)) return "Nie ma za co! 🐨 Dobra robota. Możemy przejść do następnego pytania.";
     if (isSocialMessage(text)) {
-      if (/kim jestes|co potrafisz/.test(normalized)) return "## 🐨 Jestem Koala.ai\n\nJestem lokalnym, edukacyjnym silnikiem regułowym. Pomagam wyjaśniać szkolne tematy, rozwiązywać wybrane działania matematyczne i ćwiczyć wiedzę. Gdy pytanie wymaga aktualnych lub dodatkowych informacji, backend może spróbować wyszukać materiały w skonfigurowanych witrynach.";
-      return "U mnie wszystko dobrze — jestem gotowa do nauki! 🐨 A Ty, nad czym dziś pracujesz?";
+      if (/kim jestes|co potrafisz/.test(normalized)) {
+        return "## 🐨 Jestem Koala.ai\n\nJestem własnym, lokalnym silnikiem edukacyjnym opartym na kodzie, regułach, bazie wiedzy i analizie kontekstu rozmowy. Nie korzystam z zewnętrznego modelu językowego. Pomagam w nauce, wybranych obliczeniach i analizie informacji z witryn skonfigurowanych w wyszukiwarce.";
+      }
+      return "U mnie wszystko dobrze — jestem gotowa do pomocy! 🐨 Nad czym dziś pracujesz?";
     }
+
+    if (isTopicChange(text)) return "Jasne, zmieniamy temat! 🐨 Napisz, czego teraz chcesz się nauczyć.";
 
     const activeTeacherTopic = getActiveTeacherTopic(safeHistory);
     if (activeTeacherTopic && !isFollowUp(text)) {
-      if (/^(koniec lekcji|zakoncz lekcje|stop)$/i.test(normalized)) return "🐨 Lekcja zakończona! Dobra robota. Możemy rozpocząć nowy temat.";
-      const result = evaluateTeacherAnswer(activeTeacherTopic, text);
-      if (result) return result;
+      if (/^(koniec lekcji|zakoncz lekcje|stop)$/i.test(normalized)) {
+        return "🐨 Lekcja zakończona! Dobra robota. Możemy rozpocząć nowy temat.";
+      }
+      const teacherResult = evaluateTeacherAnswer(activeTeacherTopic, text);
+      if (teacherResult) return teacherResult;
     }
 
+    // Najpierw rozpoznajemy, czy pytanie odnosi się do poprzedniego tematu.
     if (isFollowUp(text)) {
       const previousQuestion = getPreviousUserQuestion(safeHistory);
-      if (previousQuestion) {
-        const previousCalculation = explainCalculation(previousQuestion);
-        if (previousCalculation) return previousCalculation;
-        const previousTopic = findKnowledge(previousQuestion) || getPreviousTopic(safeHistory);
-        if (previousTopic) return formatKnowledge(previousTopic, intent);
+      const anchorQuestion = getContextAnchorQuestion(safeHistory) || previousQuestion;
+      if (anchorQuestion) {
+        const previousCalculation = explainCalculation(anchorQuestion);
+        if (previousCalculation && /przyklad|wyjasn|wytlumacz|prosciej|dlaczego|czemu|krok/.test(normalized)) {
+          return previousCalculation;
+        }
+        const contextTopic = findKnowledge(anchorQuestion) || getPreviousTopic(safeHistory);
+        if (contextTopic) return formatKnowledge(contextTopic, intent);
       }
+
       const previousAnswer = getPreviousAnswer(safeHistory);
-      if (previousAnswer) return `🐨 Jasne, doprecyzujmy poprzednią odpowiedź. Napisz, którego fragmentu nie rozumiesz, a wyjaśnię go prościej i pokażę kolejny przykład.`;
+      if (previousAnswer && previousAnswer.length > 80) {
+        return "🐨 Rozumiem, że nawiązujesz do poprzedniej odpowiedzi. Napisz, który konkretnie fragment mam rozwinąć, uprościć lub porównać — wtedy skupię się na nim zamiast zgadywać.";
+      }
     }
 
-    if (isTopicChange(text)) {
-      return "Jasne, zmieniamy temat! 🐨 Napisz, czego teraz chcesz się nauczyć.";
+    // Porównywanie dwóch lub więcej tematów z lokalnej bazy.
+    if (intent === "compare") {
+      const matches = findKnowledgeMatches(text).map(match => match.item);
+      const comparison = formatKnowledgeComparison(matches);
+      if (comparison) return comparison;
     }
 
-    const mathInput = text.replace(/^(wyjasnij|wytlumacz)\s+/i, "").trim();
-    const calculationExplanation = explainCalculation(mathInput);
-    if (calculationExplanation && /\b(wyjasn\w*|wytlumacz\w*|krok po kroku|dlaczego|jak to zrobic)\b/.test(normalized)) return calculationExplanation;
-
-    const calculation = calculate(text);
-    if (calculation !== null) return calculation;
-
+    // Tryb nauczyciela.
     const knowledgeItem = findKnowledge(text);
     if (knowledgeItem) {
       const wantsTeacher = /\b(naucz mnie|nauczysz mnie|tryb nauczyciela|lekcja|lekcje|przepytaj mnie|sprawdz mnie|zrob quiz|quiz)\b/.test(normalized);
@@ -723,12 +838,21 @@ export function answerQuestion(question, history = []) {
       return formatKnowledge(knowledgeItem, intent);
     }
 
+    // Matematyka.
+    const mathInput = text.replace(/^(wyjasnij|wytlumacz)\s+/i, "").trim();
+    const calculationExplanation = explainCalculation(mathInput);
+    if (calculationExplanation && /\b(wyjasn\w*|wytlumacz\w*|krok po kroku|dlaczego|jak to zrobic)\b/.test(normalized)) {
+      return calculationExplanation;
+    }
+    const calculation = calculate(text);
+    if (calculation !== null) return calculation;
+
     if (/\b(naucz mnie|chce sie nauczyc|nauczysz mnie|zrobmy cwiczenia|przygotuj mnie|przepytaj mnie|sprawdz mnie)\b/.test(normalized)) {
       return "## 🐨 Zrobimy to razem!\n\nWybierz temat, którego chcesz się nauczyć. Mogę przygotować proste wyjaśnienie, przykłady, krótką notatkę, pytania sprawdzające i zadania do samodzielnego rozwiązania.\n\nNapisz nazwę tematu, a zaczniemy.";
     }
 
-    if (/\b(notatk\w*|podsumowani\w*|streszczeni\w*|quiz|test)\b/.test(normalized)) {
-      return "🐨 Jasne! Z jakiego tematu mam przygotować notatkę albo quiz? Podaj temat lub wklej materiał z lekcji.";
+    if (/\b(notatk\w*|notatka|podsumowani\w*|streszczeni\w*|quiz|test)\b/.test(normalized)) {
+      return "🐨 Jasne! Podaj temat albo wklej materiał, z którego mam przygotować notatkę, streszczenie lub quiz.";
     }
 
     return createLearningHint(text);
