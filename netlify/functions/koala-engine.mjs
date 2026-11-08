@@ -335,13 +335,13 @@ function isSocialMessage(question) {
 
 function isCurrentInformationQuestion(question) {
   const text = normalize(question);
-  return /\b(aktualnie|obecnie|dzisiaj|dzis|jutro|wczoraj|najnowsz\w*|na zywo|teraz|aktualn\w*|ostatnie wiadomosci|co nowego|ostatnie informacje)\b/.test(text)
-    || /\b(mecz|terminarz|wynik meczu|pogoda|kurs walut|kurs euro|kurs dolara)\b/.test(text);
+  return /\b(aktualnie|obecnie|dzisiaj|dzis|jutro|wczoraj|najnowsz\w*|na zywo|teraz|aktualn\w*|ostatnie wiadomosci|co nowego|co wiadomo|co sie dzieje|co sie wydarzylo|ostatnie informacje|ostatnie wydarzenia|na swiecie|w polsce)\b/.test(text)
+    || /\b(mecz|mecze|spotkanie|terminarz|wynik meczu|pogoda|kurs walut|kurs euro|kurs dolara|aktualnosci|wiadomosci)\b/.test(text);
 }
 
 function asksToSearchOnline(question) {
   const text = normalize(question);
-  return /\b(w internecie|online|w sieci|wyszukaj|poszukaj|szukaj w internecie|znajdz w internecie|znajdz w sieci|sprawdz w internecie|sprawdz online|zweryfikuj online|potwierdz w zrodlach)\b/.test(text);
+  return /\b(w internecie|online|w sieci|wyszukaj|poszukaj|szukaj w internecie|znajdz w internecie|znajdz w sieci|sprawdz w internecie|sprawdz online|zweryfikuj online|potwierdz w zrodlach|podsumuj wydarzenia|podsumuj wiadomosci)\b/.test(text);
 }
 
 function looksLikeFactualQuestion(question) {
@@ -367,9 +367,12 @@ function getQuestionRoute(question, localAnswer = "") {
   const explicit = asksToSearchOnline(text) || isCurrentInformationQuestion(text);
   const unknownLocal = normalize(localAnswer).includes("nie znalazlam jeszcze tego zagadnienia");
   const shouldSearchWeb = explicit || (!topic && !math && looksLikeFactualQuestion(text));
+  const normalized = normalize(text);
+  const sportsQuestion = /\b(fcbarcelona|fcbarcelony|barcelona|barca|barcelony)\b/.test(normalized) && /\b(mecz|mecze|terminarz|spotkanie|najblizszy|najblizsza|kiedy|kalendarz|gra)\b/.test(normalized);
+  const newsQuestion = /\b(co sie dzieje|wiadomosci|aktualnosci|wydarzenia|na swiecie|ostatnie wydarzenia)\b/.test(normalized);
   return {
-    kind: shouldSearchWeb ? "search" : "unknown",
-    shouldSearchWeb,
+    kind: sportsQuestion ? "sports-search" : (newsQuestion ? "news-search" : (shouldSearchWeb ? "search" : "unknown")),
+    shouldSearchWeb: shouldSearchWeb || sportsQuestion || newsQuestion,
     topic: topic?.title || null
   };
 }
