@@ -500,6 +500,17 @@ footer {
   color: #94a3b8;
 }
 
+.ai-study-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 16px 0;
+}
+
+.ai-study-prompts .button {
+  margin: 0;
+}
+
 .ai-messages {
   height: 420px;
   overflow-y: auto;
@@ -1567,7 +1578,7 @@ html.auth-failed body>*:not(#authTransition){visibility:hidden!important}
     <h2>🐨 Koala.ai</h2>
 
     <p>
-      Twój pomocnik do zadań, nauki i wyjaśniania materiału.
+      Szkolna pomoc w nauce: wyjaśnienia, zadania krok po kroku i krótkie powtórki.
     </p>
 
   </div>
@@ -1576,13 +1587,19 @@ html.auth-failed body>*:not(#authTransition){visibility:hidden!important}
 
     <div class="ai-header">
 
-      <h3>🐨 Koala.ai — pomoc w nauce</h3>
+      <h3>🐨 Koala.ai — Twój korepetytor</h3>
 
       <p>
-        Napisz zadanie lub pytanie, a Koala pomoże Ci
-        je zrozumieć krok po kroku.
+        Napisz temat lub wklej treść zadania. Najpierw wyjaśnię,
+        potem pokażę przykład i pomogę Ci samodzielnie dojść do odpowiedzi.
       </p>
 
+    </div>
+
+    <div class="ai-study-prompts" aria-label="Szybkie pytania do nauki">
+      <button type="button" class="button secondary" onclick="setKoalaPrompt('Wyjaśnij mi ten temat prosto i podaj przykład: ')">📖 Wyjaśnij temat</button>
+      <button type="button" class="button secondary" onclick="setKoalaPrompt('Pomóż mi rozwiązać to zadanie krok po kroku: ')">🧮 Zadanie krok po kroku</button>
+      <button type="button" class="button secondary" onclick="setKoalaPrompt('Przygotuj krótką powtórkę i 3 pytania z tematu: ')">🎓 Powtórka i quiz</button>
     </div>
 
     <div
@@ -1591,10 +1608,9 @@ html.auth-failed body>*:not(#authTransition){visibility:hidden!important}
     >
 
       <div class="ai-message bot">
-        Cześć! 🐨 Jestem Koala.ai.
-        Napisz mi, z czym masz problem.
-        Mogę pomóc Ci zrozumieć zadanie,
-        wyjaśnić temat albo sprawdzić tok rozumowania.
+        Cześć! 🐨 Jestem Koala.ai, szkolną pomocą w nauce.
+        Mogę wyjaśnić temat prostym językiem, rozłożyć zadanie na kroki,
+        przygotować powtórkę albo sprawdzić Twoje rozumowanie.
       </div>
 
     </div>
@@ -1603,41 +1619,9 @@ html.auth-failed body>*:not(#authTransition){visibility:hidden!important}
 
       <textarea
         id="aiInput"
-        placeholder="Np. Wyjaśnij mi równania kwadratowe..."
+        placeholder="Napisz temat lub wklej zadanie, które chcesz zrozumieć…"
         onkeydown="handleAIKey(event)"
       ></textarea>
-
-      <button
-<div class="ai-input-area">
-
-  <input
-    id="aiImageInput"
-    type="file"
-    accept="image/*"
-    hidden
-    onchange="handleKoalaImage(event)"
-  >
-
-<div class="ai-input-area">
-
-  <input
-    id="aiImageInput"
-    type="file"
-    accept="image/*"
-    hidden
-    onchange="handleKoalaImage(event)"
-  >
-
-  <button
-    type="button"
-    class="button"
-    onclick="document.getElementById('aiImageInput').click()"
-  >
-    📷 Zdjęcie
-  </button>
-
-  <span id="aiImageName"></span>
-
 
   <button
     class="button ai-send"
@@ -4723,6 +4707,13 @@ function handleAIKey(event) {
 
   }
 
+}
+
+function setKoalaPrompt(prompt) {
+  const input = document.getElementById("aiInput");
+  if (!input) return;
+  input.value = prompt;
+  input.focus();
 }
 
 
