@@ -255,6 +255,86 @@ const knowledge = [
     example: "Do ważnych miast położonych nad Wisłą należą Kraków, Warszawa i Toruń.",
     related: "Wisła jest ważnym elementem geografii i historii Polski.",
     check: "Do jakiego morza uchodzi Wisła?"
+  },
+  {
+    title: "Równania liniowe",
+    keywords: ["równanie liniowe", "równania liniowe", "równanie z niewiadomą", "równania z x"],
+    aliases: ["równania", "równaniu", "niewiadoma"],
+    short: "Równanie to zapis, w którym dwie strony są równe. Rozwiązanie to taka wartość niewiadomej, która spełnia równość.",
+    explanation: "Aby rozwiązać równanie, wykonujemy te same działania po obu stronach, tak aby zostawić niewiadomą po jednej stronie, a liczby po drugiej.",
+    example: "W równaniu x + 5 = 12 odejmujemy 5 po obu stronach: x = 12 − 5, więc x = 7.",
+    related: "Po znalezieniu rozwiązania warto podstawić je do równania i sprawdzić, czy obie strony są równe.",
+    check: "Rozwiąż w pamięci: x + 5 = 12."
+  },
+  {
+    title: "Ułamki dziesiętne",
+    keywords: ["ułamek dziesiętny", "ułamki dziesiętne", "liczby dziesiętne", "przecinek dziesiętny"],
+    aliases: ["ułamka dziesiętnego", "ułamkach dziesiętnych"],
+    short: "Ułamek dziesiętny zapisuje część całości za pomocą cyfr po przecinku.",
+    explanation: "Pierwsza cyfra po przecinku oznacza części dziesiąte, druga — setne, a trzecia — tysięczne. Zera na końcu części dziesiętnej nie zmieniają wartości liczby.",
+    example: "0,5 to pięć dziesiątych, czyli tyle samo co 0,50 i jedna druga.",
+    related: "Ułamki dziesiętne można dodawać i odejmować, ustawiając przecinki jeden pod drugim.",
+    check: "Ile setnych oznacza liczba 0,25?"
+  },
+  {
+    title: "Podmiot i orzeczenie",
+    keywords: ["podmiot i orzeczenie", "podmiot", "orzeczenie", "części zdania"],
+    aliases: ["podmiotu", "orzeczenia", "podmiocie", "orzeczeniu"],
+    short: "Podmiot wskazuje, o kim lub o czym jest zdanie, a orzeczenie mówi, co podmiot robi lub co się z nim dzieje.",
+    explanation: "Podmiot najczęściej odpowiada na pytania „kto?” lub „co?”, a orzeczenie jest zwykle czasownikiem i odpowiada na pytania „co robi?” lub „co się z nim dzieje?”.",
+    example: "W zdaniu „Ania czyta książkę” podmiotem jest „Ania”, a orzeczeniem „czyta”.",
+    related: "Podmiot i orzeczenie tworzą główne części zdania.",
+    check: "W zdaniu „Ptaki śpiewają” wskaż podmiot i orzeczenie."
+  },
+  {
+    title: "Stany skupienia",
+    keywords: ["stany skupienia", "stan skupienia", "ciało stałe", "ciecz i gaz"],
+    aliases: ["stanie skupienia", "stanach skupienia"],
+    short: "Podstawowe stany skupienia materii to stan stały, ciekły i gazowy.",
+    explanation: "Ciało stałe zachowuje kształt i objętość. Ciecz zachowuje objętość, ale przyjmuje kształt naczynia. Gaz rozprzestrzenia się i wypełnia dostępną przestrzeń.",
+    example: "Lód jest ciałem stałym, woda w szklance jest cieczą, a para wodna jest gazem.",
+    related: "Ogrzewanie lub chłodzenie może powodować zmianę stanu skupienia.",
+    check: "Jaki stan skupienia ma woda w szklance?"
+  },
+  {
+    title: "Obieg wody w przyrodzie",
+    keywords: ["obieg wody", "cykl wody", "krążenie wody w przyrodzie"],
+    aliases: ["obiegu wody", "cyklu wody"],
+    short: "Woda nieustannie krąży między powierzchnią Ziemi, atmosferą i organizmami.",
+    explanation: "Słońce ogrzewa wodę, która paruje. Para wodna ochładza się i skrapla w chmurach. Potem woda spada jako opad i wraca do rzek, jezior, mórz oraz gleby.",
+    example: "Kałuża po deszczu paruje w ciepły dzień, a woda trafia do atmosfery.",
+    related: "Energia Słońca napędza obieg wody, a grawitacja pomaga opadom spływać ku niżej położonym miejscom.",
+    check: "Jak nazywa się zmiana ciekłej wody w parę wodną?"
+  },
+  {
+    title: "Układ krwionośny",
+    keywords: ["układ krwionośny", "uklad krazenia", "krążenie krwi", "serce i krew"],
+    aliases: ["układu krwionośnego", "krążenia"],
+    short: "Układ krwionośny transportuje krew, tlen, substancje odżywcze i produkty przemiany materii po organizmie.",
+    explanation: "Serce działa jak pompa. Krew płynie naczyniami krwionośnymi: tętnicami, żyłami i naczyniami włosowatymi.",
+    example: "Podczas wysiłku serce zwykle bije szybciej, aby sprawniej dostarczać tlen pracującym mięśniom.",
+    related: "Serce, krew i naczynia krwionośne współpracują, utrzymując transport substancji w ciele.",
+    check: "Jaką funkcję pełni serce w układzie krwionośnym?"
+  },
+  {
+    title: "Kontynenty i oceany",
+    keywords: ["kontynenty i oceany", "kontynenty", "oceany świata", "oceany swiata"],
+    aliases: ["kontynentów", "oceanów", "kontynencie"],
+    short: "Na Ziemi wyróżnia się siedem kontynentów i pięć oceanów.",
+    explanation: "Kontynenty to duże obszary lądowe. Oceany to rozległe słone zbiorniki wodne. Ich nazwy i podział pomagają opisywać mapę świata.",
+    example: "Europa jest jednym z kontynentów, a Ocean Atlantycki leży między Europą i Afryką a Amerykami.",
+    related: "W szkolnym podziale wyróżniamy kontynenty: Azję, Afrykę, Amerykę Północną, Amerykę Południową, Antarktydę, Europę i Australię.",
+    check: "Wymień dwa dowolne oceany."
+  },
+  {
+    title: "Epoki historyczne",
+    keywords: ["epoki historyczne", "podział dziejów", "prehistoria i historia"],
+    aliases: ["epok historycznych", "epokach historycznych"],
+    short: "Dzieje człowieka dzieli się na epoki, aby łatwiej porządkować wydarzenia i zmiany.",
+    explanation: "W szkolnym podziale historii wyróżnia się starożytność, średniowiecze, nowożytność i czasy współczesne. Prehistoria obejmuje dzieje przed wynalezieniem pisma.",
+    example: "Upadek zachodniego Cesarstwa Rzymskiego w 476 roku tradycyjnie przyjmuje się jako koniec starożytności.",
+    related: "Granice epok są umowne i pomagają porządkować przeszłość.",
+    check: "Jak nazywa się epoka między starożytnością a nowożytnością?"
   }
 ];
 
@@ -281,7 +361,15 @@ const teacherAnswerRules = {
   "Demokracja": { all: ["wybory"], hint: "Pomyśl, w jaki sposób obywatele wybierają swoich przedstawicieli." },
   "Pan Tadeusz": { all: ["adam", "mickiewicz"], hint: "Chodzi o polskiego poetę epoki romantyzmu." },
   "Druga wojna światowa": { all: ["1939"], hint: "Pomyśl o roku ataku Niemiec na Polskę." },
-  "Najdłuższa rzeka Polski": { any: ["baltyk", "baltyckiego"], hint: "Wisła uchodzi do morza na północy Polski." }
+  "Najdłuższa rzeka Polski": { any: ["baltyk", "baltyckiego"], hint: "Wisła uchodzi do morza na północy Polski." },
+  "Równania liniowe": { all: ["7"], hint: "Odejmij 5 po obu stronach równania x + 5 = 12." },
+  "Ułamki dziesiętne": { all: ["25", "setnych"], hint: "Cyfry po przecinku oznaczają kolejno części dziesiąte i setne." },
+  "Podmiot i orzeczenie": { all: ["ptaki", "spiewaja"], hint: "Podmiot odpowiada na pytanie „kto?”, a orzeczenie mówi, co robi." },
+  "Stany skupienia": { all: ["ciecz"], hint: "Woda w szklance przyjmuje kształt naczynia." },
+  "Obieg wody w przyrodzie": { all: ["parowanie"], hint: "Proces zaczyna się, gdy woda ogrzana przez Słońce zamienia się w parę." },
+  "Układ krwionośny": { all: ["pompa"], hint: "Ten narząd rytmicznie kurczy się i wprawia krew w ruch." },
+  "Kontynenty i oceany": { all: ["atlantycki"], hint: "Jeden z oceanów leży między Europą i Afryką a Amerykami." },
+  "Epoki historyczne": { all: ["sredniowiecze"], hint: "Ta epoka zaczyna się po starożytności." }
 };
 
 const STOPWORDS = new Set([
@@ -405,6 +493,8 @@ function getQuestionRoute(question, localAnswer = "", history = []) {
 
   const normalized = normalize(text);
   const topic = findKnowledge(text);
+  const equationAnswer = solveLinearEquation(text);
+  if (equationAnswer) return { kind: "math", shouldSearchWeb: false };
   const math = calculate(text) !== null;
   if (math) return { kind: "math", shouldSearchWeb: false };
 
@@ -712,6 +802,122 @@ function calculatePercent(input) {
   return `## 🐨 Procenty — wynik: ${formatNumber(result)}\n\n1. Zamieniamy procent na ułamek: ${formatNumber(percentage)}% = ${formatNumber(percentage / 100)}.\n2. Mnożymy przez całość: ${formatNumber(percentage / 100)} × ${formatNumber(whole)}.\n3. Otrzymujemy **${formatNumber(result)}**.\n\n💡 Procent oznacza jedną setną całości.`;
 }
 
+function solveLinearEquation(question) {
+  const text = normalize(question);
+  const equalsAt = text.indexOf("=");
+  if (equalsAt < 0 || text.indexOf("=", equalsAt + 1) >= 0) return null;
+
+  const leftMatch = text.slice(0, equalsAt).match(/([0-9x().+\-*/\s]+)$/);
+  const rightMatch = text.slice(equalsAt + 1).match(/^([0-9x().+\-*/\s]+)/);
+  if (!leftMatch || !rightMatch) return null;
+
+  let leftSource = leftMatch[1].trim().replace(/(\d|\))\s*(x|\()/g, "$1*$2").replace(/x\s*(\d|\()/g, "x*$1");
+  let rightSource = rightMatch[1].trim().replace(/(\d|\))\s*(x|\()/g, "$1*$2").replace(/x\s*(\d|\()/g, "x*$1");
+  if (!/[x]/.test(leftSource + rightSource)) return null;
+
+  function parseLinearExpression(source) {
+    const tokens = [];
+    const pattern = /\s*(\d+(?:\.\d+)?|x|[()+\-*/])\s*/gy;
+    let position = 0;
+    while (position < source.length) {
+      pattern.lastIndex = position;
+      const match = pattern.exec(source);
+      if (!match) throw new Error("Nieobsługiwany zapis równania.");
+      tokens.push(match[1]);
+      if (tokens.length > MAX_MATH_TOKENS) throw new Error("Równanie jest za długie.");
+      position = pattern.lastIndex;
+    }
+
+    let index = 0;
+    const add = (left, right) => ({ a: left.a + right.a, b: left.b + right.b });
+    const subtract = (left, right) => ({ a: left.a - right.a, b: left.b - right.b });
+
+    function primary() {
+      const token = tokens[index];
+      if (token === "(") {
+        index++;
+        const value = expression();
+        if (tokens[index] !== ")") throw new Error("Brak nawiasu zamykającego.");
+        index++;
+        return value;
+      }
+      if (token === "x") {
+        index++;
+        return { a: 1, b: 0 };
+      }
+      if (/^\d/.test(token || "")) {
+        index++;
+        return { a: 0, b: Number(token) };
+      }
+      throw new Error("Nieprawidłowy zapis równania.");
+    }
+
+    function unary() {
+      if (tokens[index] === "+") { index++; return unary(); }
+      if (tokens[index] === "-") {
+        index++;
+        const value = unary();
+        return { a: -value.a, b: -value.b };
+      }
+      return primary();
+    }
+
+    function multiplication() {
+      let value = unary();
+      while (["*", "/"].includes(tokens[index])) {
+        const operator = tokens[index++];
+        const next = unary();
+        if (operator === "/") {
+          if (next.a !== 0 || next.b === 0) throw new Error("Dzielenie musi być przez liczbę różną od zera.");
+          value = { a: value.a / next.b, b: value.b / next.b };
+        } else {
+          if (value.a !== 0 && next.a !== 0) throw new Error("To nie jest równanie liniowe.");
+          value = {
+            a: value.a * next.b + next.a * value.b,
+            b: value.b * next.b
+          };
+        }
+      }
+      return value;
+    }
+
+    function expression() {
+      let value = multiplication();
+      while (["+", "-"].includes(tokens[index])) {
+        const operator = tokens[index++];
+        const next = multiplication();
+        value = operator === "+" ? add(value, next) : subtract(value, next);
+      }
+      return value;
+    }
+
+    const result = expression();
+    if (index !== tokens.length || !Number.isFinite(result.a) || !Number.isFinite(result.b)) {
+      throw new Error("Nieprawidłowy zapis równania.");
+    }
+    return result;
+  }
+
+  try {
+    const left = parseLinearExpression(leftSource);
+    const right = parseLinearExpression(rightSource);
+    const coefficient = left.a - right.a;
+    const constant = right.b - left.b;
+
+    if (coefficient === 0) {
+      return constant === 0
+        ? "## 🐨 Równanie ma nieskończenie wiele rozwiązań\n\nPo uproszczeniu otrzymujemy prawdziwą równość, która zachodzi dla każdej wartości x."
+        : "## 🐨 Równanie nie ma rozwiązania\n\nPo uproszczeniu otrzymujemy sprzeczność, więc nie istnieje wartość x, która spełnia to równanie.";
+    }
+
+    const solution = constant / coefficient;
+    if (!Number.isFinite(solution)) return null;
+    return `## 🐨 Rozwiążmy równanie krok po kroku\n\n**Równanie:** ${leftSource} = ${rightSource}\n\n1. Zbieramy wyrazy z x po lewej, a liczby po prawej stronie.\n2. Po uproszczeniu otrzymujemy **${formatNumber(coefficient)}x = ${formatNumber(constant)}**.\n3. Dzielimy obie strony przez ${formatNumber(coefficient)}.\n\n**Rozwiązanie: x = ${formatNumber(solution)}**\n\n**Sprawdzenie:** po podstawieniu x = ${formatNumber(solution)} obie strony równania są równe.`;
+  } catch {
+    return null;
+  }
+}
+
 function calculate(input) {
   const expression = cleanMathExpression(input);
   if (!expression || expression.length > MAX_MATH_LENGTH) return null;
@@ -927,6 +1133,9 @@ export function answerQuestion(question, history = []) {
       const comparison = formatKnowledgeComparison(matches);
       if (comparison) return comparison;
     }
+
+    const equationAnswer = solveLinearEquation(text);
+    if (equationAnswer) return equationAnswer;
 
     // Tryb nauczyciela.
     const knowledgeItem = findKnowledge(text);
