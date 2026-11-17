@@ -102,6 +102,20 @@ const CRAWLER_SOURCES = [
     hints: ["edukacja", "szkoła", "lekcja", "nauka", "materiały"]
   },
   {
+    name: "e-podręczniki",
+    url: "https://epodreczniki.pl/",
+    category: "education",
+    trust: 9,
+    hints: ["podręcznik", "szkoła", "lekcja", "ćwiczenia", "nauka"]
+  },
+  {
+    name: "Khan Academy",
+    url: "https://pl.khanacademy.org/",
+    category: "education",
+    trust: 8,
+    hints: ["matematyka", "biologia", "chemia", "fizyka", "kurs"]
+  },
+  {
     name: "Gov.pl",
     url: "https://www.gov.pl/",
     category: "poland",
@@ -901,7 +915,7 @@ function selectCrawlerSources(question) {
   else if (science) categories = ["education", "science", "general"];
   else if (education) categories = ["education", "general"];
   else if (officialPoland) categories = ["poland", "news"];
-  else categories = ["general", "education"];
+  else categories = ["education", "general"];
 
   return CRAWLER_SOURCES
     .filter(source => categories.includes(source.category))
