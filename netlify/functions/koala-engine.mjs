@@ -845,7 +845,7 @@ function startTeacherLesson(item) {
 }
 
 function createLearningHint(topic) {
-  return `## 🐨 Zróbmy to razem\n\nNie mam jeszcze wystarczającej wiedzy zapisanej lokalnie o temacie **„${topic}”**. Nie chcę zgadywać.\n\nMożemy zacząć od definicji, prostego wyjaśnienia, przykładu i krótkiego ćwiczenia. Możesz też poprosić mnie o sprawdzenie tematu w dostępnych źródłach internetowych.`;
+  return `## 🐨 Zróbmy to razem\n\nNie mam jeszcze wystarczającej wiedzy zapisanej lokalnie o temacie **„${topic}”**. Nie chcę zgadywać.\n\nNapisz, z jakiego to przedmiotu i dla której klasy (IV–VIII), albo wklej fragment z podręcznika czy treść zadania. Wyjaśnię materiał prostym językiem, pokażę przykład i przygotuję krótkie ćwiczenie. Możesz też poprosić mnie o poszukanie materiałów w źródłach edukacyjnych.`;
 }
 
 export function classifyQuestion(question, localAnswer = "", history = []) {
@@ -881,7 +881,7 @@ export function answerQuestion(question, history = []) {
 
     // Krótkie rozmowy nigdy nie uruchamiają wyszukiwarki.
     if (isGreetingMessage(text)) {
-      return "## 🐨 Hej! Jestem Koala.ai.\n\nMogę pomóc Ci z matematyką, językiem polskim, przyrodą, historią i innymi szkolnymi tematami. Wyjaśnię zagadnienie, pokażę przykład albo przeprowadzę Cię przez zadanie krok po kroku.\n\n**Co dziś chcesz zrozumieć?**";
+      return "## 🐨 Hej! Jestem Koala.ai.\n\nPomagam w szkolnej nauce: z matematyki, języka polskiego, przyrody, historii i innych przedmiotów. Mogę wyjaśnić temat prostym językiem, pokazać przykład, zrobić krótką powtórkę albo poprowadzić Cię przez zadanie krok po kroku.\n\n**Co dziś chcesz zrozumieć?**";
     }
     if (isThanksMessage(text)) return "Nie ma za co! 🐨 Dobra robota. Możemy przejść do następnego pytania.";
     if (isSocialMessage(text)) {
