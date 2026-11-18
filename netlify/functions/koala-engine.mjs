@@ -1351,6 +1351,520 @@ addKnowledgeCards("Informatyka", [
   ["Pętla z warunkiem", "powtarzaj dopóki|while loop|pętla while", "Pętla z warunkiem powtarza instrukcje, dopóki określony warunek jest spełniony.", "Warunek powinien kiedyś przestać być prawdziwy, inaczej program może zapętlić się bez końca.", "Powtarzaj dodawanie 1, dopóki licznik jest mniejszy niż 5.", "Zmienianie wartości użytej w warunku pozwala kontrolować zakończenie pętli.", "Co może się stać, jeśli warunek pętli nigdy się nie zmieni?", "pętla nie będzie się kończyć|nieskończona pętla", "5-8"]
 ]);
 
+addKnowledgeCards("Fizyka", [
+  ["Droga a przemieszczenie", "dystans i przesunięcie|droga w ruchu", "Droga opisuje długość przebytej trasy, a przemieszczenie zmianę położenia od startu do końca.", "Droga zależy od całej trasy i jest nieujemna. Przemieszczenie ma kierunek i może być równe zero po powrocie do punktu startu.", "Okrążenie boiska to dodatnia droga, ale zerowe przemieszczenie, jeśli kończysz tam, gdzie zaczynasz.", "To rozróżnienie pomaga poprawnie opisywać ruch.", "Po pełnym okrążeniu toru wracasz na start. Czy przemieszczenie wynosi zero?", "tak", "6-8"],
+  ["Przyspieszenie", "zmiana prędkości w czasie|przyspieszenie ruchu", "Przyspieszenie opisuje, jak szybko zmienia się prędkość.", "Średnie przyspieszenie obliczamy jako zmianę prędkości podzieloną przez czas tej zmiany. Jednostką w układzie SI jest m/s².", "Jeśli prędkość wzrośnie o 6 m/s w 3 s, średnie przyspieszenie wynosi 2 m/s².", "Ujemna wartość może oznaczać zmniejszanie prędkości w przyjętym kierunku.", "Jaką jednostkę ma przyspieszenie?", "m/s2|metr na sekundę do kwadratu", "7-8"],
+  ["Bezwładność", "pierwsza zasada dynamiki|ciało zachowuje ruch", "Bezwładność to tendencja ciała do zachowania dotychczasowego stanu ruchu.", "Im większa masa ciała, tym trudniej zmienić jego prędkość. Zmiana ruchu wymaga niezrównoważonej siły.", "Podczas gwałtownego hamowania pasażer pochyla się do przodu, bo jego ciało zachowuje ruch.", "Pasy bezpieczeństwa pomagają zmienić ruch ciała w kontrolowany sposób.", "Dlaczego pasażer pochyla się do przodu przy hamowaniu?", "bezwładność|ciało zachowuje ruch", "7-8"],
+  ["Siła wypadkowa", "wypadkowa sił|siły działające na ciało", "Siła wypadkowa jest skutkiem wspólnego działania wszystkich sił na ciało.", "Siły o tym samym kierunku i zwrocie dodajemy, a o przeciwnych zwrotach odejmujemy ich wartości.", "Dwie siły 8 N w prawo i 3 N w lewo dają wypadkową 5 N w prawo.", "Gdy siła wypadkowa jest zerowa, prędkość ciała się nie zmienia.", "Jaką wypadkową dają siły 6 N i 6 N o przeciwnych zwrotach?", "0 N|zero", "7-8"],
+  ["Zasada akcji i reakcji", "trzecia zasada dynamiki Newtona|siły wzajemnego oddziaływania", "Gdy dwa ciała oddziałują na siebie, każde działa na drugie siłą o tej samej wartości i przeciwnym zwrocie.", "Siły akcji i reakcji działają na różne ciała, dlatego się nie równoważą.", "Podczas odbicia od ściany naciskasz ścianę, a ona działa na ciebie przeciwnie skierowaną siłą.", "Siły wzajemnego oddziaływania występują parami.", "Czy siła reakcji działa na to samo ciało co siła akcji?", "nie|na drugie ciało", "7-8"],
+  ["Siła wyporu", "wypór w cieczy i gazie|dlaczego przedmiot pływa", "Siła wyporu działa na ciało zanurzone w cieczy lub gazie i jest skierowana ku górze.", "Jej wartość zależy od gęstości płynu i objętości wypartego płynu.", "Łódź wypiera dużo wody, dlatego działa na nią duża siła wyporu.", "Porównanie siły wyporu z ciężarem pomaga wyjaśnić pływanie i tonięcie.", "W którą stronę działa siła wyporu?", "do góry|ku górze", "7-8"],
+  ["Ciepło a temperatura", "różnica między ciepłem i temperaturą|energia cieplna", "Temperatura opisuje stan cieplny, a ciepło to energia przekazywana między ciałami z powodu różnicy temperatur.", "Ciepło przepływa samorzutnie od cieplejszego ciała do chłodniejszego, aż zbliżą się do równowagi cieplnej.", "Łyżka w gorącej herbacie ogrzewa się, bo energia przepływa z herbaty do łyżki.", "Ciepło mierzymy w dżulach, a temperaturę między innymi w stopniach Celsjusza.", "Czy temperatura i ciepło oznaczają tę samą wielkość?", "nie", "6-8"],
+  ["Ciepło właściwe", "energia potrzebna do ogrzania substancji|ciepło właściwe wzór", "Ciepło właściwe określa, ile energii potrzeba, by ogrzać kilogram substancji o jeden kelwin.", "Wzór Q = m·c·ΔT łączy energię, masę, ciepło właściwe i zmianę temperatury.", "Do ogrzania 1 kg wody o 1°C potrzeba około 4200 J energii.", "Różne substancje nagrzewają się w różnym tempie przy tej samej energii.", "Co oznacza symbol c we wzorze Q = m·c·ΔT?", "ciepło właściwe", "8"],
+  ["Równowaga cieplna", "wyrównanie temperatury|temperatura końcowa po zmieszaniu", "Równowaga cieplna występuje, gdy ciała stykające się nie wymieniają już netto energii cieplnej.", "W izolowanym układzie energia oddana przez cieplejsze ciało przechodzi do chłodniejszego.", "Zimna łyżka pozostawiona w ciepłej wodzie po pewnym czasie ma temperaturę zbliżoną do wody.", "Izolacja spowalnia wymianę ciepła z otoczeniem.", "W którą stronę przepływa ciepło przed osiągnięciem równowagi?", "od cieplejszego do chłodniejszego", "7-8"],
+  ["Parcie cieczy", "ciśnienie hydrostatyczne|ciśnienie rośnie z głębokością", "Ciśnienie cieczy w spoczynku rośnie wraz z głębokością i gęstością cieczy.", "Wzrost ciśnienia wynika z ciężaru warstw cieczy znajdujących się wyżej.", "Na większej głębokości w basenie woda mocniej naciska na uszy.", "Zależność wykorzystuje się przy wyjaśnianiu działania tam i zbiorników.", "Gdzie ciśnienie w tej samej cieczy jest większe: płycej czy głębiej?", "głębiej", "7-8"],
+  ["Zasada Archimedesa", "prawo Archimedesa|siła wyporu równa ciężarowi wypartej cieczy", "Na ciało zanurzone w płynie działa siła wyporu równa ciężarowi płynu wypartego przez to ciało.", "Wynik zależy od objętości zanurzonej części ciała i gęstości płynu.", "Ciało wypierające 100 cm³ wody wypiera wodę o masie około 100 g.", "Zasada wyjaśnia, dlaczego statki mogą pływać.", "Ciężar czego odpowiada sile wyporu według zasady Archimedesa?", "wypartego płynu|wypartej cieczy", "8"],
+  ["Energia kinetyczna", "energia ruchu|energia ciała w ruchu", "Energia kinetyczna jest energią związaną z ruchem ciała.", "Zależy od masy i kwadratu prędkości: Eₖ = m·v²/2.", "Przy tej samej prędkości cięższy wózek ma większą energię kinetyczną.", "Podwojenie prędkości zwiększa energię kinetyczną czterokrotnie.", "Od jakich dwóch wielkości zależy energia kinetyczna?", "masy i prędkości", "8"],
+  ["Wahadło i okres drgań", "okres drgania wahadła|czas jednego drgania", "Okres drgań to czas jednego pełnego powtórzenia ruchu.", "Oznaczamy go literą T i mierzymy w sekundach. Dla małych wychyleń okres wahadła zależy głównie od jego długości i przyspieszenia grawitacyjnego.", "Jeżeli wahadło wykonuje 10 drgań w 20 s, jego okres wynosi 2 s.", "Liczba drgań w sekundzie to częstotliwość.", "Jak obliczyć okres, jeśli 10 drgań trwa 20 s?", "2 s|2 sekundy", "7-8"],
+  ["Częstotliwość drgań", "ile drgań na sekundę|częstotliwość f", "Częstotliwość mówi, ile pełnych drgań przypada na sekundę.", "Oznaczamy ją literą f, mierzymy w hercach i obliczamy jako odwrotność okresu: f = 1/T.", "Okres 0,5 s odpowiada częstotliwości 2 Hz.", "Większa częstotliwość dźwięku oznacza wyższy ton.", "Jaka jest jednostka częstotliwości?", "herc|hz", "7-8"],
+  ["Długość fali", "odległość między grzbietami fali|lambda fala", "Długość fali to odległość między najbliższymi punktami fali drgającymi w tej samej fazie.", "Oznaczamy ją grecką literą λ. Dla fali poruszającej się ze stałą prędkością λ = v/f.", "Przy prędkości 10 m/s i częstotliwości 2 Hz długość fali wynosi 5 m.", "Długość fali i częstotliwość opisują inne cechy tego samego ruchu falowego.", "Jaką literą oznacza się długość fali?", "lambda|λ", "8"],
+  ["Echo", "odbicie dźwięku od przeszkody|echo w górach", "Echo to dźwięk odbity od przeszkody i słyszany ponownie po krótkim czasie.", "Aby odróżnić echo od dźwięku bezpośredniego, odbicie musi dotrzeć z dostatecznym opóźnieniem.", "Krzyk odbity od odległej ściany może wrócić jako echo.", "Znając czas powrotu i prędkość dźwięku, można oszacować odległość do przeszkody.", "Od czego powstaje echo?", "od odbicia dźwięku|od przeszkody", "6-8"],
+  ["Moc prądu elektrycznego", "moc urządzenia elektrycznego|waty w urządzeniach", "Moc elektryczna opisuje tempo przekazywania energii elektrycznej.", "Dla odbiornika prądu stałego P = U·I. Moc podaje się w watach.", "Urządzenie przy 6 V i 2 A ma moc 12 W.", "Większa moc oznacza większy pobór energii w tym samym czasie.", "W jakiej jednostce podaje się moc elektryczną?", "wat|waty|w", "8"],
+  ["Energia elektryczna i kilowatogodzina", "rachunek za prąd|kwh energia elektryczna", "Zużyta energia zależy od mocy urządzenia i czasu jego pracy.", "E = P·t. Kilowatogodzina oznacza energię pobraną przez urządzenie o mocy 1 kW pracujące przez godzinę.", "Czajnik o mocy 2 kW pracujący 0,5 h zużyje 1 kWh energii.", "Kilowatogodzina jest jednostką energii, a nie mocy.", "Czy kWh jest jednostką energii czy mocy?", "energii", "7-8"],
+  ["Bezpiecznik elektryczny", "zabezpieczenie obwodu|bezpiecznik topikowy", "Bezpiecznik przerywa obwód, gdy płynie zbyt duży prąd.", "Ogranicza ryzyko przegrzania przewodów i pożaru. Nie wolno zastępować go drutem ani naprawiać instalacji pod napięciem.", "Przeciążony obwód może wyłączyć bezpiecznik.", "Urządzenia sieciowe naprawia wyłącznie osoba z odpowiednimi kwalifikacjami.", "Co robi bezpiecznik, gdy prąd jest zbyt duży?", "przerywa obwód|wyłącza obwód", "6-8"],
+  ["Obraz w zwierciadle płaskim", "odbicie w lustrze|lustro płaskie obraz", "Zwierciadło płaskie tworzy obraz pozorny, prosty i tej samej wielkości co przedmiot.", "Obraz wydaje się znajdować za lustrem w takiej samej odległości, w jakiej przedmiot znajduje się przed nim.", "Gdy stoisz 1 m od lustra, obraz pozornie znajduje się 1 m za jego powierzchnią.", "Promienie światła odbijają się zgodnie z prawem odbicia.", "Czy obraz w zwykłym płaskim lustrze jest rzeczywisty czy pozorny?", "pozorny", "7-8"],
+  ["Zaćmienie Słońca i Księżyca", "zaćmienie słońca|zaćmienie księżyca", "Zaćmienie powstaje, gdy ciała niebieskie ustawiają się tak, że jedno zasłania światło docierające do drugiego.", "Przy zaćmieniu Słońca Księżyc znajduje się między Ziemią a Słońcem. Przy zaćmieniu Księżyca Ziemia znajduje się między Słońcem a Księżycem.", "Podczas całkowitego zaćmienia Księżyca cień Ziemi pada na Księżyc.", "Zaćmienie Słońca można obserwować wyłącznie z użyciem właściwego, certyfikowanego filtra.", "Co znajduje się między Ziemią a Słońcem podczas zaćmienia Słońca?", "Księżyc", "6-8"]
+]);
+
+addKnowledgeCards("Fizyka", [
+  ["Ruch jednostajny prostoliniowy", "stała prędkość po prostej|ruch bez przyspieszenia", "W ruchu jednostajnym prostoliniowym ciało porusza się po linii prostej ze stałą prędkością.", "W równych odstępach czasu pokonuje równe drogi. Wypadkowa sił jest równa zeru.", "W 5 sekund ciało pokonuje po 2 m w każdej sekundzie: razem 10 m.", "Wykres drogi od czasu jest linią prostą.", "Czy prędkość zmienia się w ruchu jednostajnym?", "nie|jest stała", "6-8"],
+  ["Ruch jednostajnie przyspieszony", "stałe przyspieszenie|zmiana prędkości co sekundę", "W ruchu jednostajnie przyspieszonym prędkość zmienia się w równych odstępach czasu o taką samą wartość.", "Przyspieszenie jest stałe. Dla startu z bezruchu prędkość po czasie t wynosi v = a·t.", "Przy przyspieszeniu 2 m/s² prędkość rośnie o 2 m/s w każdej sekundzie.", "W ruchu opóźnionym wartość prędkości maleje.", "Co pozostaje stałe w ruchu jednostajnie przyspieszonym?", "przyspieszenie", "7-8"],
+  ["Grawitacja i ciężar", "siła ciężkości|ciężar ciała wzór", "Grawitacja przyciąga ciała mające masę, a ciężar jest siłą, z jaką ciało naciska na podparcie lub napina zawieszenie.", "W pobliżu powierzchni Ziemi wartość siły ciężkości obliczamy w przybliżeniu jako F = m·g.", "Dla 1 kg na Ziemi ciężar wynosi około 9,8 N, często zaokrąglane do 10 N.", "Masa i ciężar są różnymi wielkościami fizycznymi.", "W jakiej jednostce mierzymy ciężar jako siłę?", "niuton|n", "7-8"],
+  ["Siła sprężystości", "sprężyna wraca do kształtu|prawo Hooke'a", "Siła sprężystości pojawia się, gdy odkształcone ciało dąży do powrotu do wcześniejszego kształtu.", "Dla niewielkich odkształceń sprężyny siła jest proporcjonalna do jej wydłużenia.", "Rozciągnięta sprężyna ciągnie końce z powrotem ku sobie.", "Nie wolno przekraczać bezpiecznego zakresu odkształcenia materiału.", "W którą stronę działa siła sprężystości względem odkształcenia?", "przeciwnie|przeciwnie do odkształcenia", "7-8"],
+  ["Tarcie statyczne i kinetyczne", "tarcie podczas poślizgu|tarcie przed ruchem", "Tarcie przeciwdziała względnemu przesuwaniu się stykających powierzchni.", "Tarcie statyczne może zapobiec rozpoczęciu ruchu, a kinetyczne występuje podczas poślizgu.", "Tarcie między butem i podłożem pomaga chodzić.", "Tarcie może być pożyteczne, ale powoduje też zużycie i ogrzewanie.", "Który rodzaj tarcia działa, zanim przedmiot zacznie się ślizgać?", "tarcie statyczne", "6-8"],
+  ["Ciśnienie atmosferyczne", "nacisk powietrza|barometr", "Ciśnienie atmosferyczne wynika z nacisku powietrza otaczającego Ziemię.", "Mierzy się je barometrem. Wartość zmienia się między innymi z wysokością i pogodą.", "Na szczycie góry ciśnienie atmosferyczne jest zwykle niższe niż nad morzem.", "Powietrze ma masę i wywiera nacisk, choć zwykle go nie zauważamy.", "Jak nazywa się przyrząd do pomiaru ciśnienia atmosferycznego?", "barometr", "7-8"],
+  ["Rozszerzalność cieplna", "ciała zwiększają rozmiar przy ogrzewaniu|dylatacja", "Większość ciał zwiększa swoje wymiary podczas ogrzewania i zmniejsza je podczas ochładzania.", "Zmiana rozmiaru zależy od materiału, pierwotnego wymiaru i zmiany temperatury.", "Mosty mają szczeliny dylatacyjne, które pozwalają konstrukcji bezpiecznie zmieniać długość.", "Woda ma nietypowe zachowanie w pobliżu temperatury zamarzania.", "Po co w mostach pozostawia się szczeliny dylatacyjne?", "na rozszerzalność cieplną|zmiany długości", "7-8"],
+  ["Ciepło topnienia i parowania", "energia zmiany stanu skupienia|ciepło przemiany", "Podczas zmiany stanu skupienia czysta substancja może pobierać lub oddawać energię bez zmiany temperatury.", "Energia jest zużywana na zmianę uporządkowania i oddziaływań między drobinami.", "Lód topniejący w temperaturze 0°C pobiera energię, choć jego temperatura pozostaje wtedy bliska 0°C.", "Do odparowania potrzeba energii; skraplanie ją oddaje.", "Czy podczas topnienia lodu w temperaturze topnienia temperatura musi rosnąć?", "nie", "7-8"],
+  ["Współczynnik załamania światła", "światło zmienia kierunek w szkle|załamanie światła współczynnik", "Współczynnik załamania opisuje, jak światło zwalnia w ośrodku w porównaniu z próżnią.", "Dla ośrodka n = c/v, gdzie c to prędkość światła w próżni, a v w ośrodku.", "Światło biegnie wolniej w szkle niż w powietrzu, dlatego na granicy może zmienić kierunek.", "Zmiana kierunku zależy też od kąta padania i rodzaju ośrodków.", "Co opisuje współczynnik załamania?", "jak zmienia się prędkość światła w ośrodku", "8"],
+  ["Prawo odbicia światła", "kąt padania równy kątowi odbicia|promień odbity", "Prawo odbicia mówi, że kąt padania jest równy kątowi odbicia.", "Oba kąty mierzymy od prostej prostopadłej do powierzchni, czyli normalnej.", "Gładkie lustro odbija światło kierunkowo.", "Na chropowatej powierzchni promienie odbijają się w wielu kierunkach.", "Od jakiej linii mierzymy kąty padania i odbicia?", "od normalnej|od prostej prostopadłej", "6-8"],
+  ["Soczewka i ognisko", "punkt skupienia promieni|ogniskowa soczewki", "Ognisko soczewki skupiającej to punkt, w którym zbiegają się promienie biegnące równolegle do osi optycznej.", "Odległość ogniska od środka soczewki nazywamy ogniskową.", "Lupa skupia światło i może tworzyć powiększony obraz przedmiotu znajdującego się blisko.", "Nie wolno skupiać światła słonecznego na skórze ani materiale łatwopalnym.", "Jak nazywa się odległość ogniska od soczewki?", "ogniskowa", "7-8"],
+  ["Pole magnetyczne", "obszar działania magnesu|linie pola magnetycznego", "Pole magnetyczne to obszar, w którym działają siły magnetyczne.", "Umowny kierunek linii pola na zewnątrz magnesu biegnie od bieguna północnego do południowego.", "Opiłki żelaza układają się wzdłuż linii pola wokół magnesu.", "Linie pola nie przecinają się i są gęstsze tam, gdzie pole jest silniejsze.", "Od którego bieguna do którego biegną umowne linie pola na zewnątrz magnesu?", "od północnego do południowego", "7-8"],
+  ["Elektromagnes", "cewka z prądem i rdzeń|magnes zasilany prądem", "Elektromagnes wytwarza pole magnetyczne dzięki przepływowi prądu przez cewkę.", "Żelazny rdzeń wzmacnia pole, a po wyłączeniu prądu pole zwykle słabnie.", "Elektromagnesy działają w dzwonkach i niektórych urządzeniach dźwigowych.", "Siłę elektromagnesu można zmieniać między innymi przez zmianę prądu i liczby zwojów.", "Co wytwarza pole magnetyczne w cewce elektromagnesu?", "prąd elektryczny", "7-8"],
+  ["Przewodnik i izolator elektryczny", "materiał przewodzący prąd|izolacja elektryczna", "Przewodnik pozwala ładunkom elektrycznym przemieszczać się łatwiej niż izolator.", "Metale są zwykle dobrymi przewodnikami, a tworzywa sztuczne i suche drewno izolatorami.", "Metalowy przewód przewodzi prąd, a jego plastikowa osłona ogranicza ryzyko porażenia.", "Woda i zabrudzenia mogą zmienić bezpieczeństwo izolacji.", "Który materiał zwykle jest izolatorem: miedź czy plastik?", "plastik", "6-8"],
+  ["Ładunek elektryczny", "elektryzowanie przez tarcie|ładunek dodatni i ujemny", "Ładunek elektryczny jest właściwością materii odpowiedzialną za oddziaływania elektryczne.", "Wyróżniamy ładunki dodatnie i ujemne; ładunki jednoimienne się odpychają, a różnoimienne przyciągają.", "Potarty balon może przyciągać lekkie skrawki papieru.", "Ładunek całkowity układu izolowanego jest zachowany.", "Jak zachowują się dwa ładunki jednoimienne?", "odpychają się", "7-8"],
+  ["Energia w obwodzie szeregowym i równoległym", "różnica połączenia szeregowego i równoległego", "W obwodzie szeregowym elementy są połączone jeden za drugim, a w równoległym każda gałąź tworzy osobną drogę dla prądu.", "Przerwanie jedynej drogi w obwodzie szeregowym wyłącza wszystkie odbiorniki; w równoległym pozostałe gałęzie mogą nadal działać.", "Domowe lampy zwykle łączy się równolegle, aby działały niezależnie.", "Schemat obwodu pozwala odczytać drogi przepływu prądu.", "W którym połączeniu odbiorniki mają osobne gałęzie?", "równoległym", "7-8"],
+  ["Wolt jako jednostka napięcia", "jednostka napięcia elektrycznego|symbol V", "Wolt (V) jest jednostką napięcia elektrycznego.", "Napięcie opisuje różnicę potencjałów między punktami obwodu.", "Bateria AA ma napięcie nominalne około 1,5 V.", "Napięcie samo w sobie nie określa natężenia bez znajomości obwodu.", "Jakim symbolem oznacza się wolt?", "V", "6-8"],
+  ["Amper jako jednostka natężenia", "jednostka prądu elektrycznego|symbol A", "Amper (A) jest jednostką natężenia prądu elektrycznego.", "Natężenie mówi, jaki ładunek przepływa przez przekrój przewodnika w jednostce czasu.", "Prąd o natężeniu 2 A przenosi ładunek 2 C w każdej sekundzie.", "Natężenie mierzy się amperomierzem włączonym szeregowo.", "Jakim symbolem oznacza się amper?", "A", "7-8"],
+  ["Om jako jednostka oporu", "jednostka rezystancji|symbol omega", "Om (Ω) jest jednostką oporu elektrycznego.", "Opór opisuje, jak bardzo element ogranicza przepływ prądu.", "Wartość 10 Ω oznacza opór dziesięciu omów.", "W prostym obwodzie omowym R = U/I.", "Jak nazywa się jednostka oporu?", "om|omega", "8"],
+  ["Dżul jako jednostka energii", "jednostka pracy i energii|symbol J", "Dżul (J) jest jednostką energii i pracy w układzie SI.", "Jeden dżul pracy wykonuje siła 1 N przesuwająca ciało o 1 m w swoim kierunku.", "Podniesienie małego przedmiotu wymaga wykonania pracy i przekazania mu energii.", "Energia może zmieniać postać, ale w układzie izolowanym jest zachowana.", "Jakim symbolem oznacza się dżul?", "J", "6-8"],
+  ["Wat jako jednostka mocy", "jednostka mocy|symbol W", "Wat (W) jest jednostką mocy, czyli szybkości wykonywania pracy lub przekazywania energii.", "Jeden wat odpowiada jednemu dżulowi na sekundę.", "Urządzenie o mocy 60 W przekazuje 60 J energii w ciągu sekundy.", "Wata nie należy mylić z watogodziną, jednostką energii.", "Ile dżuli na sekundę odpowiada jednemu watowi?", "jeden", "6-8"],
+  ["Herc jako jednostka częstotliwości", "jednostka drgań na sekundę|symbol Hz", "Herc (Hz) jest jednostką częstotliwości.", "Jeden herc oznacza jedno pełne powtórzenie zjawiska w ciągu sekundy.", "Częstotliwość 5 Hz oznacza pięć drgań w sekundzie.", "Wysokość tonu dźwięku zależy od częstotliwości drgań źródła.", "Ile drgań na sekundę oznacza 1 Hz?", "jedno", "6-8"]
+]);
+
+addKnowledgeCards("Chemia", [
+  ["Model cząsteczkowy materii", "z czego zbudowana jest substancja|cząsteczki są w ruchu", "Substancje składają się z drobin, które są w ciągłym ruchu.", "Odległości i ruch drobin pomagają wyjaśniać właściwości ciał oraz różnice między stanami skupienia.", "Zapach perfum rozchodzi się po pokoju, bo drobiny poruszają się i mieszają z powietrzem.", "Model drobinowy łączy obserwacje makroskopowe z budową materii.", "Czy drobiny substancji w gazie pozostają nieruchome?", "nie", "7-8"],
+  ["Izotopy", "atomy tego samego pierwiastka różne neutrony|izotop atomu", "Izotopy to atomy tego samego pierwiastka o tej samej liczbie protonów, ale różnej liczbie neutronów.", "Mają ten sam numer atomowy, lecz różną liczbę masową.", "Węgiel-12 i węgiel-14 to izotopy węgla.", "Niektóre izotopy są trwałe, a inne promieniotwórcze.", "Czym różnią się izotopy jednego pierwiastka?", "liczbą neutronów", "8"],
+  ["Izomery i odmiany alotropowe", "odmiany alotropowe pierwiastka|diament i grafit", "Odmiany alotropowe to różne formy tego samego pierwiastka w tym samym stanie skupienia.", "Ich atomy są połączone lub uporządkowane w odmienny sposób, dlatego mogą mieć różne właściwości.", "Diament i grafit są odmianami alotropowymi węgla.", "Różnica w budowie może silnie zmienić twardość i przewodnictwo.", "Podaj dwie odmiany alotropowe węgla.", "diament i grafit", "8"],
+  ["Współczynnik stechiometryczny", "liczba przed wzorem w równaniu|uzgadnianie równania reakcji", "Współczynnik stechiometryczny pokazuje liczbę cząsteczek lub jednostek substancji w równaniu reakcji.", "Uzgadniając równanie, zmieniamy współczynniki przed wzorami, a nie indeksy we wzorach.", "2H₂ + O₂ → 2H₂O ma współczynniki 2, 1 i 2.", "Liczba atomów każdego pierwiastka musi być taka sama po obu stronach równania.", "Czy przy uzgadnianiu zmieniamy indeks we wzorze wody?", "nie", "8"],
+  ["Reakcja syntezy", "reakcja łączenia|synteza chemiczna", "Synteza to reakcja, w której z kilku substratów powstaje jeden produkt.", "Ogólny zapis ma postać A + B → AB.", "Wodór i tlen mogą reagować, tworząc wodę.", "Liczba atomów każdego pierwiastka nadal musi się zgadzać po obu stronach równania.", "Ile produktów powstaje w typowej reakcji syntezy?", "jeden", "7-8"],
+  ["Reakcja rozkładu", "analiza chemiczna|rozkład związku na prostsze substancje", "Rozkład to reakcja, w której jedna substancja rozpada się na dwie lub więcej prostszych substancji.", "Ogólny schemat można zapisać jako AB → A + B.", "Pod wpływem ogrzewania niektóre związki rozkładają się na prostsze produkty.", "Do rozkładu może być potrzebna energia, na przykład ciepło lub światło.", "Ile substratów występuje zwykle w reakcji rozkładu?", "jeden", "7-8"],
+  ["Reakcja wymiany", "reakcja podstawienia|wymiana składników reakcji", "W reakcji wymiany składniki dwóch substancji zamieniają się partnerami.", "W uproszczonym schemacie AB + CD → AD + CB; rzeczywisty przebieg zależy od reagujących substancji.", "Reakcje kwasów z zasadami są przykładem szczególnej reakcji wymiany.", "Trzeba sprawdzić, czy produkty rzeczywiście mogą powstać w danym układzie.", "Co dzieje się ze składnikami w reakcji wymiany?", "zamieniają się partnerami|wymieniają się", "8"],
+  ["Stężenie procentowe roztworu", "obliczanie procentów roztworu|ile substancji w roztworze", "Stężenie procentowe mówi, ile gramów substancji rozpuszczonej przypada na 100 g roztworu.", "Obliczamy je jako masę substancji podzieloną przez masę roztworu i pomnożoną przez 100%.", "10 g soli w 100 g roztworu daje stężenie 10%.", "Masa roztworu to masa substancji rozpuszczonej i rozpuszczalnika razem.", "Ile gramów substancji jest w 100 g roztworu 5-procentowego?", "5 g", "8"],
+  ["Roztwór nasycony", "nasycenie roztworu|czy można rozpuścić więcej substancji", "Roztwór nasycony zawiera maksymalną ilość substancji, która może rozpuścić się w danych warunkach.", "Rozpuszczalność zależy od substancji, temperatury i czasem ciśnienia.", "Gdy do nasyconej wody dosypiesz więcej soli, część może pozostać na dnie.", "Zmiana temperatury może zmienić rozpuszczalność wielu substancji.", "Czy w nasyconym roztworze można bez końca rozpuszczać więcej substancji?", "nie", "7-8"],
+  ["Kwasy i zasady w roztworach", "odczyn kwasowy i zasadowy|kwas a zasada", "Roztwory kwasów mają odczyn kwasowy, a roztwory zasad — zasadowy.", "Odczyn sprawdzamy wskaźnikiem lub pH-metrem; nigdy nie rozpoznajemy substancji przez próbowanie.", "Sok z cytryny ma odczyn kwasowy, a roztwór mydła zwykle zasadowy.", "Pojęcie mocnego kwasu ma ścisłe znaczenie chemiczne i nie oznacza po prostu stężonego roztworu.", "Jak bezpiecznie sprawdza się odczyn roztworu w pracowni?", "wskaźnikiem|papierkiem wskaźnikowym", "7-8"],
+  ["Tlenki", "związek pierwiastka z tlenem|tlenek chemia", "Tlenki to związki chemiczne tlenu z innym pierwiastkiem.", "Wzór tlenku zależy od składu związku i wartościowości lub ładunków łączących się atomów.", "Dwutlenek węgla CO₂ jest tlenkiem węgla.", "Niektóre tlenki reagują z wodą, tworząc kwasy lub zasady.", "Z jakim pierwiastkiem połączony jest tlen w CO₂?", "węglem", "7-8"],
+  ["Wodorotlenki", "zasady i wodorotlenki|grupa OH", "Wodorotlenki zawierają kation metalu i grupę wodorotlenową OH.", "Nie każdy wodorotlenek dobrze rozpuszcza się w wodzie. Rozpuszczalne wodorotlenki tworzą zasady.", "Wodorotlenek sodu zapisujemy NaOH.", "Nie wolno dotykać ani mieszać odczynników bez polecenia i nadzoru nauczyciela.", "Jaki wzór ma wodorotlenek sodu?", "NaOH", "7-8"],
+  ["Sole", "sól chemiczna|kation i anion soli", "Sole to związki zbudowane z kationów metalu lub amonu oraz anionów reszty kwasowej.", "Wiele soli powstaje podczas reakcji kwasu z zasadą, ale istnieją też inne drogi ich otrzymywania.", "Chlorek sodu ma wzór NaCl.", "Sól kuchenna to tylko jeden przykład dużej grupy związków.", "Jaki wzór ma chlorek sodu?", "NaCl", "8"],
+  ["Węglowodory", "związki węgla i wodoru|alkany alkeny alkiny", "Węglowodory to związki chemiczne zbudowane wyłącznie z węgla i wodoru.", "Należą do nich między innymi alkany, alkeny i alkiny, które różnią się typem wiązań.", "Metan CH₄ jest najprostszym alkanem.", "Wiele węglowodorów jest palnych; pracę z nimi prowadzi się zgodnie z zasadami bezpieczeństwa.", "Z jakich pierwiastków zbudowane są węglowodory?", "węgla i wodoru", "8"],
+  ["Spalanie całkowite i niecałkowite", "niedobór tlenu przy spalaniu|tlenek węgla czad", "Spalanie całkowite zachodzi przy dostatecznej ilości tlenu, a niecałkowite przy jego niedoborze.", "Produkty zależą od reagenta i warunków; przy niecałkowitym spalaniu węgla może powstać trujący tlenek węgla.", "Nieprawidłowy dopływ powietrza do pieca może zwiększać ryzyko powstania czadu.", "Czad jest bezbarwny i bezwonny; w razie alarmu należy opuścić miejsce i wezwać pomoc.", "Jaki niebezpieczny gaz może powstać przy niecałkowitym spalaniu węgla?", "tlenek węgla|czad", "8"],
+  ["Korozja żelaza", "rdzewienie|jak powstaje rdza", "Korozja to stopniowe niszczenie materiału wskutek reakcji ze środowiskiem.", "Żelazo koroduje szczególnie łatwo w obecności wody i tlenu; sól może przyspieszać ten proces.", "Farba lub powłoka ochronna ogranicza dostęp wody i tlenu do żelaza.", "Ochrona przed korozją wydłuża trwałość mostów, pojazdów i narzędzi.", "Jak można ograniczyć rdzewienie żelaza?", "pokryć warstwą ochronną|odizolować od wody i tlenu", "7-8"],
+  ["Gazy cieplarniane", "dwutlenek węgla metan klimat|efekt cieplarniany", "Gazy cieplarniane pochłaniają i emitują promieniowanie podczerwone, wpływając na bilans energii Ziemi.", "Do gazów cieplarnianych należą między innymi para wodna, dwutlenek węgla, metan i podtlenek azotu.", "Spalanie paliw kopalnych zwiększa stężenie dwutlenku węgla w atmosferze.", "Naturalny efekt cieplarniany umożliwia życie; jego wzmacnianie przez człowieka zmienia klimat.", "Podaj jeden gaz cieplarniany.", "dwutlenek węgla|metan|para wodna", "7-8"],
+  ["Zasady bezpieczeństwa w pracowni chemicznej", "piktogramy chemiczne|bezpieczne doświadczenie", "Bezpieczna praca z chemikaliami wymaga stosowania poleceń nauczyciela, ochrony oczu i właściwego postępowania z odczynnikami.", "Nie próbuj substancji, nie wąchaj ich bezpośrednio i nie mieszaj nieznanych preparatów.", "Rozlany odczynnik zgłasza się nauczycielowi zamiast samodzielnie go wycierać.", "Piktogramy ostrzegawcze informują o konkretnym rodzaju zagrożenia.", "Co zrobisz, jeśli nieznana substancja rozleje się na stanowisku?", "powiem nauczycielowi|zgłoszę nauczycielowi", "4-8"]
+]);
+
+addKnowledgeCards("Fizyka", [
+  ["Układ odniesienia", "względność ruchu|względem czego ciało się porusza", "Ruch opisujemy względem wybranego układu odniesienia, na przykład drogi, budynku albo jadącego pojazdu.", "To samo ciało może spoczywać względem jednego obiektu i poruszać się względem innego.", "Pasażer siedzi nieruchomo względem autobusu, ale przemieszcza się względem przystanku.", "Zanim nazwiesz ciało poruszającym się, określ punkt odniesienia.", "Czy pasażer autobusu porusza się względem siedzenia?", "nie|spoczywa względem siedzenia", "5-8"],
+  ["Tor ruchu", "trajektoria ciała|kształt drogi ruchu", "Tor ruchu to linia, po której porusza się ciało.", "Tor może być prostoliniowy lub krzywoliniowy; droga jest długością przebytej części toru.", "Piłka kopnięta po łuku porusza się po torze krzywoliniowym.", "Kształt toru zależy od ruchu i przyjętego układu odniesienia.", "Jaki tor ma ciało poruszające się po prostej?", "prostoliniowy|po linii prostej", "5-8"],
+  ["Prędkość a szybkość", "różnica prędkości i szybkości|kierunek ruchu", "Szybkość mówi, jak szybko ciało pokonuje drogę, a prędkość w fizyce może uwzględniać także kierunek ruchu.", "W prostych zadaniach szkolnych często obliczamy wartość prędkości ze wzoru v = s/t.", "Samochód jadący 50 km/h na północ i 50 km/h na południe ma taką samą szybkość, lecz inny kierunek prędkości.", "Wielkość z kierunkiem nazywamy wektorową.", "Co odróżnia prędkość wektorową od samej szybkości?", "kierunek|kierunek ruchu", "7-8"],
+  ["Średnia prędkość całej podróży", "średnia prędkość z kilku odcinków|łączna droga i czas", "Średnią prędkość z całej podróży liczymy, dzieląc łączną drogę przez łączny czas.", "Nie dodajemy po prostu prędkości z poszczególnych odcinków; trzeba uwzględnić, ile czasu trwał każdy odcinek.", "Jeśli 60 km zajęło 1 h, a kolejne 60 km 2 h, średnia wynosi 120 km ÷ 3 h = 40 km/h.", "Postój wliczamy do czasu, jeśli pytanie dotyczy całej podróży.", "Co dzielimy przez całkowity czas, aby znaleźć średnią prędkość?", "całkowitą drogę|łączną drogę", "7-8"],
+  ["Wykres drogi od czasu w fizyce", "wykres s(t)|nachylenie wykresu ruchu", "Wykres drogi od czasu pokazuje, jak zmienia się położenie lub droga wraz z czasem.", "Linia pozioma oznacza brak zmiany położenia; większe nachylenie w prostym ruchu oznacza większą szybkość.", "Jeśli w 2 s droga rośnie o 6 m, szybkość na tym odcinku wynosi 3 m/s.", "Zawsze odczytaj skalę i jednostki obu osi.", "Co oznacza poziomy wykres drogi od czasu?", "spoczynek|brak zmiany położenia", "6-8"],
+  ["Przeliczanie km/h na m/s", "zamiana kilometrów na godzinę na metry na sekundę|jednostki prędkości", "Aby zamienić km/h na m/s, dzielimy wartość przez 3,6; w drugą stronę mnożymy przez 3,6.", "Wynika to z tego, że 1 km = 1000 m, a 1 h = 3600 s.", "36 km/h = 10 m/s, bo 36 ÷ 3,6 = 10.", "W zadaniu porównuj prędkości zapisane w tych samych jednostkach.", "Ile m/s to 72 km/h?", "20 m/s|20", "6-8"],
+  ["Masa i ciężar ciała", "masa a siła ciężkości|kilogram a niuton", "Masa opisuje ilość materii i jest podawana w kilogramach, a ciężar jest siłą grawitacji działającą na ciało i mierzy się go w niutonach.", "W szkolnych zadaniach blisko powierzchni Ziemi ciężar można oszacować jako Fg = m·g, gdzie g ≈ 10 N/kg.", "Ciało o masie 2 kg ma na Ziemi ciężar około 20 N.", "Masa nie zmienia się przy przeniesieniu na Księżyc, ale ciężar tam jest mniejszy.", "W jakiej jednostce mierzymy ciężar jako siłę?", "niuton|n", "7-8"],
+  ["Ciśnienie jako siła na powierzchnię", "wzór na ciśnienie|p równa się F przez S", "Ciśnienie określa, jak duża siła naciska na jednostkę powierzchni.", "Obliczamy je ze wzoru p = F/S; jednostką jest paskal, czyli N/m².", "Tę samą siłę łatwiej wywierać na miękkie podłoże ostrym końcem, bo mniejsza powierzchnia daje większe ciśnienie.", "Przed podstawieniem sprawdź, czy siła jest w niutonach, a powierzchnia w metrach kwadratowych.", "Jak zmieni się ciśnienie, gdy ta sama siła działa na mniejszą powierzchnię?", "wzrośnie|będzie większe", "7-8"],
+  ["Barometr i manometr", "przyrząd do pomiaru ciśnienia|pomiar ciśnienia gazu", "Barometr służy do pomiaru ciśnienia atmosferycznego, a manometr mierzy ciśnienie gazu lub cieczy w układzie.", "Wynik pomiaru zapisujemy razem z jednostką, na przykład paskalem lub hektopaskalem.", "Prognozy pogody często podają ciśnienie atmosferyczne w hPa.", "Przyrząd trzeba odczytać zgodnie z jego skalą.", "Który przyrząd mierzy ciśnienie atmosferyczne?", "barometr", "6-8"],
+  ["Prawo Pascala i urządzenia hydrauliczne", "prasa hydrauliczna|ciśnienie w cieczy zamkniętej", "Zmiana ciśnienia wywierana na ciecz zamkniętą rozchodzi się w niej we wszystkich kierunkach.", "W urządzeniu hydraulicznym mała siła na małym tłoku może równoważyć większą siłę na większym tłoku, kosztem większej drogi ruchu.", "Podnośnik hydrauliczny wykorzystuje ciśnienie przekazywane przez ciecz.", "Urządzenie nie tworzy energii; zamienia siłę i drogę jej działania.", "Co przenosi nacisk między tłokami w układzie hydraulicznym?", "ciecz|ciśnienie cieczy", "8"],
+  ["Warunek pływania ciała", "kiedy przedmiot pływa|siła wyporu i ciężar", "Ciało pływa, gdy siła wyporu może równoważyć jego ciężar.", "O zachowaniu ciała decyduje też jego średnia gęstość w porównaniu z gęstością płynu.", "Statek z pustymi przestrzeniami ma średnią gęstość mniejszą niż gęstość wody, choć jest zbudowany z metalu.", "Kształt i objętość wypartej wody wpływają na siłę wyporu.", "Jakie dwie siły równoważą się, gdy ciało spokojnie pływa?", "siła wyporu i ciężar", "7-8"],
+  ["Praca mechaniczna a siła", "kiedy siła wykonuje pracę|wzór praca siła droga", "W fizyce praca jest wykonywana, gdy siła powoduje przesunięcie ciała w kierunku swojego działania.", "Dla stałej siły w tym samym kierunku W = F·s; pracę mierzymy w dżulach.", "Siła 5 N przesuwająca pudełko o 2 m wykonuje pracę 10 J.", "Samo trzymanie ciężkiej torby nieruchomo nie oznacza pracy mechanicznej w tym sensie.", "Jaka praca powstaje, gdy siła 4 N przesuwa przedmiot o 3 m?", "12 J|12 dżuli", "7-8"],
+  ["Sprawność urządzenia", "sprawność energetyczna|energia użyteczna i dostarczona", "Sprawność mówi, jaka część dostarczonej energii staje się energią użyteczną.", "Obliczamy ją jako energię użyteczną podzieloną przez dostarczoną i mnożymy przez 100%.", "Jeśli z 100 J energii 80 J staje się użyteczne, sprawność wynosi 80%.", "Pozostała energia najczęściej rozprasza się, na przykład jako ciepło lub dźwięk.", "Czy sprawność rzeczywistego urządzenia może przekroczyć 100%?", "nie", "8"],
+  ["Zasada zachowania energii", "energia nie ginie|przemiana energii", "Energia nie znika ani nie powstaje z niczego; może zmieniać formę i być przekazywana między ciałami.", "W rzeczywistych procesach część energii użytecznej często rozprasza się do otoczenia, na przykład w postaci ciepła.", "Podczas spadania energia potencjalna grawitacji zmienia się głównie w kinetyczną.", "W opisie układu uwzględnij wszystkie formy energii i wymianę z otoczeniem.", "Czy energia może samoczynnie zniknąć?", "nie|zmienia formę", "7-8"],
+  ["Izolacja cieplna", "jak ograniczyć utratę ciepła|izolator cieplny", "Izolacja cieplna spowalnia przekazywanie energii między ciałem a otoczeniem.", "Powietrze uwięzione w materiale, na przykład w wełnie lub piance, słabo przewodzi ciepło.", "Termos ma warstwy ograniczające przewodzenie, konwekcję i promieniowanie.", "Izolacja spowalnia wymianę, ale zwykle nie zatrzymuje jej całkowicie.", "Dlaczego puchowa kurtka pomaga utrzymać ciepło?", "zatrzymuje warstwę powietrza|ogranicza utratę ciepła", "4-8"],
+  ["Parowanie a chłodzenie", "dlaczego pot chłodzi|parowanie zabiera energię", "Podczas parowania najbardziej energetyczne drobiny opuszczają ciecz, dlatego pozostała ciecz i jej otoczenie mogą się ochładzać.", "Szybkość parowania rośnie między innymi przy większej powierzchni, ruchu powietrza i wyższej temperaturze.", "Mokra skóra chłodzi się, gdy woda z niej paruje.", "Parowanie zachodzi także poniżej temperatury wrzenia.", "Dlaczego mokra skóra może się ochładzać?", "woda paruje i pobiera energię|parowanie", "7-8"],
+  ["Elektromierz i zużycie energii", "licznik energii elektrycznej|zużycie prądu w domu", "Licznik energii elektrycznej rejestruje energię pobraną przez instalację, zwykle w kilowatogodzinach.", "Koszt zależy od zużytej energii i stawki za jednostkę; sama moc urządzenia nie mówi jeszcze, ile energii zużyje.", "Urządzenie 1 kW działające przez 2 h zużywa 2 kWh.", "Energia elektryczna to moc pomnożona przez czas pracy.", "W jakiej jednostce domowy licznik zwykle podaje zużytą energię?", "kilowatogodzinie|kwh", "6-8"],
+  ["Amperomierz w obwodzie", "jak podłączyć amperomierz|pomiar natężenia prądu", "Amperomierz mierzy natężenie prądu i włącza się go szeregowo z elementem, przez który płynie mierzony prąd.", "W szkolnych doświadczeniach stosuj właściwy zakres miernika i wykonuj pomiary pod nadzorem nauczyciela.", "Aby zmierzyć prąd przez żarówkę, amperomierz włączamy w ten sam szeregowy tor obwodu.", "Nie podłączaj miernika bezpośrednio do gniazdka ani źródła sieciowego.", "Jak włącza się amperomierz względem badanego odbiornika?", "szeregowo", "7-8"],
+  ["Woltomierz w obwodzie", "jak podłączyć woltomierz|pomiar napięcia", "Woltomierz mierzy napięcie między dwoma punktami i podłącza się go równolegle do badanego elementu.", "Przed pomiarem wybierz właściwy rodzaj i zakres napięcia na mierniku.", "Aby zmierzyć napięcie żarówki, końcówki woltomierza przykładamy do jej dwóch zacisków.", "Pomiary wykonuj na bezpiecznych zestawach szkolnych, zgodnie z poleceniami nauczyciela.", "Jak podłączamy woltomierz do żarówki?", "równolegle", "7-8"],
+  ["Zwarcie elektryczne", "co to jest zwarcie|nadmierny prąd w obwodzie", "Zwarcie powstaje, gdy prąd otrzymuje drogę o bardzo małym oporze, omijając zwykły odbiornik.", "Może wtedy popłynąć bardzo duży prąd, który nagrzewa przewody i stwarza ryzyko pożaru.", "Uszkodzona izolacja przewodów może doprowadzić do zwarcia.", "Zabezpieczenia instalacji powinny odłączyć obwód; nie wolno samodzielnie naprawiać przewodów pod napięciem.", "Dlaczego zwarcie może być niebezpieczne?", "może popłynąć bardzo duży prąd|przewody mogą się przegrzać", "7-8"],
+  ["Uziemienie i bezpieczeństwo instalacji", "przewód ochronny|po co jest uziemienie", "Uziemienie i przewód ochronny pomagają odprowadzić niebezpieczny prąd w razie uszkodzenia urządzenia.", "Instalacje sieciowe wymagają właściwych zabezpieczeń i pracy osób z kwalifikacjami.", "Metalowa obudowa urządzenia z uszkodzoną izolacją może znaleźć się pod napięciem; nie dotykaj jej i zgłoś problem dorosłemu.", "Nie otwieraj gniazdek ani urządzeń zasilanych z sieci.", "Komu zgłosisz uszkodzone urządzenie elektryczne?", "dorosłemu|nauczycielowi|opiekunowi", "6-8"],
+  ["Elektryzowanie przez tarcie", "ładunki elektryczne przez pocieranie|naelektryzowany balon", "Podczas pocierania niektóre materiały mogą wymieniać elektrony i uzyskać ładunki elektryczne.", "Ładunki jednoimienne się odpychają, a różnoimienne przyciągają.", "Potarty balon może przyciągać drobne skrawki papieru.", "Ładunek nie powstaje z niczego — przenosi się między ciałami.", "Jak zachowują się ładunki różnoimienne?", "przyciągają się", "6-8"],
+  ["Linie pola magnetycznego", "jak rysujemy pole magnesu|linie pola magnetycznego", "Linie pola magnetycznego umownie pokazują kierunek i względną siłę pola.", "Poza magnesem biegną od bieguna północnego do południowego; nie przecinają się.", "Opilki żelaza wokół magnesu układają się w charakterystyczny wzór pola.", "Rysunek pola jest modelem, a linie nie są fizycznymi nitkami.", "Czy linie pola magnetycznego mogą się przecinać?", "nie", "7-8"],
+  ["Co wzmacnia elektromagnes", "jak zwiększyć siłę elektromagnesu|zwoje i rdzeń", "Elektromagnes powstaje, gdy prąd płynie przez zwojnicę; jego działanie można zmieniać.", "Większa liczba zwojów i żelazny rdzeń zwykle wzmacniają pole w prostym szkolnym elektromagnesie.", "Włączony elektromagnes może przyciągać spinacze, a po wyłączeniu jego działanie słabnie.", "Doświadczenia wykonuj przy bezpiecznym, niskim napięciu i nie zwieraj źródła.", "Podaj jeden sposób na zwiększenie pola elektromagnesu.", "zwiększyć liczbę zwojów|dodać żelazny rdzeń", "7-8"],
+  ["Dźwięk potrzebuje ośrodka", "czy dźwięk rozchodzi się w próżni|fale dźwiękowe", "Dźwięk jest falą mechaniczną, która rozchodzi się dzięki drganiom cząstek ośrodka.", "Może rozchodzić się w gazach, cieczach i ciałach stałych, ale nie w próżni.", "W kosmosie nie usłyszymy bezpośrednio wybuchu, bo między ciałami nie ma powietrza przenoszącego dźwięk.", "Cząstki przekazują drgania dalej; same nie muszą przebywać całej drogi fali.", "Czy dźwięk rozchodzi się w próżni?", "nie", "6-8"],
+  ["Amplituda i głośność dźwięku", "co wpływa na głośność dźwięku|amplituda fali", "Większa amplituda drgań fali dźwiękowej zwykle oznacza głośniejszy dźwięk.", "Głośność odczuwana przez człowieka zależy także od częstotliwości i wrażliwości słuchu.", "Mocniejsze uderzenie w bęben powoduje większe drgania jego membrany.", "Wysokość tonu zależy głównie od częstotliwości, a nie od amplitudy.", "Co zwykle zwiększa amplituda fali dźwiękowej?", "głośność", "6-8"],
+  ["Rozszczepienie światła białego", "tęcza pryzmat kolory światła|widmo światła", "Światło białe składa się z wielu barw, które mogą się rozdzielić podczas załamania.", "Krople wody i pryzmat załamują różne barwy pod nieco innymi kątami.", "Tęcza powstaje, gdy światło Słońca załamuje się i odbija w kroplach wody.", "Kolory widma przechodzą płynnie jeden w drugi.", "Z jakich barw składa się światło białe?", "z wielu barw|z widma", "6-8"],
+  ["Cień i półcień", "jak powstaje cień|przeszkoda zasłania światło", "Cień powstaje, gdy nieprzezroczyste ciało blokuje światło docierające do powierzchni.", "Przy większym źródle światła lub kilku źródłach może powstać też półcień, do którego dociera część światła.", "Drzewo rzuca cień, bo jego korona zasłania część promieni słonecznych.", "Kształt cienia zależy od źródła światła, przeszkody i ekranu.", "Co musi znaleźć się na drodze światła, by powstał cień?", "nieprzezroczysta przeszkoda", "4-8"],
+  ["Fazy Księżyca", "dlaczego Księżyc zmienia kształt|nów i pełnia", "Fazy Księżyca wynikają ze zmiany widocznej z Ziemi części jego oświetlonej półkuli.", "Księżyc nie świeci własnym światłem widzialnym; odbija światło Słońca.", "W pełni widzimy prawie całą oświetloną tarczę, a podczas nowiu jej ciemną stronę.", "Fazy nie są skutkiem cienia Ziemi; jej cień powoduje zaćmienie Księżyca.", "Co oświetla Księżyc?", "Słońce|światło Słońca", "5-8"],
+  ["Ruch obrotowy Ziemi i dzień", "dlaczego jest dzień i noc|obrót Ziemi", "Ziemia obraca się wokół własnej osi, a ta część jej powierzchni, która jest zwrócona ku Słońcu, ma dzień.", "Pełny obrót trwa około doby; obrót Ziemi wyjaśnia pozorną wędrówkę Słońca po niebie.", "Gdy w Polsce jest dzień, po przeciwnej stronie Ziemi może być noc.", "Dzień i noc nie wynikają z obiegania Słońca.", "Jaki ruch Ziemi powoduje następowanie dnia i nocy?", "ruch obrotowy|obrót wokół osi", "5-8"],
+  ["Ruch obiegowy Ziemi i pory roku", "dlaczego są pory roku|nachylenie osi Ziemi", "Pory roku wynikają z obiegu Ziemi wokół Słońca oraz nachylenia osi Ziemi.", "Nachylenie sprawia, że w różnych porach roku półkule otrzymują różną ilość światła i ciepła.", "Gdy półkula północna jest nachylona ku Słońcu, ma lato, a południowa wtedy zimę.", "Pory roku nie wynikają głównie ze zmiany odległości Ziemi od Słońca.", "Co oprócz obiegu Ziemi wokół Słońca jest ważne dla pór roku?", "nachylenie osi Ziemi", "6-8"],
+  ["Planeta a gwiazda", "różnica między gwiazdą i planetą", "Gwiazda świeci dzięki energii powstającej w jej wnętrzu, a planeta krąży wokół gwiazdy i zwykle świeci odbitym światłem.", "Słońce jest gwiazdą, a Ziemia planetą Układu Słonecznego.", "Planeta może wyglądać jasno na niebie, bo odbija światło Słońca.", "Obserwowany blask nie oznacza, że obiekt sam wytwarza światło.", "Który obiekt Układu Słonecznego jest gwiazdą?", "Słońce", "4-8"]
+]);
+
+addKnowledgeCards("Chemia", [
+  ["Zmiana fizyczna a chemiczna", "różnica przemiany fizycznej i chemicznej|czy powstała nowa substancja", "Zmiana fizyczna zmienia stan, kształt lub rozdrobnienie substancji, a zmiana chemiczna prowadzi do powstania innych substancji.", "Samo rozpuszczenie lub stopienie nie zawsze oznacza reakcję chemiczną; szukaj dowodów powstania nowych produktów.", "Topnienie lodu jest zmianą fizyczną, a rdzewienie żelaza chemiczną.", "Zmiana barwy lub wydzielanie gazu może być wskazówką, ale należy ocenić cały przebieg.", "Czy topnienie lodu tworzy nową substancję?", "nie", "4-8"],
+  ["Substraty i produkty reakcji", "co jest substratem a co produktem|lewa i prawa strona równania", "Substraty to substancje wyjściowe, które reagują, a produkty to substancje powstałe w reakcji.", "W zapisie równania substraty stoją po lewej stronie strzałki, a produkty po prawej.", "W 2H₂ + O₂ → 2H₂O wodór i tlen są substratami, a woda produktem.", "Strzałka oznacza kierunek przemiany, nie znak równości liczby cząsteczek.", "Po której stronie strzałki zapisuje się produkty?", "po prawej", "7-8"],
+  ["Uzgadnianie równania reakcji", "bilansowanie równań chemicznych|dobieranie współczynników", "Równanie reakcji uzgadniamy tak, aby po obu stronach była taka sama liczba atomów każdego pierwiastka.", "Zmieniamy współczynniki przed wzorami, a nigdy indeksy w samym wzorze substancji.", "2H₂ + O₂ → 2H₂O ma po obu stronach 4 atomy wodoru i 2 atomy tlenu.", "Po uzgodnieniu policz atomy każdego pierwiastka ponownie.", "Co zmieniamy podczas uzgadniania równania: współczynnik czy indeks we wzorze?", "współczynnik", "8"],
+  ["Najczęstsze wzory kwasów", "wzory kwasu solnego siarkowego azotowego", "W szkolnych przykładach często spotyka się kwas chlorowodorowy HCl, siarkowy(VI) H₂SO₄, azotowy(V) HNO₃ i węglowy H₂CO₃.", "Wzór pokazuje rodzaj i liczbę atomów w cząsteczce; nazwy i stopnie utlenienia poznaje się stopniowo.", "HCl zawiera wodór i chlor, a H₂SO₄ — wodór, siarkę i tlen.", "Nie próbuj ani nie dotykaj kwasów laboratoryjnych; pracuj tylko według poleceń nauczyciela.", "Jaki wzór ma kwas siarkowy(VI)?", "H2SO4|H₂SO₄", "8"],
+  ["Kwas a zasada", "jak odróżnić kwas od zasady|odczyn kwasowy zasadowy", "Kwas i zasada to różne grupy substancji; ich roztwory mogą mieć odczyn odpowiednio kwasowy lub zasadowy.", "Odczyn określa się wskaźnikiem lub pH-metrem, nigdy przez smakowanie.", "Sok cytrynowy ma odczyn kwasowy, a roztwór mydła zwykle zasadowy.", "Właściwości zależą od konkretnej substancji i stężenia roztworu.", "Jak bezpiecznie sprawdzić, czy roztwór ma odczyn kwasowy?", "wskaźnikiem|papierkiem wskaźnikowym|ph-metrem", "7-8"],
+  ["Jak odczytać skalę pH", "pH poniżej 7 powyżej 7|odczyn obojętny", "W uproszczonym szkolnym ujęciu pH poniżej 7 wskazuje odczyn kwasowy, pH 7 obojętny, a powyżej 7 zasadowy.", "Skala pH jest logarytmiczna, więc różnica jednej jednostki oznacza dziesięciokrotną zmianę stężenia jonów wodorowych.", "Roztwór o pH 3 jest bardziej kwasowy niż roztwór o pH 5.", "Wynik dotyczy roztworu w określonych warunkach i temperaturze.", "Jaki odczyn ma roztwór o pH 9?", "zasadowy", "7-8"],
+  ["Fenoloftaleina i papierek wskaźnikowy", "kolory wskaźników chemicznych|jak używać wskaźnika", "Wskaźniki zmieniają barwę zależnie od odczynu roztworu.", "Papierek uniwersalny porównuje się ze skalą barw, a fenoloftaleina przyjmuje malinową barwę w roztworze zasadowym.", "Papierek można zwilżyć badaną próbką zgodnie z instrukcją doświadczenia.", "Kolor interpretuje się z legendą konkretnego wskaźnika; nie wszystkie wskaźniki działają tak samo.", "W jakim odczynie fenoloftaleina staje się malinowa?", "zasadowym", "7-8"],
+  ["Reakcja egzotermiczna i endotermiczna", "reakcja oddaje lub pobiera ciepło|energia reakcji", "Reakcja egzotermiczna przekazuje energię do otoczenia, a endotermiczna pobiera ją z otoczenia.", "O zmianie energii można wnioskować między innymi z kontrolowanego pomiaru temperatury.", "Spalanie jest zwykle reakcją egzotermiczną, a niektóre rozkłady wymagają stałego ogrzewania.", "Nie oceniaj reakcji przez dotykanie naczynia; stosuj bezpieczny pomiar i nadzór.", "Czy reakcja egzotermiczna oddaje czy pobiera energię z otoczenia?", "oddaje|przekazuje", "8"],
+  ["Wykrywanie tlenu w doświadczeniu", "jak wykryć tlen|żarzące łuczywo", "Tlen podtrzymuje spalanie, dlatego w doświadczeniu szkolnym jego obecność sprawdza się odpowiednią metodą pod nadzorem nauczyciela.", "Żarzące się łuczywo może ponownie się rozpalić w atmosferze bogatszej w tlen.", "Tlen sam nie jest paliwem, ale umożliwia intensywniejsze spalanie wielu substancji.", "Doświadczenia z ogniem i gazami wykonuje wyłącznie nauczyciel lub klasa pod jego bezpośrednim nadzorem.", "Czy tlen jest paliwem?", "nie|podtrzymuje spalanie", "7-8"],
+  ["Wykrywanie dwutlenku węgla", "próba z wodą wapienną|jak rozpoznać co2", "Dwutlenek węgla można rozpoznać w szkolnym doświadczeniu między innymi po zmętnieniu wody wapiennej.", "Reakcja tworzy trudno rozpuszczalny węglan wapnia, który powoduje mleczne zmętnienie.", "CO₂ powstaje między innymi podczas oddychania i spalania węgla w tlenie.", "Nie wdychaj gazów z doświadczeń; przeprowadzaj je tylko według instrukcji i pod nadzorem.", "Jaki widoczny efekt może dać CO₂ w wodzie wapiennej?", "zmętnienie|mętna woda", "8"],
+  ["Stop metali", "co to jest stop|brąz mosiądz stal", "Stop to materiał złożony z co najmniej dwóch składników, z których przynajmniej jeden jest metalem.", "Skład stopu dobiera się, by uzyskać użyteczne właściwości, takie jak większa twardość lub odporność na korozję.", "Stal jest stopem na bazie żelaza i węgla, a mosiądz zawiera miedź i cynk.", "Stop jest mieszaniną, a nie pojedynczym pierwiastkiem.", "Z jakich głównych składników powstaje mosiądz?", "miedzi i cynku", "7-8"],
+  ["Woda jako rozpuszczalnik", "co rozpuszcza woda|substancje rozpuszczalne i nierozpuszczalne", "Woda dobrze rozpuszcza wiele substancji polarnych i jonowych, ale nie rozpuszcza wszystkiego.", "Rozpuszczanie tworzy mieszaninę jednorodną; olej i woda po wymieszaniu tworzą osobne warstwy.", "Sól kuchenna rozpuszcza się w wodzie, a piasek pozostaje widoczny.", "Mieszanina jednorodna nie oznacza, że substancja zniknęła.", "Czy każda substancja rozpuszcza się w wodzie?", "nie", "4-8"],
+  ["Filtracja a destylacja", "jak rozdzielić mieszaniny|różnica filtracji destylacji", "Filtracja zatrzymuje nierozpuszczalne cząstki, a destylacja wykorzystuje różnice temperatur wrzenia i skraplanie pary.", "Metodę dobieramy do właściwości składników mieszaniny.", "Piasek oddzielimy od wody filtrem, a czystą wodę z roztworu soli można otrzymać przez destylację.", "Sama filtracja nie usuwa rozpuszczonej soli z wody.", "Która metoda oddzieli piasek od wody?", "filtracja", "6-8"],
+  ["Metale przewodzą ciepło i prąd", "właściwości metali|przewodnictwo metali", "Wiele metali dobrze przewodzi prąd i ciepło, a także można je formować.", "Przewodnictwo wynika z budowy metalu; różne metale mają różne właściwości i zastosowania.", "Miedź wykorzystuje się w przewodach, a aluminium w lekkich konstrukcjach.", "Nie każdy srebrzysty materiał jest metalem i nie każdy metal jest bezpieczny w każdej sytuacji.", "Dlaczego miedź stosuje się w przewodach elektrycznych?", "dobrze przewodzi prąd", "6-8"],
+  ["Grupa i okres w układzie okresowym", "wiersz i kolumna układu okresowego", "Okres to poziomy wiersz układu okresowego, a grupa to pionowa kolumna.", "Położenie pierwiastka pomaga porządkować informacje o jego budowie i podobieństwie właściwości.", "Lit i sód znajdują się w tej samej grupie i mają podobne niektóre właściwości chemiczne.", "Samo położenie nie zastępuje znajomości szczegółów reakcji.", "Jak nazywa się pionowa kolumna układu okresowego?", "grupa", "7-8"],
+  ["Elektrony walencyjne", "elektrony na zewnętrznej powłoce|wartościowość", "Elektrony walencyjne znajdują się na zewnętrznej powłoce atomu i uczestniczą w tworzeniu wiązań.", "W prostych modelach szkolnych pomagają przewidywać, jak atomy łączą się w związki.", "Atom sodu łatwo oddaje jeden elektron, tworząc jon Na⁺.", "Pełniejszy opis wiązań wymaga modelu elektronowego, a nie tylko reguły oktetu.", "Które elektrony atomu biorą udział w tworzeniu wiązań?", "walencyjne", "8"],
+  ["Polimery i tworzywa sztuczne", "czym są polimery|plastik recykling", "Polimery to bardzo duże cząsteczki zbudowane z powtarzających się fragmentów; wiele tworzyw sztucznych jest polimerami.", "Różne tworzywa mają różne właściwości i oznaczenia, dlatego segreguje się je zgodnie z lokalnymi zasadami.", "Polietylen stosuje się między innymi w opakowaniach, a nylon w włóknach.", "Ograniczanie jednorazowych produktów i poprawne sortowanie zmniejsza ilość odpadów.", "Z jakich powtarzających się elementów zbudowany jest polimer?", "fragmentów|jednostek", "7-8"],
+  ["Substancje organiczne w życiu codziennym", "chemia organiczna w jedzeniu|cukry tłuszcze białka", "Wiele substancji zawierających węgiel spotykamy w żywności, paliwach, lekach i materiałach.", "Cukry, tłuszcze i białka są przykładami ważnych związków organicznych; nie każdy związek węgla zalicza się jednak do organicznych.", "Glukoza jest cukrem o wzorze C₆H₁₂O₆.", "Nazwa „organiczny” w chemii nie oznacza automatycznie, że produkt jest naturalny lub zdrowy.", "Podaj jeden przykład grupy związków organicznych w żywności.", "cukry|tłuszcze|białka", "7-8"]
+]);
+
+const PERIODIC_ELEMENTS_PL = [
+  ["wodór", "H"], ["hel", "He"], ["lit", "Li"], ["beryl", "Be"], ["bor", "B"], ["węgiel", "C"], ["azot", "N"], ["tlen", "O"], ["fluor", "F"], ["neon", "Ne"],
+  ["sód", "Na"], ["magnez", "Mg"], ["glin", "Al"], ["krzem", "Si"], ["fosfor", "P"], ["siarka", "S"], ["chlor", "Cl"], ["argon", "Ar"], ["potas", "K"], ["wapń", "Ca"],
+  ["skand", "Sc"], ["tytan", "Ti"], ["wanad", "V"], ["chrom", "Cr"], ["mangan", "Mn"], ["żelazo", "Fe"], ["kobalt", "Co"], ["nikiel", "Ni"], ["miedź", "Cu"], ["cynk", "Zn"],
+  ["gal", "Ga"], ["german", "Ge"], ["arsen", "As"], ["selen", "Se"], ["brom", "Br"], ["krypton", "Kr"], ["rubid", "Rb"], ["stront", "Sr"], ["itr", "Y"], ["cyrkon", "Zr"],
+  ["niob", "Nb"], ["molibden", "Mo"], ["technet", "Tc"], ["ruten", "Ru"], ["rod", "Rh"], ["pallad", "Pd"], ["srebro", "Ag"], ["kadm", "Cd"], ["ind", "In"], ["cyna", "Sn"],
+  ["antymon", "Sb"], ["tellur", "Te"], ["jod", "I"], ["ksenon", "Xe"], ["cez", "Cs"], ["bar", "Ba"], ["lantan", "La"], ["cer", "Ce"], ["prazeodym", "Pr"], ["neodym", "Nd"],
+  ["promet", "Pm"], ["samar", "Sm"], ["europ", "Eu"], ["gadolin", "Gd"], ["terb", "Tb"], ["dysproz", "Dy"], ["holm", "Ho"], ["erb", "Er"], ["tul", "Tm"], ["iterb", "Yb"],
+  ["lutet", "Lu"], ["hafn", "Hf"], ["tantal", "Ta"], ["wolfram", "W"], ["ren", "Re"], ["osm", "Os"], ["iryd", "Ir"], ["platyna", "Pt"], ["złoto", "Au"], ["rtęć", "Hg"],
+  ["tal", "Tl"], ["ołów", "Pb"], ["bizmut", "Bi"], ["polon", "Po"], ["astat", "At"], ["radon", "Rn"], ["frans", "Fr"], ["rad", "Ra"], ["aktyn", "Ac"], ["tor", "Th"],
+  ["protaktyn", "Pa"], ["uran", "U"], ["neptun", "Np"], ["pluton", "Pu"], ["ameryk", "Am"], ["kiur", "Cm"], ["berkel", "Bk"], ["kaliforn", "Cf"], ["einstein", "Es"], ["ferm", "Fm"],
+  ["mendelew", "Md"], ["nobel", "No"], ["lorens", "Lr"], ["rutherford", "Rf"], ["dubn", "Db"], ["seaborg", "Sg"], ["bohr", "Bh"], ["has", "Hs"], ["meitner", "Mt"], ["darmsztadt", "Ds"],
+  ["roentgen", "Rg"], ["kopernik", "Cn"], ["nihon", "Nh"], ["flerow", "Fl"], ["moskow", "Mc"], ["liwermor", "Lv"], ["tenes", "Ts"], ["oganeson", "Og"]
+];
+
+for (const [index, [name, symbol]] of PERIODIC_ELEMENTS_PL.entries()) {
+  const atomicNumber = index + 1;
+  knowledge.push({
+    title: `${name[0].toLocaleUpperCase("pl-PL")}${name.slice(1)} (${symbol})`,
+    subject: "Chemia",
+    grades: [7, 8],
+    educationStage: "VII–VIII",
+    keywords: [name, `${name} pierwiastek`, `pierwiastek ${name}`, `symbol ${symbol}`, `liczba atomowa ${atomicNumber}`, symbol],
+    aliases: [`${symbol} — ${name}`, `atom ${name}`, `numer atomowy ${atomicNumber}`],
+    short: `${name[0].toLocaleUpperCase("pl-PL")}${name.slice(1)} ma symbol ${symbol} i liczbę atomową ${atomicNumber}.`,
+    explanation: `Liczba atomowa ${atomicNumber} oznacza, że jądro każdego atomu ${name} ma ${atomicNumber} protonów. W obojętnym atomie jest też ${atomicNumber} elektronów.`,
+    example: `Zapis ${symbol} oznacza pierwiastek ${name}; w jego jądrze znajduje się ${atomicNumber} protonów.`,
+    related: "Symbol pierwiastka jest umownym zapisem literowym, a jego pierwsza litera jest wielka.",
+    check: `Jaki jest symbol ${name} i ile protonów ma jego atom?`,
+    teacherAnswer: { all: [[symbol], [String(atomicNumber)]], hint: `Symbol to ${symbol}, a liczba atomowa to ${atomicNumber}.` }
+  });
+}
+
+const LITERATURE_CATALOG = new Map();
+
+function registerLiteratureList(version, role, grades, entries) {
+  for (const line of entries.trim().split("\n")) {
+    const separator = line.indexOf("|");
+    if (separator < 0) continue;
+    const author = line.slice(0, separator).trim();
+    const title = line.slice(separator + 1).trim();
+    if (!title) continue;
+    const key = normalize(title);
+    const item = LITERATURE_CATALOG.get(key) || { title, author, roles: [] };
+    if (!item.author || item.author.includes("lub")) item.author = author;
+    item.roles.push({ version, role, grades });
+    LITERATURE_CATALOG.set(key, item);
+  }
+}
+
+registerLiteratureList("2017", "required", [4, 5, 6], `
+Jan Brzechwa|Akademia Pana Kleksa
+Janusz Christa|Kajko i Kokosz. Szkoła latania
+René Goscinny i Jean-Jacques Sempé|Mikołajek — wybór opowiadań
+Rafał Kosik|Felix, Net i Nika oraz Gang Niewidzialnych Ludzi
+Ignacy Krasicki|Wybrane bajki
+C.S. Lewis|Opowieści z Narnii. Lew, czarownica i stara szafa
+Adam Mickiewicz|Powrót taty i Pani Twardowska
+Adam Mickiewicz|Pan Tadeusz — wybrane fragmenty
+Ferenc Molnár|Chłopcy z Placu Broni
+Bolesław Prus|Katarynka
+Juliusz Słowacki|W pamiętniku Zofii Bobrówny
+J.R.R. Tolkien|Hobbit, czyli tam i z powrotem
+Henryk Sienkiewicz|W pustyni i w puszczy
+Józef Wybicki|Mazurek Dąbrowskiego
+Autorzy różni|Wybrane mity greckie
+Autorzy różni|Biblia — stworzenie świata i wybrane przypowieści
+Autorzy różni|Wybrane podania i legendy polskie
+Autorzy różni|Wybrane baśnie polskie i europejskie
+Autorzy różni|Wybrane wiersze i pieśni patriotyczne`);
+
+registerLiteratureList("2017", "required", [7, 8], `
+Charles Dickens|Opowieść wigilijna
+Aleksander Fredro|Zemsta
+Jan Kochanowski|Wybór fraszek, pieśni i trenów
+Aleksander Kamiński|Kamienie na szaniec
+Ignacy Krasicki|Żona modna
+Adam Mickiewicz|Dziady część II
+Adam Mickiewicz|Reduta Ordona i Śmierć Pułkownika
+Adam Mickiewicz|Świtezianka i wybrany Sonet krymski
+Adam Mickiewicz|Pan Tadeusz — całość
+Antoine de Saint-Exupéry|Mały Książę
+Henryk Sienkiewicz|Quo vadis
+Henryk Sienkiewicz|Latarnik
+Juliusz Słowacki|Balladyna
+Stefan Żeromski|Syzyfowe prace
+Sławomir Mrożek|Artysta
+Melchior Wańkowicz|Ziele na kraterze — fragmenty
+Melchior Wańkowicz|Tędy i owędy — wybrany reportaż
+Autorzy różni|Wybrane wiersze poetów dla klas VII–VIII`);
+
+registerLiteratureList("2017", "choice", [4, 5, 6], `
+Adam Bahdaj|Kapelusz za 100 tysięcy
+Frances Hodgson Burnett|Tajemniczy ogród lub inna powieść
+Lewis Carroll|Alicja w Krainie Czarów
+Aleksander Dumas|Trzej muszkieterowie
+Olaf Fritsche|Skarb Troi
+Rudyard Kipling|Księga dżungli
+Janusz Korczak|Król Maciuś Pierwszy
+Marcin Kozioł|Skrzynia Władcy Piorunów
+Selma Lagerlöf|Cudowna podróż
+Stanisław Lem|Cyberiada — fragmenty
+Kornel Makuszyński|Wybrana powieść
+Andrzej Maleszka|Magiczne drzewo
+Karol May|Winnetou
+Lucy Maud Montgomery|Ania z Zielonego Wzgórza
+Małgorzata Musierowicz|Wybrana powieść
+Ewa Nowak|Pajączek na rowerze
+Edmund Niziurski|Sposób na Alcybiadesa
+Sat-Okh|Biały Mustang
+Henryk Sienkiewicz|Janko Muzykant
+Alfred Szklarski|Wybrana powieść
+Mark Twain|Przygody Tomka Sawyera
+Autorzy różni|Seria Nazywam się… — wybrana pozycja`);
+
+registerLiteratureList("2017", "choice", [7, 8], `
+Miron Białoszewski|Pamiętnik z powstania warszawskiego — fragmenty
+Agatha Christie|Wybrana powieść kryminalna
+Arkady Fiedler|Dywizjon 303
+Ernest Hemingway|Stary człowiek i morze
+Barbara Kosmowska|Pozłacana rybka
+Jan Paweł II|Przekroczyć próg nadziei — fragmenty
+Nancy H. Kleinbaum|Stowarzyszenie Umarłych Poetów
+Henryk Sienkiewicz|Krzyżacy
+Éric-Emmanuel Schmitt|Oskar i pani Róża
+Melchior Wańkowicz|Monte Cassino — fragmenty
+Karolina Lanckorońska|Wspomnienia wojenne 22 IX 1939–5 IV 1945 — fragmenty`);
+
+registerLiteratureList("2026", "required", [4, 5, 6, 7, 8], `
+Jan Kochanowski|Tren VII i Tren VIII oraz wybrane fraszki
+Ignacy Krasicki|Wybrane bajki
+Adam Mickiewicz|Dziady część II
+Adam Mickiewicz|Reduta Ordona
+Adam Mickiewicz|Śmierć pułkownika
+Adam Mickiewicz|Pan Tadeusz — Inwokacja
+Adam Mickiewicz|Wybrana ballada
+Juliusz Słowacki|Balladyna
+Bolesław Prus lub Henryk Sienkiewicz|Wybrana nowela
+Aleksander Kamiński|Kamienie na szaniec
+Sławomir Mrożek|Wybrane opowiadanie lub jednoaktówka
+Ida Fink|Wybrane opowiadanie
+Autorzy różni|Wybrane wiersze poetów wskazanych w podstawie 2026`);
+
+registerLiteratureList("2026", "choice", [4, 5, 6, 7, 8], `
+Adam Bahdaj|Do przerwy 0:1 lub inna powieść
+Justyna Bednarek|Dom numer 5
+Paweł Beręsewicz|Wszystkie lajki Marczuka lub Szeptane
+Miron Białoszewski|Pamiętnik z powstania warszawskiego — fragmenty
+Karol Olgierd Borchardt|Znaczy Kapitan
+Frances Hodgson Burnett|Tajemniczy ogród
+Lewis Carroll|Alicja w Krainie Czarów
+Marine Carteron|Wybrana powieść z serii Podpalacze książek
+Joanna Chmielewska|Nawiedzony dom lub Zwyczajne życie
+Agatha Christie|Wybrana powieść kryminalna
+Carlo Collodi|Pinokio
+Sarah Crossan|Kasieńka
+Charles Dickens|Opowieść wigilijna
+Lloyd Cassel Douglas|Wielki Rybak
+Jacek Dukaj|Wroniec
+Aleksander Dumas|Trzej muszkieterowie
+Michael Ende|Momo lub Niekończąca się historia
+John Flanagan|Wybrana powieść z cyklu Zwiadowcy
+Aleksander Fredro|Zemsta lub Śluby panieńskie
+Olaf Fritsche|Skarb Troi
+Ernest Hemingway|Stary człowiek i morze
+Roksana Jędrzejewska-Wróbel|Stan splątania
+Grzegorz Kasdepke|Wybrana powieść
+Jacqueline Kelly|Ewolucja według Calpurnii Tate
+Emilia Kiereś|Rzeka
+Rudyard Kipling|Księga dżungli
+Nancy H. Kleinbaum|Stowarzyszenie umarłych poetów
+Janusz Korczak|Król Maciuś Pierwszy lub Bankructwo małego Dżeka
+Rafał Kosik|Felix, Net i Nika oraz Gang Niewidzialnych Ludzi
+Barbara Kosmowska|Pozłacana rybka
+Zofia Kossak-Szczucka|Topsy i Lupus — opowiadanie z tomu Bursztyny
+Marcin Kozioł|Skrzynia Władcy Piorunów
+Alice Kuipers|Życie na drzwiach lodówki
+Selma Lagerlöf|Cudowna podróż
+Ursula K. Le Guin|Czarnoksiężnik z Archipelagu
+Stanisław Lem|Cyberiada lub Bajki robotów
+Bolesław Leśmian|Klechdy sezamowe
+C.S. Lewis|Wybrana powieść z cyklu Opowieści z Narnii
+Astrid Lindgren|Bracia Lwie Serce lub Ronja, córka zbójnika
+Kornel Makuszyński|Wybrana powieść
+Andrzej Maleszka|Wybrana powieść z cyklu Magiczne drzewo
+A.A. Milne|Kubuś Puchatek
+Ferenc Molnár|Chłopcy z Placu Broni
+Lucy Maud Montgomery|Ania z Zielonego Wzgórza
+Brandon Mull|Baśniobór lub Wojna cukierkowa
+Małgorzata Musierowicz|Wybrana powieść z cyklu Jeżycjada
+Edmund Niziurski|Sposób na Alcybiadesa
+Ewa Nowak|Pajączek na rowerze
+Longin Jan Okoń|Tecumseh
+George Orwell|Folwark zwierzęcy
+Ferdynand Antoni Ossendowski|Słoń Birara
+Raquel Jaramillo Palacio|Cudowny chłopak
+Katherine Paterson|Most do Terabithii
+Sara Pennypacker|Pax
+Jacek Podsiadło|Czerwona kartka dla Sprężyny
+Rick Riordan|Wybrana powieść z cyklu Percy Jackson i bogowie olimpijscy
+J.K. Rowling|Wybrana powieść o Harrym Potterze
+Katarzyna Ryrych|Król, Wyspa mojej siostry lub Lato na Rodos
+Antoine de Saint-Exupéry|Mały Książę
+Éric-Emmanuel Schmitt|Oskar i pani Róża
+William Shakespeare|Romeo i Julia lub Sen nocy letniej
+Henryk Sienkiewicz|Krzyżacy, W pustyni i w puszczy lub Quo vadis
+Linn Skåber|Młodość. Wyznania nastolatków
+Nancy Springer|Wybrana powieść z cyklu Enola Holmes
+Erin Stewart|Blizny jak skrzydła
+Marcin Szczygielski|Teatr Niewidzialnych Dzieci lub Arka Czasu
+Alfred Szklarski|Wybrana powieść o Tomku Wilmowskim
+Dorota Terakowska|Tam, gdzie spadają anioły lub Córka czarownic
+J.R.R. Tolkien|Hobbit, czyli tam i z powrotem
+Mark Twain|Przygody Tomka Sawyera
+Katarzyna Wasilkowska|Już, już!
+Danuta Wawiłow i Natalia Usenko|Wierzbowa 13
+Louis de Wohl|Posłaniec króla
+Karol Wojtyła|Wybrany utwór
+Markus Zusak|Złodziejka książek
+Stefan Żeromski|Syzyfowe prace lub Siłaczka
+Autorzy różni|Gorzka czekolada i inne opowiadania o ważnych sprawach
+Autorzy różni|Nazywam się… — wybrana biografia
+Autorzy różni|Wszystkie kolory świata
+Autorzy różni|Wybrane wiersze dawnych i współczesnych poetów
+Autorzy różni|Zbiory mitologii światowej
+Francesco D’Adamo|Iqbal
+Anna Dziewit-Meller|Damy, dziewuchy, dziewczyny
+Arkady Fiedler|Dywizjon 303
+Rachel Firth, Minna Lacey i Jordan Akpojoro|Filozofia dla początkujących
+Natalia Gancarz|Mietek na wojnie
+Magdalena Grzebałkowska|Wojenka — wybrany reportaż
+Boguś Janiszewski|Wybrana pozycja z serii To, o czym dorośli ci nie mówią
+Leszek Kołakowski|Mini-wykłady o maxi-sprawach — wybrany fragment
+Simona Kossak|Serce i pazur. Opowieści o uczuciach zwierząt
+Anna Kowalczyk|Brakująca połowa dziejów
+Karolina Lanckorońska|Wspomnienia wojenne — fragmenty
+Anna Mieszkowska|Dzieci Ireny Sendlerowej
+Nela Mała Reporterka|Wybrany utwór
+Lidia Ostałowska|Bezprizorni
+Marie Pavlenko|A kiedy zniknie pustynia
+Łukasz Pilip|Podwórko bez trzepaka — wybrany reportaż
+Michel Piquemal|Bajki filozoficzne
+Magdalena Rigamonti|Niewygodni — wywiad lub inny wywiad
+Michał Rusinek|Szalik. O Wisławie Szymborskiej dla dzieci
+Maria Strzelecka|Simona
+Justyna Suchecka|Young power. 30 historii o tym, jak młodzi zmieniają świat
+Zbigniew Urbanyi|Na szlaku kliprów i windjammerów — fragmenty
+Melchior Wańkowicz|Bitwa o Monte Cassino lub Ziele na kraterze
+Urszula Zajączkowska|Patyki, badyle`);
+
+for (const literature of LITERATURE_CATALOG.values()) {
+  const selectedGrades = [...new Set(literature.roles.flatMap(role => role.grades))].sort();
+  const roleSummary = literature.roles.map(({ version, role, grades }) =>
+    `${version === "2026" ? "podstawa 2026" : "podstawa 2017"}: ${role === "required" ? "obowiązkowa" : "pozycja do wyboru"} (klasy ${grades.join(", ")})`
+  ).join("; ");
+  const title = `Lektura: ${literature.title}`;
+  const aliases = [literature.title, `${literature.author} ${literature.title}`, `${literature.title} autor`, `lektura ${literature.title}`];
+  knowledge.push({
+    title,
+    subject: "Lektury szkolne",
+    grades: selectedGrades,
+    educationStage: "IV–VIII",
+    keywords: [title, ...aliases],
+    aliases,
+    short: `${literature.author} — ${literature.title}. ${roleSummary}.`,
+    explanation: "Status zależy od rocznika ucznia, klasy i podstawy programowej wdrażanej w danym roku szkolnym.",
+    example: "Możesz poprosić o autora, status lektury, krótki plan czytania albo pytania sprawdzające.",
+    related: "Wykaz pozycji uzupełniających jest przykładowy; nauczyciel i uczniowie wybierają konkretne tytuły zgodnie z programem.",
+    check: `Kto jest autorem lub autorką utworu „${literature.title}”?`,
+    teacherAnswer: { all: [literature.author], hint: `Autorem lub autorką jest ${literature.author}.` },
+    literature
+  });
+}
+
+const LITERATURE_GUIDES = [
+  ["akademia pana kleksa", "Jan Brzechwa", "Adaś Niezgódka trafia do niezwykłej szkoły profesora Kleksa, gdzie zwykłe lekcje ustępują miejsca wyobraźni, eksperymentom i przygodom.", "wyobraźnia, ciekawość, odwaga"],
+  ["kajko i kokosz szkola latania", "Janusz Christa", "Komiks opowiada o wojach Kajku i Kokoszu, którzy mierzą się z niebezpieczeństwami i pomagają mieszkańcom grodu kasztelana Mirmiła.", "przyjaźń, spryt, współpraca"],
+  ["mikolajek", "René Goscinny i Jean-Jacques Sempé", "Zbiór humorystycznych opowiadań pokazuje świat szkolnych i rodzinnych przygód Mikołajka oraz jego kolegów.", "przyjaźń, dziecięca perspektywa, humor"],
+  ["opowiesci z narnii lew czarownica i stara szafa", "C.S. Lewis", "Dzieci przechodzą przez starą szafę do Narnii, gdzie pomagają walczyć z Białą Czarownicą i przywrócić w krainie sprawiedliwy ład.", "odwaga, lojalność, dobro i zło"],
+  ["chlopcy z placu broni", "Ferenc Molnár", "Chłopcy bronią swojego placu zabaw, a próba lojalności i przyjaźni pokazuje cenę odpowiedzialności oraz poświęcenia.", "przyjaźń, honor, odpowiedzialność"],
+  ["katarynka", "Bolesław Prus", "Pan Tomasz nie znosi katarynek, lecz spotkanie z niewidomą dziewczynką zmienia jego spojrzenie i skłania go do działania.", "empatia, przemiana, pomoc drugiemu człowiekowi"],
+  ["hobbit czyli tam i z powrotem", "J.R.R. Tolkien", "Bilbo Baggins wyrusza z krasnoludami w podróż, która wystawia na próbę jego odwagę, spryt i stosunek do bogactwa.", "odwaga, dojrzewanie, przyjaźń, odpowiedzialność"],
+  ["opowiesc wigilijna", "Charles Dickens", "Skąpy Ebenezer Scrooge podczas niezwykłej nocy poznaje duchy, które pomagają mu zobaczyć skutki jego postępowania i możliwość zmiany.", "empatia, przemiana, odpowiedzialność za innych"],
+  ["zemsta", "Aleksander Fredro", "Komedia przedstawia spór Cześnika i Rejenta oraz perypetie młodych, którzy próbują połączyć swoje losy mimo konfliktu dorosłych.", "zgoda, pycha, komizm, konflikt"],
+  ["kamienie na szaniec", "Aleksander Kamiński", "Reportażowa opowieść o Alku, Rudym i Zośce pokazuje przyjaźń oraz działalność młodych ludzi w okupowanej Warszawie.", "przyjaźń, patriotyzm, odwaga, odpowiedzialność"],
+  ["maly ksiaze", "Antoine de Saint-Exupéry", "Podróż Małego Księcia przez różne planety prowadzi do rozmów o przyjaźni, odpowiedzialności i tym, jak patrzymy na świat.", "przyjaźń, troska, odpowiedzialność, perspektywa"],
+  ["balladyna", "Juliusz Słowacki", "Dramat pokazuje, jak żądza władzy i kolejne złe decyzje Balladyny prowadzą do krzywdy innych oraz jej własnego upadku.", "ambicja, wina, sprawiedliwość, odpowiedzialność"],
+  ["latarnik", "Henryk Sienkiewicz", "Skawiński, polski emigrant pracujący jako latarnik, po latach tułaczki otrzymuje spokojną posadę, lecz lektura polskiej książki budzi w nim silne wspomnienia.", "tęsknota za ojczyzną, pamięć, emigracja"],
+  ["quo vadis", "Henryk Sienkiewicz", "Powieść osadzona w starożytnym Rzymie splata historię miłości Ligii i Marka Winicjusza z prześladowaniem pierwszych chrześcijan.", "miłość, przemiana, wiara, władza"],
+  ["dziady czesc ii", "Adam Mickiewicz", "Podczas obrzędu dziadów przywoływane duchy opowiadają o swoich winach i cierpieniach, a ich historie niosą nauki moralne.", "wina, kara, współczucie, moralność"],
+  ["syzyfowe prace", "Stefan Żeromski", "Powieść śledzi szkolne doświadczenia Marcina Borowicza i pokazuje, jak młodzi ludzie odkrywają własną tożsamość oraz siłę języka i kultury.", "dojrzewanie, tożsamość, język, opór"],
+  ["tajemniczy ogrod", "Frances Hodgson Burnett", "Mary odkrywa zamknięty ogród i stopniowo nawiązuje relacje z innymi, a wspólna opieka nad miejscem przynosi zmianę bohaterom.", "przyjaźń, natura, przemiana, troska"],
+  ["przygody tomka sawyera", "Mark Twain", "Tomek przeżywa liczne przygody w miasteczku nad Missisipi, ucząc się odpowiedzialności mimo zamiłowania do psot.", "przygoda, dojrzewanie, odwaga, przyjaźń"]
+];
+
+function findLiteratureKnowledgeItem(question) {
+  const query = normalize(question);
+  if (!query) return null;
+  const grade = getRequestedSchoolGrade(question);
+  const edition = grade ? getCurriculumEditionForGrade(grade) : null;
+  const titleMatches = [...LITERATURE_CATALOG.values()].map(literature => {
+    const title = normalize(literature.title)
+      .replace(/\b(wybrane|wybrana|wybrany|fragmenty|fragment|opowiadania|powiesc|wybor)\b/g, " ")
+      .replace(/\s+/g, " ").trim();
+    const terms = title.split(" ").filter(term => term.length >= 4);
+    const matched = terms.filter(term => query.includes(term) || lexicalTokens(query).some(token => tokenStemMatch(token, term)));
+    const exact = title.length >= 5 && query.includes(title);
+    const hasDistinctiveTitleLead = terms[0]?.length >= 5 && (query.includes(terms[0]) || lexicalTokens(query).some(token => tokenStemMatch(token, terms[0])));
+    let score = exact ? title.length + 100 : matched.length >= Math.min(2, terms.length) || hasDistinctiveTitleLead ? matched.join(" ").length + matched.length * 10 + (hasDistinctiveTitleLead ? 8 : 0) : 0;
+    if (score && edition && getLiteratureRole(literature, edition, grade)) score += 60;
+    return { literature, score };
+  }).filter(match => match.score > 0).sort((left, right) => right.score - left.score);
+  const best = titleMatches[0]?.literature;
+  if (!best) return null;
+  return knowledge.find(item => item.literature === best) || null;
+}
+
+function isLiteratureListQuestion(question) {
+  const text = normalize(question);
+  if (!/\blektur\w*\b/.test(text)) return false;
+  return /\b(obowiazk\w*|nieobowiazk\w*|uzupelniaj\w*|wykaz|lista|wymien\w*|jakie|ktore|spis|co czytac|mam czytac|musze czytac|wybrane|polecane)\b/.test(text)
+    || Boolean(getRequestedSchoolGrade(question) && /\blektur\w*\b/.test(text));
+}
+
+function getLiteratureRole(literature, edition, grade) {
+  return literature.roles.find(role => role.version === edition && (!grade || role.grades.includes(grade))) || null;
+}
+
+function formatLiteratureListAnswer(question) {
+  if (!isLiteratureListQuestion(question)) return null;
+  const context = getCurriculumContext(question);
+  const grade = context?.grade || null;
+  const edition = context?.edition || null;
+  const wantsChoice = /\b(nieobowiazk\w*|uzupelniaj\w*|polecane|do wyboru|wybrane)\b/.test(normalize(question));
+  const baseUrl2017 = "https://eli.gov.pl/eli/DU/2017/356/ogl";
+  const baseUrl2026 = "https://eli.gov.pl/eli/DU/2026/378/ogl";
+
+  if (!edition) {
+    return "Koala rozdziela dwa wykazy, bo nowa podstawa jest wdrażana etapami. W roku szkolnym 2026/2027 klasa IV korzysta już z podstawy 2026, a klasy V–VIII z dotychczasowego wykazu 2017. Podaj klasę, a pokażę właściwy zestaw i rozdzielę lektury obowiązkowe od pozycji wybieranych przez nauczyciela i uczniów.\n\nPodstawy: 2026 — " + baseUrl2026 + " · 2017 — " + baseUrl2017;
+  }
+
+  const matching = [...LITERATURE_CATALOG.values()].filter(literature => getLiteratureRole(literature, edition, grade));
+  const list = matching.filter(literature => getLiteratureRole(literature, edition, grade).role === (wantsChoice ? "choice" : "required"));
+  if (!list.length) return null;
+
+  const currentLabel = edition === "2026" ? "nowa podstawa 2026" : "dotychczasowa podstawa 2017";
+  const gradeGroup = edition === "2017" ? (grade <= 6 ? "klasy IV–VI" : "klasy VII–VIII") : "etap klas IV–VIII";
+  const examples = wantsChoice ? list.slice(0, 12) : list;
+  const formatted = examples.map(item => `• ${item.author} — ${item.title}`).join("\n");
+  let explanation;
+  if (edition === "2026" && !wantsChoice) {
+    explanation = "To wykaz klasyki wskazany w nowej podstawie. Ponadto w każdym roku szkolnym uczeń czyta co najmniej 4 dłuższe utwory, wybierane wspólnie przez nauczyciela i uczniów z listy przykładów lub spoza niej. Tytuły z listy przykładów nie są wszystkie obowiązkowe.";
+  } else if (edition === "2026") {
+    explanation = "To przykładowe propozycje do wspólnego wyboru, a nie lista tytułów, które każdy uczeń musi przeczytać. Nowa podstawa wymaga co najmniej 4 dłuższych utworów w każdym roku szkolnym.";
+  } else if (wantsChoice) {
+    explanation = `W podstawie 2017 wskazano lektury uzupełniające — wybiera się dwie w każdym roku szkolnym. Poniżej przykłady; możliwe są też inne utwory wybrane przez nauczyciela.`;
+  } else {
+    explanation = `To wykaz obowiązkowy dla grupy ${gradeGroup}, a nie roczny przydział dla jednej klasy. Dokładną kolejność w klasie ustala szkolny program nauczania.`;
+  }
+  const title = wantsChoice ? "Pozycje do wyboru / lektury uzupełniające" : "Lektury obowiązkowe";
+  const source = edition === "2026" ? baseUrl2026 : baseUrl2017;
+  const year = context.schoolYear;
+  return `🐨 ${title} — klasa ${grade}, rok szkolny ${year}\nPodstawa: ${currentLabel}; wykaz dotyczy ${gradeGroup}.\n\n${formatted}${wantsChoice && list.length > examples.length ? `\n• … oraz ${list.length - examples.length} dalszych propozycji z pełnego wykazu` : ""}\n\n${explanation}\n\nŹródło urzędowe: ${source}\nW ARKONIE konkretny rozkład lektur może doprecyzować szkolny program i nauczyciel.`;
+}
+
+function formatLiteratureAnswer(item, question) {
+  if (!item?.literature) return null;
+  const literature = item.literature;
+  const context = getCurriculumContext(question);
+  const matchingRole = context ? getLiteratureRole(literature, context.edition, context.grade) : null;
+  const roleLabel = matchingRole
+    ? matchingRole.role === "required" ? "obowiązkowa w tej podstawie" : "pozycja z listy do wyboru / uzupełniającej"
+    : literature.roles.map(role => `${role.version}: ${role.role === "required" ? "obowiązkowa" : "do wyboru"} (klasy ${role.grades.join(", ")})`).join("; ");
+  const guideKey = normalize(literature.title).replace(/\s+/g, " ");
+  const guide = LITERATURE_GUIDES.find(([key]) => guideKey.includes(key) || key.includes(guideKey));
+  const intent = normalize(question);
+  const asksAuthor = /\b(kto napisal|autorem|autorka|autor|autorstwo)\b/.test(intent);
+  const asksStatus = /\b(obowiazk\w*|uzupelniaj\w*|nieobowiazk\w*|program|ktora klasa|jaka klasa)\b/.test(intent);
+  const asksContent = /\b(o czym|streszcz\w*|opowiedz|plan wydarzen|bohater\w*|motyw\w*|temat\w*|analiz\w*|omow\w*|notatk\w*|powtork\w*)\b/.test(intent);
+  const contextLabel = context ? `klasa ${context.grade}, rok ${context.schoolYear}` : "właściwa klasa zależy od roku wdrożenia podstawy";
+  let response = `🐨 ${literature.title}\nAutor: ${literature.author}.\nStatus: ${roleLabel}. (${contextLabel})`;
+  if (guide && asksContent) response += `\n\nKrótko o utworze: ${guide[2]}\n\nWażne zagadnienia: ${guide[3]}.`;
+  else if (!asksAuthor && !asksStatus && guide) response += `\n\nKrótko o utworze: ${guide[2]}\nWażne zagadnienia: ${guide[3]}.`;
+  else if (asksContent && !guide) response += "\n\nNie mam jeszcze lokalnego, sprawdzonego streszczenia tego tytułu. Mogę pomóc na podstawie wklejonego fragmentu albo wyszukać materiały, jeśli poprosisz o źródła online.";
+  response += `\n\nWażne: pozycja oznaczona jako „do wyboru” nie jest automatycznie obowiązkowa w każdej klasie. Podstawa dla ${context?.schoolYear || "bieżącego roku"}: ${context?.edition === "2026" ? "https://eli.gov.pl/eli/DU/2026/378/ogl" : "https://eli.gov.pl/eli/DU/2017/356/ogl"}.`;
+  return response;
+}
+
 for (const item of knowledge) {
   item.grades ||= [4, 5, 6, 7, 8];
   item.educationStage ||= "IV–VIII";
@@ -1644,6 +2158,7 @@ function findKnowledgeMatches(question) {
   const query = expandKnowledgeQuery(question);
   const questionTokens = query.tokens;
   if (!questionTokens.length) return [];
+  const requestedSubject = getRequestedSubject(question);
   const matches = [];
 
   for (const item of knowledge) {
@@ -1660,6 +2175,15 @@ function findKnowledgeMatches(question) {
     if (query.grade && Array.isArray(item.grades)) {
       if (!item.grades.includes(query.grade)) continue;
       score += 12;
+    }
+    if (requestedSubject && item.subject) {
+      const subjectAliases = {
+        "język polski": ["język polski", "lektury szkolne"],
+        "biologia i przyroda": ["biologia i przyroda", "biologia", "przyroda"],
+        "język angielski": ["język angielski", "angielski"]
+      };
+      const acceptedSubjects = subjectAliases[requestedSubject] || [requestedSubject];
+      if (acceptedSubjects.some(subject => normalize(item.subject) === normalize(subject))) score += 28;
     }
     if (score >= 25) matches.push({ item, score, matchedPhrase });
   }
@@ -1712,11 +2236,18 @@ function getQuestionRoute(question, localAnswer = "", history = []) {
   if (isSocialMessage(text)) return { kind: "social", shouldSearchWeb: false };
 
   const normalized = normalize(text);
+  if (!asksToSearchOnline(text)) {
+    const literatureList = formatLiteratureListAnswer(text);
+    if (literatureList) return { kind: "literature-list", shouldSearchWeb: false, topic: "lektury szkolne", searchQuery: null };
+    const literatureItem = findLiteratureKnowledgeItem(text);
+    if (literatureItem) return { kind: "literature", shouldSearchWeb: false, topic: literatureItem.title, searchQuery: null };
+  }
   const topic = findKnowledge(text);
   const equationAnswer = solveLinearEquation(text);
   if (equationAnswer) return { kind: "math", shouldSearchWeb: false };
   const math = calculate(text) !== null;
   if (math) return { kind: "math", shouldSearchWeb: false };
+  if (solvePhysicsProblem(text)) return { kind: "physics-calculation", shouldSearchWeb: false };
 
   if (getIntent(text) === "study-plan" && !asksToSearchOnline(text) && !isCurrentInformationQuestion(text)) {
     return { kind: "study-plan", shouldSearchWeb: false, topic: findKnowledge(text)?.title || null };
@@ -2320,6 +2851,101 @@ function solveSquareRoot(question) {
   return `## 🐨 Pierwiastek kwadratowy krok po kroku\n\nSzukamy liczby, której kwadrat jest równy ${formatNumber(value)}. Ponieważ ${formatNumber(Math.floor(root))}² < ${formatNumber(value)} < ${formatNumber(Math.ceil(root))}², wynik nie jest liczbą całkowitą.\n\n**√${formatNumber(value)} ≈ ${formatNumber(rounded)}**`;
 }
 
+function solvePhysicsProblem(question) {
+  const raw = String(question ?? "")
+    .replace(/(\d),(\d)/g, "$1.$2")
+    .replace(/²/g, "2")
+    .replace(/³/g, "3");
+  const text = normalize(raw);
+  if (!/\b(oblicz|policz|wyznacz|znajdz|ile wynosi|jaka jest|jakie jest)\b/.test(text)) return null;
+
+  function readQuantity(labels, units) {
+    const match = text.match(new RegExp(`\\b(?:${labels})\\b\\s*(?:(?:wynosi|to|rowna sie|jest)\\s*)?[:=]?\\s*(-?\\d+(?:\\.\\d+)?)\\s*(${units})\\b`));
+    if (!match) return null;
+    const value = Number(match[1]);
+    if (!Number.isFinite(value)) return null;
+    return { value, unit: match[2].replace(/\s+/g, "").replace(/\^/g, "") };
+  }
+
+  const mass = readQuantity("masa|masy|mase", "kg|g|mg");
+  const volume = readQuantity("objetosc|objetosci", "m3|cm3|dm3|l|ml|litra|litry|litrow");
+  const force = readQuantity("sila|sily|sile|nacisk", "n|niuton|niutony");
+  const area = readQuantity("powierzchnia|pole", "m2|cm2|mm2");
+  const distance = readQuantity("droga|przesuniecie|odleglosc", "m|cm|mm|km");
+  const duration = readQuantity("czas pracy|czas|czasu", "s|sekunda|sekundy|sekund|min|minuta|minuty|minut|h|godzina|godziny|godzin");
+  const voltage = readQuantity("napiecie|napiecie elektryczne", "v|volt|volty");
+  const current = readQuantity("natezenie|natezenie pradu|prad", "a|amper|ampery");
+  const resistance = readQuantity("opor|rezystancja", "ohm|om");
+  const work = readQuantity("praca mechaniczna|praca|prace|pracy|energia", "j|kj|dzul|dzule|dzuli");
+
+  const wants = pattern => pattern.test(text);
+  const wantsPressure = wants(/\b(cisnienie|cisnienia|cisnieniu)\b/);
+  const wantsDensity = wants(/\b(gestosc|gestosci)\b/);
+  const wantsWeight = wants(/\b(ciezar|sila ciezkosci)\b/);
+  const wantsWork = wants(/\b(praca mechaniczna|prace mechaniczna|prace|praca|pracy)\b/);
+  const wantsPower = wants(/\b(moc|mocy)\b/);
+  const wantsCurrent = wants(/\b(natezenie|natezenie pradu)\b/);
+  const wantsVoltage = wants(/\b(napiecie|napiecie elektryczne)\b/);
+  const wantsResistance = wants(/\b(opor|rezystancja)\b/);
+  let formula = "";
+  let substitution = "";
+  let answer = "";
+
+  if (wantsDensity && mass && volume) {
+    const massKg = mass.value * (mass.unit === "g" ? 0.001 : mass.unit === "mg" ? 0.000001 : 1);
+    const volumeM3 = volume.value * ({ m3: 1, dm3: 0.001, l: 0.001, litra: 0.001, litrow: 0.001, cm3: 0.000001, ml: 0.000001 }[volume.unit] || 1);
+    if (massKg < 0 || volumeM3 <= 0) return null;
+    formula = "ρ = m ÷ V";
+    substitution = `ρ = ${formatNumber(massKg)} kg ÷ ${formatNumber(volumeM3)} m³`;
+    answer = `${formatNumber(massKg / volumeM3)} kg/m³`;
+  } else if (wantsPressure && force && area) {
+    const areaM2 = area.value * ({ m2: 1, cm2: 0.0001, mm2: 0.000001 }[area.unit] || 1);
+    if (force.value < 0 || areaM2 <= 0) return null;
+    formula = "p = F ÷ S";
+    substitution = `p = ${formatNumber(force.value)} N ÷ ${formatNumber(areaM2)} m²`;
+    answer = `${formatNumber(force.value / areaM2)} Pa`;
+  } else if (wantsWeight && mass) {
+    const massKg = mass.value * (mass.unit === "g" ? 0.001 : mass.unit === "mg" ? 0.000001 : 1);
+    if (massKg < 0) return null;
+    formula = "Fg ≈ m · g, gdzie g ≈ 10 N/kg";
+    substitution = `Fg ≈ ${formatNumber(massKg)} kg · 10 N/kg`;
+    answer = `${formatNumber(massKg * 10)} N`;
+  } else if (wantsWork && force && distance) {
+    const distanceM = distance.value * ({ m: 1, cm: 0.01, mm: 0.001, km: 1000 }[distance.unit] || 1);
+    if (force.value < 0 || distanceM < 0) return null;
+    formula = "W = F · s";
+    substitution = `W = ${formatNumber(force.value)} N · ${formatNumber(distanceM)} m`;
+    answer = `${formatNumber(force.value * distanceM)} J`;
+  } else if (wantsPower && voltage && current) {
+    formula = "P = U · I";
+    substitution = `P = ${formatNumber(voltage.value)} V · ${formatNumber(current.value)} A`;
+    answer = `${formatNumber(voltage.value * current.value)} W`;
+  } else if (wantsPower && work && duration) {
+    const workJ = work.value * (work.unit === "kj" ? 1000 : 1);
+    const timeS = duration.value * ({ s: 1, sekunda: 1, sekundy: 1, sekund: 1, min: 60, minuta: 60, minuty: 60, minut: 60, h: 3600, godzina: 3600, godziny: 3600, godzin: 3600 }[duration.unit] || 1);
+    if (timeS <= 0) return null;
+    formula = "P = W ÷ t";
+    substitution = `P = ${formatNumber(workJ)} J ÷ ${formatNumber(timeS)} s`;
+    answer = `${formatNumber(workJ / timeS)} W`;
+  } else if (wantsCurrent && voltage && resistance && resistance.value > 0) {
+    formula = "I = U ÷ R";
+    substitution = `I = ${formatNumber(voltage.value)} V ÷ ${formatNumber(resistance.value)} Ω`;
+    answer = `${formatNumber(voltage.value / resistance.value)} A`;
+  } else if (wantsVoltage && current && resistance) {
+    formula = "U = I · R";
+    substitution = `U = ${formatNumber(current.value)} A · ${formatNumber(resistance.value)} Ω`;
+    answer = `${formatNumber(current.value * resistance.value)} V`;
+  } else if (wantsResistance && voltage && current && current.value > 0) {
+    formula = "R = U ÷ I";
+    substitution = `R = ${formatNumber(voltage.value)} V ÷ ${formatNumber(current.value)} A`;
+    answer = `${formatNumber(voltage.value / current.value)} Ω`;
+  } else {
+    return null;
+  }
+
+  return `🐨 Obliczenie z fizyki krok po kroku\n\nWzór: ${formula}\nDane po zamianie jednostek: ${substitution}\n\nOdpowiedź: ${answer}\n\nSprawdź, czy w zadaniu przyjęto te same jednostki i czy podany model pasuje do sytuacji.`;
+}
+
 function solveMotionProblem(question) {
   const text = normalize(String(question ?? "").replace(/,/g, "."));
   if (!/\b(droga|czas|predkosc)\b/.test(text)) return null;
@@ -2815,11 +3441,15 @@ function createGeneralStudyPlan(question) {
       ? "Przeczytaj fragment, zaznacz ważne słowa i ułóż własne zdanie lub krótką wypowiedź z użyciem poznanej reguły."
       : subject === "język angielski"
         ? "Powtórz pięć słów, ułóż z nimi dwa własne zdania i przeczytaj je na głos."
+        : subject === "fizyka"
+          ? "Zapisz dane z jednostkami, wybierz wzór i pokaż podstawienie. Potem sprawdź, czy wynik i jego jednostka mają sens w opisanej sytuacji."
+          : subject === "chemia"
+            ? "Narysuj prosty model drobin albo zapis reakcji. Podpisz substraty i produkty, policz atomy po obu stronach i przypomnij sobie zasady bezpieczeństwa."
         : subject === "historia"
           ? "Ułóż trzy wydarzenia w kolejności i dopisz po jednym powodzie lub skutku każdego z nich."
           : subject === "geografia"
             ? "Pracuj z mapą lub wykresem: wskaż miejsce, odczytaj jedną informację i wyjaśnij ją własnymi słowami."
-            : subject === "biologia i przyroda" || subject === "fizyka" || subject === "chemia"
+            : subject === "biologia i przyroda"
               ? "Narysuj prosty schemat zjawiska, podpisz jego elementy i opowiedz, jak łączą się ze sobą."
               : "Wypisz najważniejsze pojęcia, połącz je strzałkami i spróbuj wyjaśnić jedno połączenie bez notatek.";
   return `## 🐨 Plan nauki na 15 minut — ${subjectLabel}
@@ -2955,6 +3585,13 @@ export function answerQuestion(question, history = []) {
       if (teacherResult) return teacherResult;
     }
 
+    if (!asksToSearchOnline(text)) {
+      const literatureList = formatLiteratureListAnswer(text);
+      if (literatureList) return literatureList;
+      const literatureItem = findLiteratureKnowledgeItem(text);
+      if (literatureItem) return formatLiteratureAnswer(literatureItem, text);
+    }
+
     // Najpierw rozpoznajemy, czy pytanie odnosi się do poprzedniego tematu.
     if (isFollowUp(text)) {
       const previousQuestion = getPreviousUserQuestion(safeHistory);
@@ -3007,6 +3644,9 @@ export function answerQuestion(question, history = []) {
     if (motionAnswer) return motionAnswer;
     const romanAnswer = convertRomanNumerals(text);
     if (romanAnswer) return romanAnswer;
+
+    const physicsAnswer = solvePhysicsProblem(text);
+    if (physicsAnswer) return physicsAnswer;
 
     // Tryb nauczyciela.
     const knowledgeItem = findKnowledge(text);

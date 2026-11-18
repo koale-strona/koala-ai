@@ -236,6 +236,14 @@ const CRAWLER_SOURCES = [
     hints: ["rozporządzenie", "podstawa programowa", "2026/2027", "wdrażanie etapami", "klasy IV–VIII"]
   },
   {
+    name: "Dziennik Ustaw — podstawa programowa 2017",
+    url: "https://eli.gov.pl/eli/DU/2017/356/ogl",
+    category: "education",
+    trust: 10,
+    aliases: ["stara podstawa", "podstawa 2017", "lektury 2017"],
+    hints: ["lektury obowiązkowe", "lektury uzupełniające", "klasy IV–VI", "klasy VII–VIII", "język polski"]
+  },
+  {
     name: "Reforma26 — Kompas Jutra MEN",
     url: "https://reforma26.men.gov.pl/",
     category: "education",
@@ -266,6 +274,22 @@ const CRAWLER_SOURCES = [
     hints: ["matematyka", "biologia", "chemia", "fizyka", "kurs"]
   },
   {
+    name: "PubChem — Periodic Table",
+    url: "https://pubchem.ncbi.nlm.nih.gov/periodic-table/",
+    category: "science",
+    trust: 10,
+    aliases: ["pubchem", "układ okresowy pubchem", "tablica pierwiastków"],
+    hints: ["chemia", "pierwiastki", "układ okresowy", "symbol chemiczny", "liczba atomowa", "masa atomowa"]
+  },
+  {
+    name: "PhET — symulacje fizyczne i chemiczne",
+    url: "https://phet.colorado.edu/pl/",
+    category: "science",
+    trust: 9,
+    aliases: ["phet", "symulacje fizyka chemia"],
+    hints: ["fizyka", "chemia", "doświadczenie", "symulacja", "obwód elektryczny", "cząsteczki", "siły"]
+  },
+  {
     name: "Ośrodek Rozwoju Edukacji",
     url: "https://ore.edu.pl/",
     category: "education",
@@ -291,9 +315,10 @@ const CRAWLER_SOURCES = [
   {
     name: "Wolne Lektury",
     url: "https://wolnelektury.pl/",
-    category: "education",
-    trust: 8,
-    hints: ["lektura", "autor", "książka", "poezja", "literatura"]
+    category: "literature",
+    trust: 10,
+    aliases: ["wolne lektury", "wolnelektury"],
+    hints: ["lektury szkolne", "autor", "książka", "tekst utworu", "poezja", "literatura", "domena publiczna"]
   },
   {
     name: "Główny Urząd Statystyczny",
@@ -1135,6 +1160,7 @@ function selectCrawlerSources(question) {
   const language = has(/\b(jezyk|jezyka|polszczyzna|slownik|slowniki|slownikowy|znaczenie|znaczy|synonim|synonimy|antonim|antonimy|odmiana|odmienic|fleksja|gramatyka|ortografia|pisownia|interpunkcja|przecinek|wymowa|fonetyka|etymologia|frazeologizm|frazeologia|poprawnie|poprawnosc|tlumaczenie|przetlumacz|rzeczownik|czasownik|przymiotnik|angielski|angielsku|niemiecki|niemiecku|francuski|francusku|hiszpanski|hiszpansku|english|german|french|spanish|deutsch|francais|espanol|meaning|definition|dictionary|translation|translate|grammar|vocabulary|pronunciation|etymology|synonym|antonym)\b/);
   const astronomy = has(/\b(kosmos|kosmosu|astronomia|planeta|planety|nasa|eksploracji kosmosu|misja kosmiczna)\b/);
   const science = has(/\b(nauka|naukowy|badania|biologia|fizyka|chemia|fotosynteza|chlorofil)\b/);
+  const literature = has(/\b(lektur\w*|ksiazk\w*|powiesc\w*|bohater\w*|autor\w*|wiersz\w*|motyw literacki|utwor literacki|literatur\w*|mit\w*)\b/);
   const education = has(/\b(szkola|szkolny|lekcja|edukacja|zadanie|egzamin|matura|podstawa programowa|lektura|literatura)\b/);
   const curriculum = has(/\b(podstawa programowa|wymagania programowe|reforma26|kompas jutra|program nauczania|podstawa men|nowa podstawa)\b/);
   const arkona = has(/\b(arkona|nasza szkola|w naszej szkole|szkola arkona|program nauczania arkona)\b/);
@@ -1146,6 +1172,7 @@ function selectCrawlerSources(question) {
   if (sports) categories = ["sport"];
   else if (arkona) categories = ["school", "education", "general"];
   else if (curriculum) categories = ["education", "poland", "general"];
+  else if (literature) categories = ["literature", "education", "general"];
   else if (language) categories = ["language", "education", "general"];
   else if (news && PolandFocus && officialPoland) categories = ["news", "poland"];
   else if (news) categories = ["news"];
@@ -1161,9 +1188,11 @@ function selectCrawlerSources(question) {
     .sort((a, b) => {
       const relevance = source => scoreCrawlerText(`${source.name} ${(source.hints || []).join(" ")}`, getCrawlerTerms(question));
       const curriculumBoost = source => curriculum && /ministerstwo|dziennik ustaw|reforma26|zintegrowana platforma/i.test(source.name) ? 100 : 0;
+      const literatureBoost = source => literature && source.category === "literature" ? 100 : 0;
       const schoolBoost = source => arkona && source.category === "school" ? 100 : 0;
       return schoolBoost(b) - schoolBoost(a)
         || curriculumBoost(b) - curriculumBoost(a)
+        || literatureBoost(b) - literatureBoost(a)
         || categories.indexOf(a.category) - categories.indexOf(b.category)
         || relevance(b) - relevance(a)
         || (b.trust || 0) - (a.trust || 0);
