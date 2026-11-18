@@ -25,10 +25,10 @@ const CRAWLER_REQUEST_TIMEOUT = 2200;
 const CRAWLER_TOTAL_BUDGET = 8000;
 const CRAWLER_MAX_PAGE_SIZE = 450_000;
 const CRAWLER_MAX_SITEMAP_SIZE = 300_000;
-const CRAWLER_MAX_PAGES_PER_SITE = 7;
+const CRAWLER_MAX_PAGES_PER_SITE = 9;
 const CRAWLER_MAX_SITEMAPS_PER_SITE = 2;
 const CRAWLER_MAX_RESULTS = 8;
-const CRAWLER_MAX_SOURCES = 4;
+const CRAWLER_MAX_SOURCES = 5;
 const CRAWLER_MAX_LINKS_PER_PAGE = 120;
 const CRAWLER_MAX_TERMS = 24;
 
@@ -114,6 +114,27 @@ const CRAWLER_SOURCES = [
     category: "education",
     trust: 8,
     hints: ["matematyka", "biologia", "chemia", "fizyka", "kurs"]
+  },
+  {
+    name: "Centralna Komisja Egzaminacyjna",
+    url: "https://cke.gov.pl/",
+    category: "education",
+    trust: 10,
+    hints: ["egzamin", "arkusze", "informator", "wymagania", "podstawa programowa"]
+  },
+  {
+    name: "Wolne Lektury",
+    url: "https://wolnelektury.pl/",
+    category: "education",
+    trust: 8,
+    hints: ["lektura", "autor", "książka", "poezja", "literatura"]
+  },
+  {
+    name: "Główny Urząd Statystyczny",
+    url: "https://stat.gov.pl/",
+    category: "poland",
+    trust: 10,
+    hints: ["statystyka", "dane", "ludność", "demografia", "gospodarka"]
   },
   {
     name: "Gov.pl",
@@ -209,6 +230,7 @@ const STOP_WORDS = new Set([
   "tego", "tym", "albo", "lub", "mam", "ma", "byc", "hej", "hejka",
   "czesc", "siema", "witaj", "witam", "koala", "nowego", "wiadomo",
   "opowiedz", "wyjasnij", "prosze", "znajdz", "wyszukaj", "poszukaj",
+  "wiarygodne", "edukacyjne", "materialy", "temat", "temacie", "o", "oraz",
   "w", "na", "z", "ze", "do", "od", "to", "co", "kto", "czyli"
 ]);
 
@@ -217,7 +239,14 @@ const QUERY_EXPANSIONS = [
   { match: /\b(mecz|mecze|spotkanie|terminarz|pilka|pilkarski)\b/, terms: ["match", "fixture", "fixtures", "schedule", "calendar"] },
   { match: /\b(nauka|naukowy|badania|kosmos|kosmosu|astronomia|eksploracji|planeta|planety)\b/, terms: ["science", "research", "space", "planet", "astronomy", "exploration"] },
   { match: /\b(fotosynteza|fotosyntezy|rosliny|chlorofil)\b/, terms: ["photosynthesis", "plant", "chlorophyll"] },
-  { match: /\b(szkoła|szkolny|lekcja|edukacja|zadanie)\b/, terms: ["edukacja", "lekcja", "szkoła", "materiały"] },
+  { match: /\b(szkola|szkolny|lekcja|edukacja|zadanie|egzamin|matura|lektura|literatura)\b/, terms: ["edukacja", "lekcja", "szkola", "materialy", "egzamin", "lektura"] },
+  { match: /\b(lektura|literatura|ksiazka|poezja|wiersz|autor|bohater)\b/, terms: ["literature", "book", "poem", "author", "character", "lektura"] },
+  { match: /\b(egzamin|matura|sprawdzian|arkusz|wymagania)\b/, terms: ["exam", "examination", "test", "requirements", "arkusz"] },
+  { match: /\b(fizyka|sila|energia|ruch|predkosc)\b/, terms: ["physics", "force", "energy", "motion", "speed"] },
+  { match: /\b(chemia|atom|pierwiastek|reakcja|roztwor)\b/, terms: ["chemistry", "atom", "element", "reaction", "solution"] },
+  { match: /\b(biologia|komorka|organizm|ekosystem|genetyka)\b/, terms: ["biology", "cell", "organism", "ecosystem", "genetics"] },
+  { match: /\b(geografia|klimat|kontynent|mapa|ludnosc)\b/, terms: ["geography", "climate", "continent", "map", "population"] },
+  { match: /\b(historia|historyczny|historyczna|wojna|powstanie|krol)\b/, terms: ["history", "historical", "war", "uprising", "king"] },
   { match: /\b(polska|polski|polskie|urzad|prawo|przepisy|ministerstwo)\b/, terms: ["polska", "polski", "gov"] },
   { match: /\b(historia|historyczny|historyczna)\b/, terms: ["historia", "history", "historyczny"] },
   { match: /\b(wiadomosci|aktualnosci|wydarzenia|co sie dzieje|co nowego|na swiecie|ze swiata|swiata|podsumuj)\b/, terms: ["news", "latest", "world", "global", "current affairs", "breaking"] },
@@ -264,8 +293,8 @@ function getDocumentRelevance(page, url, terms) {
   const descriptionScore = scoreCrawlerText(page.description || "", terms);
   const urlScore = scoreCrawlerText(url || "", terms);
   const contentScore = scoreCrawlerText(`${(page.paragraphs || []).join(" ")} ${page.text || ""}`, terms);
-  const strongMatch = titleScore > 0 || descriptionScore > 0;
-  const score = titleScore * 7 + descriptionScore * 4 + urlScore * 2 + Math.min(contentScore, 12) * 0.35;
+  const strongMatch = titleScore > 0 || descriptionScore > 0 || contentScore >= 8;
+  const score = titleScore * 7 + descriptionScore * 4 + urlScore * 2 + Math.min(contentScore, 16) * 0.7;
   return { score, titleScore, descriptionScore, urlScore, contentScore, strongMatch };
 }
 
@@ -900,11 +929,12 @@ function selectCrawlerSources(question) {
   const has = pattern => pattern.test(text);
 
   const sports = has(/\b(mecz|mecze|spotkanie|terminarz|fcbarcelona|fcbarcelony|barcelona|barcelony|barca|liga|pilka|pilkarski|uefa|najblizszy mecz)\b/);
-  const news = has(/\b(co sie dzieje|co sie wydarzylo|wiadomosci|wiadomosciami|aktualnosci|newsy|wydarzenia|na swiecie|ze swiata|swiata|w polsce|dzisiejsze informacje|ostatnie wydarzenia|co nowego|podsumuj)\b/);
+  const news = has(/\b(co sie dzieje|co sie wydarzylo|wiadomosci|wiadomosciami|aktualnosci|newsy|wydarzenia|na swiecie|ze swiata|swiata|dzisiejsze informacje|ostatnie wydarzenia|co nowego)\b/);
   const astronomy = has(/\b(kosmos|kosmosu|astronomia|planeta|planety|nasa|eksploracji kosmosu|misja kosmiczna)\b/);
   const science = has(/\b(nauka|naukowy|badania|biologia|fizyka|chemia|fotosynteza|chlorofil)\b/);
-  const education = has(/\b(szkoła|szkolny|lekcja|edukacja|zadanie|egzamin|matura|podstawa programowa)\b/);
-  const officialPoland = has(/\b(gov|urzad|ministerstwo|ustawa|prawo|przepisy|wniosek|swiadczenie|podatki|sejm|senat)\b/);
+  const education = has(/\b(szkola|szkolny|lekcja|edukacja|zadanie|egzamin|matura|podstawa programowa|lektura|literatura)\b/);
+  const statistics = has(/\b(statystyka|statystyki|dane|demografia|ludnosc|populacja|bezrobocie|inflacja)\b/);
+  const officialPoland = has(/\b(gov|urzad|ministerstwo|ustawa|prawo|przepisy|wniosek|swiadczenie|podatki|sejm|senat|gus|statystyka|demografia|ludnosc)\b/);
   const PolandFocus = has(/\b(w polsce|polska|polski|polskie|polskich)\b/);
 
   let categories;
@@ -914,13 +944,38 @@ function selectCrawlerSources(question) {
   else if (astronomy) categories = ["science", "general"];
   else if (science) categories = ["education", "science", "general"];
   else if (education) categories = ["education", "general"];
+  else if (statistics) categories = ["poland", "general"];
   else if (officialPoland) categories = ["poland", "news"];
   else categories = ["education", "general"];
 
-  return CRAWLER_SOURCES
+  const grouped = CRAWLER_SOURCES
     .filter(source => categories.includes(source.category))
-    .sort((a, b) => categories.indexOf(a.category) - categories.indexOf(b.category) || (b.trust || 0) - (a.trust || 0))
-    .slice(0, CRAWLER_MAX_SOURCES);
+    .sort((a, b) => {
+      const relevance = source => scoreCrawlerText(`${source.name} ${(source.hints || []).join(" ")}`, getCrawlerTerms(question));
+      return categories.indexOf(a.category) - categories.indexOf(b.category)
+        || relevance(b) - relevance(a)
+        || (b.trust || 0) - (a.trust || 0);
+    });
+
+  // Rotujemy między kategoriami zamiast wybierać wyłącznie pierwszą z nich.
+  // Dzięki temu pytanie szkolne może dostać i podręcznik, i niezależne źródło ogólne.
+  const byCategory = new Map(categories.map(category => [
+    category,
+    grouped.filter(source => source.category === category)
+  ]));
+  const selected = [];
+  while (selected.length < CRAWLER_MAX_SOURCES) {
+    let added = false;
+    for (const category of categories) {
+      const next = byCategory.get(category)?.shift();
+      if (!next) continue;
+      selected.push(next);
+      added = true;
+      if (selected.length >= CRAWLER_MAX_SOURCES) break;
+    }
+    if (!added) break;
+  }
+  return selected;
 }
 
 function extractAllowedSourceFromMessage(message) {
@@ -1483,7 +1538,7 @@ async function searchAllSources(question) {
     return answer;
   }
 
-  const isNewsRequest = /\b(wiadomosci|aktualnosci|wydarzenia|co sie dzieje|co sie wydarzylo|co nowego|na swiecie|ze swiata|najnowsz|podsumuj|w polsce)\b/.test(normalizedQuestion);
+  const isNewsRequest = /\b(wiadomosci|aktualnosci|wydarzenia|co sie dzieje|co sie wydarzylo|co nowego|na swiecie|ze swiata|najnowsz)\b/.test(normalizedQuestion);
   let rankedResults = uniqueResults;
   if (isNewsRequest) {
     rankedResults = uniqueResults.filter(result => result.category === "news" && result.publishedAt);
