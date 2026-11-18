@@ -871,7 +871,24 @@ const KNOWLEDGE_QUERY_SYNONYMS = [
   [/\b(kto uchwala ustawy|izba nizsza|izba wyzsza)\b/, "Sejm i Senat"],
   [/\b(wirus komputerowy|oszustwo na haslo|podejrzany link)\b/, "phishing"],
   [/\b(jak sprawdzic czy strona jest wiarygodna|sprawdzic zrodlo|fake news)\b/, "weryfikowanie informacji online"],
-  [/\b(wpisac formule w excelu|komorka arkusza|suma w arkuszu)\b/, "formuła w arkuszu kalkulacyjnym"]
+  [/\b(wpisac formule w excelu|komorka arkusza|suma w arkuszu)\b/, "formuła w arkuszu kalkulacyjnym"],
+  [/\b(masa na objetosc|masa podzielona przez objetosc|ile masy w objetosci)\b/, "Gęstość"],
+  [/\b(sila na powierzchnie|nacisk na powierzchnie|wzor na cisnienie)\b/, "Ciśnienie"],
+  [/\b(u rowna sie i razy r|i u przez r|natezenie z napiecia i oporu|prawo oma)\b/, "Prawo Ohma"],
+  [/\b(praca rowna sie sila razy droga|sila razy przesuniecie)\b/, "Praca mechaniczna"],
+  [/\b(energia podzielona przez czas|tempo wykonywania pracy)\b/, "Moc"],
+  [/\b(wypieranie cieczy|dlaczego statek plywa|czy cialo utonie)\b/, "Siła wyporu"],
+  [/\b(cieplo przeplywa|jak cieplo sie rozchodzi|przekazywanie ciepla)\b/, "Przewodnictwo cieplne"],
+  [/\b(liczba protonow w atomie|numer porzadkowy pierwiastka)\b/, "Liczba atomowa"],
+  [/\b(jak czytac układ okresowy|wiersze i kolumny ukladu okresowego)\b/, "Grupa i okres w układzie okresowym"],
+  [/\b(zrownowazenie reakcji|ile atomow po obu stronach|bilans reakcji)\b/, "Uzgadnianie równania reakcji"],
+  [/\b(kwas czy zasada)\b/, "Kwas a zasada"],
+  [/\b(odczyn roztworu|ph roztworu|wartosc ph)\b/, "Jak odczytać skalę pH"],
+  [/\b(rozdzielanie piasku i wody|oddzielenie soli od wody)\b/, "Filtracja a destylacja"],
+  [/\b(pani twardowska|powrot taty)\b/, "Powrót taty i Pani Twardowska"],
+  [/\b(reduta ordona|smierc pulkownika)\b/, "Reduta Ordona i Śmierć Pułkownika"],
+  [/\b(switezianka|sonet krymski)\b/, "Świtezianka i wybrany Sonet krymski"],
+  [/\b(tren vii|tren viii|fraszki kochanowskiego)\b/, "Tren VII i Tren VIII oraz wybrane fraszki"]
 ];
 
 const KNOWLEDGE_QUERY_FILLERS = new Set([
@@ -1492,8 +1509,37 @@ const PERIODIC_ELEMENTS_PL = [
   ["roentgen", "Rg"], ["kopernik", "Cn"], ["nihon", "Nh"], ["flerow", "Fl"], ["moskow", "Mc"], ["liwermor", "Lv"], ["tenes", "Ts"], ["oganeson", "Og"]
 ];
 
+const ELEMENT_PROFILES_PL = new Map([
+  ["H", ["W warunkach pokojowych wodór występuje zwykle jako cząsteczki H₂. Jest najlżejszym pierwiastkiem.", "Woda zawiera wodór i tlen; wodór występuje też w wielu związkach organicznych."]],
+  ["He", ["Hel jest gazem szlachetnym i w zwykłych warunkach mało chętnie reaguje z innymi pierwiastkami.", "Lekkość i mała reaktywność helu wykorzystuje się w wybranych zastosowaniach technicznych i naukowych."]],
+  ["Li", ["Lit jest lekkim metalem alkalicznym. W przyrodzie spotyka się go głównie w związkach.", "Związki litu wykorzystuje się między innymi w akumulatorach; właściwości zależą od konkretnego związku."]],
+  ["B", ["Bor jest półmetalem, a nie typowym metalem.", "Związki boru stosuje się między innymi do produkcji szkła borokrzemowego i detergentów."]],
+  ["C", ["Węgiel jest niemetalem i tworzy różne odmiany alotropowe, między innymi grafit i diament.", "Węgiel buduje związki organiczne oraz występuje w dwutlenku węgla i węglanach."]],
+  ["N", ["Azot cząsteczkowy N₂ stanowi około 78% objętości suchego powietrza.", "Azot jest składnikiem białek i kwasów nukleinowych, a jego obieg łączy atmosferę z organizmami."]],
+  ["O", ["Tlen cząsteczkowy O₂ stanowi około 21% objętości suchego powietrza i jest potrzebny w oddychaniu tlenowym.", "Tlen nie jest paliwem, ale podtrzymuje spalanie; występuje też w wodzie i wielu minerałach."]],
+  ["F", ["Fluor jest niemetalem z grupy halogenów. W przyrodzie występuje przede wszystkim w związkach.", "Jony fluorkowe w odpowiednich ilościach wykorzystuje się w profilaktyce próchnicy; sam fluor pierwiastkowy jest niebezpieczny."]],
+  ["Ne", ["Neon jest gazem szlachetnym, który w typowych warunkach mało reaguje.", "Neon wykorzystuje się w niektórych źródłach światła i wskaźnikach."]],
+  ["Na", ["Sód jest miękkim metalem alkalicznym i silnie reaguje z wodą, dlatego nie występuje w przyrodzie jako swobodny metal.", "W chlorku sodu, czyli soli kuchennej, sód jest połączony chemicznie z chlorem."]],
+  ["Mg", ["Magnez jest lekkim metalem. Jego jony są ważne dla organizmów, a atom magnezu znajduje się w cząsteczce chlorofilu.", "Stopy magnezu wykorzystuje się tam, gdzie liczy się mała masa materiału."]],
+  ["Al", ["Glin jest lekkim metalem. Cienka warstwa tlenku na jego powierzchni spowalnia dalszą korozję.", "Mała gęstość i odporność powierzchniowa sprawiają, że glin stosuje się w opakowaniach i konstrukcjach."]],
+  ["Si", ["Krzem jest półmetalem. W przyrodzie występuje w dużych ilościach w krzemionce i krzemianach.", "Kontrolowane przewodnictwo krzemu pozwala wykorzystywać go w elektronice i ogniwach fotowoltaicznych."]],
+  ["P", ["Fosfor jest niemetalem i występuje w różnych odmianach; w organizmach jego związki są składnikiem między innymi kości i DNA.", "Związki fosforu są ważne dla roślin i wykorzystuje się je w nawozach; substancje fosforowe wymagają właściwego obchodzenia się."]],
+  ["S", ["Siarka jest żółtym niemetalem. Występuje zarówno jako pierwiastek, jak i w wielu minerałach.", "Siarka jest składnikiem niektórych aminokwasów, a jej związki mają zastosowania przemysłowe."]],
+  ["Cl", ["Chlor jest halogenem i w warunkach pokojowych występuje jako cząsteczki Cl₂; wolny chlor jest toksycznym gazem.", "Chlorki, czyli związki zawierające jony chlorkowe, są powszechne; wybrane związki chloru służą do dezynfekcji wody."]],
+  ["Ar", ["Argon jest gazem szlachetnym i stanowi niecały 1% objętości suchego powietrza.", "Mała reaktywność argonu jest wykorzystywana między innymi do ochrony materiałów podczas wybranych procesów technicznych."]],
+  ["K", ["Potas jest metalem alkalicznym; w przyrodzie występuje w związkach, a jego jony są ważne dla pracy komórek.", "Potas jest składnikiem wielu minerałów i nawozów; pierwiastkowego potasu nie należy samodzielnie badać."]],
+  ["Ca", ["Wapń jest metalem, ale w przyrodzie spotyka się go głównie w związkach.", "Związki wapnia budują między innymi wapień i kredę, a jony wapniowe są ważne dla kości i zębów."]],
+  ["Fe", ["Żelazo jest metalem, który w obecności wody i tlenu może korodować.", "Żelazo wykorzystuje się do produkcji stali; jego atomy są też częścią hemoglobiny."]],
+  ["Cu", ["Miedź jest metalem dobrze przewodzącym prąd i ciepło.", "Wykorzystuje się ją w przewodach elektrycznych i stopach, na przykład w mosiądzu."]],
+  ["Zn", ["Cynk jest metalem, który na powierzchni może tworzyć warstwę ochronną.", "Powłoki cynkowe pomagają chronić stal przed korozją; cynk wchodzi też w skład mosiądzu."]],
+  ["Ag", ["Srebro jest metalem o bardzo dobrym przewodnictwie elektrycznym.", "Stosuje się je w jubilerstwie i wybranych elementach elektrycznych; srebro jest również pierwiastkiem chemicznym, nie tylko nazwą koloru."]],
+  ["Au", ["Złoto jest metalem mało podatnym na korozję i łatwym do kształtowania.", "Wykorzystuje się je w jubilerstwie, elektronice i wybranych zastosowaniach medycznych."]],
+  ["Hg", ["Rtęć jest metalem ciekłym w typowej temperaturze pokojowej. Jej opary i związki mogą być toksyczne.", "Ze względu na zagrożenie rtęcią nie wolno dotykać rozbitego termometru ani samodzielnie zbierać rtęci."]]
+]);
+
 for (const [index, [name, symbol]] of PERIODIC_ELEMENTS_PL.entries()) {
   const atomicNumber = index + 1;
+  const profile = ELEMENT_PROFILES_PL.get(symbol);
   knowledge.push({
     title: `${name[0].toLocaleUpperCase("pl-PL")}${name.slice(1)} (${symbol})`,
     subject: "Chemia",
@@ -1502,9 +1548,9 @@ for (const [index, [name, symbol]] of PERIODIC_ELEMENTS_PL.entries()) {
     keywords: [name, `${name} pierwiastek`, `pierwiastek ${name}`, `symbol ${symbol}`, `liczba atomowa ${atomicNumber}`, symbol],
     aliases: [`${symbol} — ${name}`, `atom ${name}`, `numer atomowy ${atomicNumber}`],
     short: `${name[0].toLocaleUpperCase("pl-PL")}${name.slice(1)} ma symbol ${symbol} i liczbę atomową ${atomicNumber}.`,
-    explanation: `Liczba atomowa ${atomicNumber} oznacza, że jądro każdego atomu ${name} ma ${atomicNumber} protonów. W obojętnym atomie jest też ${atomicNumber} elektronów.`,
-    example: `Zapis ${symbol} oznacza pierwiastek ${name}; w jego jądrze znajduje się ${atomicNumber} protonów.`,
-    related: "Symbol pierwiastka jest umownym zapisem literowym, a jego pierwsza litera jest wielka.",
+    explanation: `Liczba atomowa ${atomicNumber} oznacza, że jądro każdego atomu ${name} ma ${atomicNumber} protonów. W obojętnym atomie jest też ${atomicNumber} elektronów.${profile ? ` ${profile[0]}` : ""}`,
+    example: profile ? profile[1] : `Zapis ${symbol} oznacza pierwiastek ${name}; w jego jądrze znajduje się ${atomicNumber} protonów.`,
+    related: profile ? `Symbol pierwiastka to ${symbol}. ${profile[1]}` : "Symbol pierwiastka jest umownym zapisem literowym, a jego pierwsza litera jest wielka.",
     check: `Jaki jest symbol ${name} i ile protonów ma jego atom?`,
     teacherAnswer: { all: [[symbol], [String(atomicNumber)]], hint: `Symbol to ${symbol}, a liczba atomowa to ${atomicNumber}.` }
   });
@@ -1775,6 +1821,7 @@ const LITERATURE_GUIDES = [
 function findLiteratureKnowledgeItem(question) {
   const query = normalize(question);
   if (!query) return null;
+  const expandedQuery = [...expandKnowledgeQuery(question).tokens, ...lexicalTokens(query)].join(" ");
   const grade = getRequestedSchoolGrade(question);
   const edition = grade ? getCurriculumEditionForGrade(grade) : null;
   const titleMatches = [...LITERATURE_CATALOG.values()].map(literature => {
@@ -1782,9 +1829,10 @@ function findLiteratureKnowledgeItem(question) {
       .replace(/\b(wybrane|wybrana|wybrany|fragmenty|fragment|opowiadania|powiesc|wybor)\b/g, " ")
       .replace(/\s+/g, " ").trim();
     const terms = title.split(" ").filter(term => term.length >= 4);
-    const matched = terms.filter(term => query.includes(term) || lexicalTokens(query).some(token => tokenStemMatch(token, term)));
-    const exact = title.length >= 5 && query.includes(title);
-    const hasDistinctiveTitleLead = terms[0]?.length >= 5 && (query.includes(terms[0]) || lexicalTokens(query).some(token => tokenStemMatch(token, terms[0])));
+    const expandedTokens = lexicalTokens(expandedQuery);
+    const matched = terms.filter(term => expandedQuery.includes(term) || expandedTokens.some(token => tokenStemMatch(token, term)));
+    const exact = title.length >= 5 && expandedQuery.includes(title);
+    const hasDistinctiveTitleLead = terms[0]?.length >= 5 && (expandedQuery.includes(terms[0]) || expandedTokens.some(token => tokenStemMatch(token, terms[0])));
     let score = exact ? title.length + 100 : matched.length >= Math.min(2, terms.length) || hasDistinctiveTitleLead ? matched.join(" ").length + matched.length * 10 + (hasDistinctiveTitleLead ? 8 : 0) : 0;
     if (score && edition && getLiteratureRole(literature, edition, grade)) score += 60;
     return { literature, score };
@@ -2133,6 +2181,15 @@ function lexicalTokens(value) {
 
 function tokenStemMatch(left, right) {
   if (left === right) return true;
+  if (Math.min(left.length, right.length) < 4) return false;
+  const suffixes = ["owego", "owych", "owej", "aniem", "eniem", "owaniu", "owania", "ami", "ach", "owie", "osci", "osc", "eniu", "enie", "ania", "anie", "owym", "ego", "emu", "owa", "owe", "owi", "om", "ow", "ie", "em", "ym", "im", "mi", "ii", "ia", "iu", "y", "a", "e", "u", "i", "ą", "ę"];
+  const stem = value => {
+    for (const suffix of suffixes) {
+      if (value.length - suffix.length >= 3 && value.endsWith(suffix)) return value.slice(0, -suffix.length);
+    }
+    return value;
+  };
+  if (stem(left) === stem(right)) return true;
   if (Math.min(left.length, right.length) < 5) return false;
   const common = Math.min(left.length, right.length, 7);
   return left.slice(0, common) === right.slice(0, common);
@@ -2228,6 +2285,52 @@ function looksLikeFactualQuestion(question) {
   return /\b(co to jest|czym jest|kto jest|kto byl|kto|gdzie|kiedy|ile|jak dziala|jak powstal|jak powstala|dlaczego|czemu|wymien|podaj informacje|opowiedz o|wyjasnij|co oznacza|co nowego|co wiadomo|najnowsze informacje|informacje o|historia|biografia|definicja|znaczenie|czy)\b/.test(text);
 }
 
+function getBroadSubjectOnlyQuestion(question) {
+  const normalized = normalize(question);
+  const subjects = [
+    ["matematyka", /\b(matma|matmy|matematyk\w*|maths?|mathematics?)\b/],
+    ["język polski", /\b(jezyk polski|polski|polskiego|polszczyzna)\b/],
+    ["język angielski", /\b(jezyk angielski|angielski|angielskiego|english)\b/],
+    ["biologia i przyroda", /\b(biologia|biologii|przyroda|przyrody)\b/],
+    ["fizyka", /\b(fizyka|fizyki|fizyce|physics)\b/],
+    ["chemia", /\b(chemia|chemii|chemie|chemistry)\b/],
+    ["historia", /\b(historia|historii|historie|history)\b/],
+    ["geografia", /\b(geografia|geografii|geografie|geography)\b/],
+    ["informatyka", /\b(informatyka|informatyki|informatyce|computer science)\b/]
+  ];
+  const matched = subjects.find(([, pattern]) => pattern.test(normalized));
+  if (!matched) return null;
+
+  const grade = getRequestedSchoolGrade(question) || Number(normalized.match(/\b([4-8])\b/)?.[1]) || null;
+  let remainder = normalized;
+  for (const [, pattern] of subjects) remainder = remainder.replace(new RegExp(pattern.source, "g"), " ");
+  remainder = remainder
+    .replace(/\b(?:klas(?:a|y|ie|e|ach)?|grade|class)\s*(?:iv|viii|vii|vi|v|[4-8]|czwartej|czwarta|czwarty|piatej|piata|piaty|szostej|szosta|szosty|siodmej|siodma|siodmy|osmej|osma|osmy)\b/g, " ")
+    .replace(/\b(?:iv|viii|vii|vi|v|[4-8])\s+klas(?:a|y|ie|e|ach)\b/g, " ")
+    .replace(/\b(?:dla|z|mi|pomoz|pomocy|prosze|temat|tematu|przedmiot|przedmiotu|nauka|nauki|zakres|zakresu|podstawowe|tematy|dzial|dzialy|lekcja|lekcji|material|materialy|chce|chcialbym|chcialabym|ucze|sie|poznac|powtorka|powtorki|moj|moja|to)\b/g, " ")
+    .replace(/\b[4-8]\b/g, " ")
+    .replace(/\s+/g, " ").trim();
+  return remainder ? null : { subject: matched[0], grade };
+}
+
+function createBroadSubjectAnswer(question) {
+  const request = getBroadSubjectOnlyQuestion(question);
+  if (!request) return null;
+  const examples = {
+    matematyka: "ułamki, procenty, obliczenia i geometrię",
+    "język polski": "gramatykę, pisanie, analizę tekstu i lektury",
+    "język angielski": "słownictwo, gramatykę, wymowę i krótkie dialogi",
+    "biologia i przyroda": "organizmy, ekosystemy, ciało człowieka i doświadczenia przyrodnicze",
+    fizyka: "ruch, siły, energię, ciepło, światło i obwody elektryczne",
+    chemia: "budowę materii, pierwiastki, mieszaniny, roztwory i reakcje",
+    historia: "chronologię, wydarzenia, źródła historyczne i ich przyczyny",
+    geografia: "mapy, krajobrazy, klimat, ludność i pracę z danymi",
+    informatyka: "algorytmy, programowanie, arkusze i bezpieczeństwo cyfrowe"
+  };
+  const gradeLabel = request.grade ? `, klasa ${request.grade}` : "";
+  return `🐨 Pomogę z ${request.subject}${gradeLabel}. Mogę wyjaśnić ${examples[request.subject]}, rozwiązać zadanie krok po kroku albo zrobić krótką powtórkę.\n\nNapisz konkretny temat lub wklej zadanie. Kolejność materiału w ARKONIE ustala szkolny program i nauczyciel, więc nie zgaduję, który dział macie teraz.`;
+}
+
 function getQuestionRoute(question, localAnswer = "", history = []) {
   const text = String(question ?? "").trim();
   if (!text) return { kind: "empty", shouldSearchWeb: false };
@@ -2236,11 +2339,12 @@ function getQuestionRoute(question, localAnswer = "", history = []) {
   if (isSocialMessage(text)) return { kind: "social", shouldSearchWeb: false };
 
   const normalized = normalize(text);
+  if (getBroadSubjectOnlyQuestion(text)) return { kind: "subject-menu", shouldSearchWeb: false, topic: null, searchQuery: null };
   if (!asksToSearchOnline(text)) {
-    const literatureList = formatLiteratureListAnswer(text);
-    if (literatureList) return { kind: "literature-list", shouldSearchWeb: false, topic: "lektury szkolne", searchQuery: null };
     const literatureItem = findLiteratureKnowledgeItem(text);
     if (literatureItem) return { kind: "literature", shouldSearchWeb: false, topic: literatureItem.title, searchQuery: null };
+    const literatureList = formatLiteratureListAnswer(text);
+    if (literatureList) return { kind: "literature-list", shouldSearchWeb: false, topic: "lektury szkolne", searchQuery: null };
   }
   const topic = findKnowledge(text);
   const equationAnswer = solveLinearEquation(text);
@@ -3553,6 +3657,9 @@ export function answerQuestion(question, history = []) {
 
     if (isTopicChange(text)) return "Jasne, zmieniamy temat! 🐨 Napisz, czego teraz chcesz się nauczyć.";
 
+    const broadSubjectAnswer = createBroadSubjectAnswer(text);
+    if (broadSubjectAnswer) return broadSubjectAnswer;
+
     const activeTextQuiz = getActiveTextQuiz(safeHistory);
     if (activeTextQuiz) {
       if (/^(koniec quizu|zakoncz quiz|stop)$/i.test(normalized)) {
@@ -3586,10 +3693,10 @@ export function answerQuestion(question, history = []) {
     }
 
     if (!asksToSearchOnline(text)) {
-      const literatureList = formatLiteratureListAnswer(text);
-      if (literatureList) return literatureList;
       const literatureItem = findLiteratureKnowledgeItem(text);
       if (literatureItem) return formatLiteratureAnswer(literatureItem, text);
+      const literatureList = formatLiteratureListAnswer(text);
+      if (literatureList) return literatureList;
     }
 
     // Najpierw rozpoznajemy, czy pytanie odnosi się do poprzedniego tematu.

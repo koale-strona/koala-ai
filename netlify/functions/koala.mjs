@@ -1735,7 +1735,7 @@ function buildResearchSummary(question, results, terms) {
     timeZone: "Europe/Warsaw", dateStyle: "short", timeStyle: "short"
   }).format(new Date());
 
-  const heading = newsMode ? "## 🐨 Przegląd najnowszych wiadomości" : "## 🐨 Zebrane materiały";
+  const heading = newsMode ? "🐨 Przegląd najnowszych wiadomości" : "🐨 Zebrane materiały";
   const intro = newsMode
     ? `Znalazłam **${picked.length} artykułów z ${siteCount} witryn**. Uporządkowałam je według dat publikacji.`
     : `Znalazłam **${picked.length} stron z ${siteCount} witryn**, które pasują do pytania.`;
@@ -1743,7 +1743,7 @@ function buildResearchSummary(question, results, terms) {
     ? "_To krótkie omówienia fragmentów artykułów, a nie pełna synteza wszystkich wydarzeń. Fragmenty mogą pozostać w języku oryginalnym strony._"
     : "_To wybrane fragmenty publicznych stron. Sprawdź źródła, jeśli potrzebujesz pełnego kontekstu._";
 
-  return `${heading}\n\n${intro}\n\n### Najważniejsze znalezione materiały\n${bullets || "Nie udało się wyodrębnić treści artykułów."}\n\n### Źródła do przeczytania\n${sourceLines}\n\n_Stan sprawdzenia: ${checkedAt} czasu polskiego._\n\n${limitation}`;
+  return `${heading}\n\n${intro}\n\nNajważniejsze znalezione materiały\n${bullets || "Nie udało się wyodrębnić treści artykułów."}\n\nŹródła do przeczytania\n${sourceLines}\n\n_Stan sprawdzenia: ${checkedAt} czasu polskiego._\n\n${limitation}`;
 }
 
 function isBarcaFixtureQuestion(question) {
