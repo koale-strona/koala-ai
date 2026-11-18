@@ -799,12 +799,16 @@ const knowledge = [
 ];
 
 function addKnowledgeCards(subject, rows) {
-  const entries = rows.map(([title, aliasText, short, explanation, example, related, check, answerText]) => {
+  const entries = rows.map(([title, aliasText, short, explanation, example, related, check, answerText, gradeRange]) => {
     const aliases = aliasText ? aliasText.split("|").filter(Boolean) : [];
     const all = answerText.split("&").map(group => group.split("|").filter(Boolean));
+    const grades = gradeRange
+      ? gradeRange.split("-").map(value => Number(value)).filter(value => value >= 4 && value <= 8)
+      : undefined;
     return {
       title,
       subject,
+      ...(grades?.length ? { grades } : {}),
       keywords: [title, ...aliases],
       aliases,
       short,
@@ -816,6 +820,97 @@ function addKnowledgeCards(subject, rows) {
     };
   });
   knowledge.push(...entries);
+}
+
+// The same curriculum concept is often asked about in many different ways.
+// These prompt patterns and grade labels are normalized before lookup, so the
+// factual cards stay unique while more than 100 common class/prompt forms work.
+const LEARNING_QUERY_PROMPTS = [
+  "co to jest", "czym jest", "co oznacza", "co znaczy", "wyjaśnij", "wytłumacz",
+  "opowiedz o", "naucz mnie", "pokaż mi", "daj przykład", "podaj przykład",
+  "jak działa", "jak rozumieć", "jak zapamiętać", "jak rozwiązać", "krok po kroku",
+  "zrób notatkę", "przygotuj notatkę", "zrób powtórkę", "przepytaj mnie",
+  "sprawdź moją wiedzę", "przygotuj quiz", "ułóż plan nauki", "wytłumacz prosto",
+  "wytłumacz prostymi słowami", "nie rozumiem", "mam problem z", "pomóż mi z"
+];
+const GRADE_QUERY_FORMS = [
+  ["4", "iv", "czwartej", "czwarta", "czwartoklasisty", "czwartoklasista"],
+  ["5", "v", "piątej", "piąta", "piątoklasisty", "piątoklasista"],
+  ["6", "vi", "szóstej", "szósta", "szóstoklasisty", "szóstoklasista"],
+  ["7", "vii", "siódmej", "siódma", "siódmoklasisty", "siódmoklasista"],
+  ["8", "viii", "ósmej", "ósma", "ósmoklasisty", "ósmoklasista"]
+];
+
+const KNOWLEDGE_QUERY_SYNONYMS = [
+  [/\b(skracanie ulamkow|skrocic ulamek|skroc ulamki|wspolny dzielnik licznika)\b/, "skracanie ułamków"],
+  [/\b(rozszerzanie ulamkow|rozszerzyc ulamek|wspolny mianownik)\b/, "rozszerzanie ułamków"],
+  [/\b(licznik|mianownik|kreska ulamkowa|ulamki zwykle)\b/, "ułamki zwykłe"],
+  [/\b(ulamki po przecinku|liczby z przecinkiem|ulamki dziesietne)\b/, "ułamki dziesiętne"],
+  [/\b(ile to procent|procent z liczby|procenty w zadaniu)\b/, "obliczanie procentu liczby"],
+  [/\b(x w rownaniu|niewiadoma|jak rozwiazac rownanie|przeniesc na druga strone)\b/, "rozwiązywanie równania przez działania odwrotne"],
+  [/\b(wykres liniowy|odczytac wykres liniowy)\b/, "Odczytywanie wykresu liniowego"],
+  [/\b(wykres slupkowy)\b/, "wykres słupkowy"],
+  [/\b(kat prosty|kat ostry|kat rozwarty)\b/, "kąty ostre, proste i rozwarte"],
+  [/\b(rodzaje wyrazow|czesci mowy|jak nazwac rzecz)\b/, "rzeczownik"],
+  [/\b(co robi w zdaniu|wyraz oznaczajacy czynnosc)\b/, "czasownik"],
+  [/\b(cecha rzeczownika|wyraz opisujacy rzecz)\b/, "przymiotnik"],
+  [/\b(osoba opowiadajaca|kto opowiada tekst|ja w narracji)\b/, "narrator pierwszoosobowy"],
+  [/\b(przenosnia|metafora)\b/, "środki stylistyczne"],
+  [/\b(slowo o przeciwnym znaczeniu|wyraz przeciwny)\b/, "synonim i antonim"],
+  [/\b(simple present|czas terazniejszy po angielsku|do does)\b/, "Present Simple"],
+  [/\b(present progressive|present continuous|am is are ing)\b/, "Present Continuous"],
+  [/\b(past tense|czas przeszly po angielsku|did)\b/, "Past Simple"],
+  [/\b(roslina robi pokarm|pokarm rosliny|dwutlenek wegla i slonce)\b/, "fotosynteza"],
+  [/\b(krew krazy|serce pompuje|naczynia krwionosne)\b/, "układ krwionośny"],
+  [/\b(czasteczki i atomy|z czego zbudowana jest materia)\b/, "atom"],
+  [/\b(odparowanie|parowanie wody|wrzenie a parowanie)\b/, "parowanie i wrzenie"],
+  [/\b(przemieszczenie|ile kilometrow na godzine|droga predkosc czas)\b/, "droga, prędkość i czas"],
+  [/\b(kraje i stolice|kontynenty swiata|oceany swiata)\b/, "kontynenty i oceany"],
+  [/\b(zerowy poludnik|greenwich|dlugosc i szerokosc na mapie)\b/, "szerokość i długość geograficzna"],
+  [/\b(kiedy bylo|ustawic daty|wiek z daty)\b/, "chronologia historyczna"],
+  [/\b(kto uchwala ustawy|izba nizsza|izba wyzsza)\b/, "Sejm i Senat"],
+  [/\b(wirus komputerowy|oszustwo na haslo|podejrzany link)\b/, "phishing"],
+  [/\b(jak sprawdzic czy strona jest wiarygodna|sprawdzic zrodlo|fake news)\b/, "weryfikowanie informacji online"],
+  [/\b(wpisac formule w excelu|komorka arkusza|suma w arkuszu)\b/, "formuła w arkuszu kalkulacyjnym"]
+];
+
+const KNOWLEDGE_QUERY_FILLERS = new Set([
+  "a", "aby", "ale", "albo", "bo", "czy", "co", "czemu", "dlaczego", "do", "dla",
+  "gdzie", "ile", "jak", "jaka", "jakie", "jaki", "jest", "jestem", "mi", "mnie",
+  "na", "nie", "o", "od", "oraz", "po", "pod", "poniewaz", "prosze", "przez",
+  "sie", "to", "w", "we", "z", "za", "ze", "ten", "ta", "te", "temat", "tematu",
+  "zagadnienie", "lekcja", "material", "materialy", "nauki", "powtorki", "quiz", "test",
+  "plan", "klasa", "klasy", "klasie", "uczen", "uczniowi", "szkoly", "szkolny", "szkolna",
+  "wyjasnij", "wytlumacz", "opowiedz", "naucz", "pokaz", "podaj", "daj", "przygotuj",
+  "zrob", "uloz", "rozpisz", "sprawdz", "przepytaj", "prosto", "prosciej", "latwiej",
+  "krok", "kroki", "przyklad", "przyklady", "notatke", "notatka", "podsumuj", "rozwin"
+]);
+
+function expandKnowledgeQuery(question) {
+  const normalized = normalize(question);
+  const grade = getRequestedSchoolGrade(question);
+  const gradeToken = `(?:${[...new Set(GRADE_QUERY_FORMS.flat())].map(normalize).join("|")})`;
+  const classToken = "(?:klas(?:a|y|ie|e|ach)?|grade|class)";
+  let searchable = normalized.replace(new RegExp(
+    `\\b${classToken}\\s*${gradeToken}\\b|\\b${gradeToken}\\s+${classToken}\\b|\\b(?:dla|do|w)\\s+${gradeToken}\\b`,
+    "g"
+  ), " ");
+
+  for (const prompt of LEARNING_QUERY_PROMPTS) {
+    const normalizedPrompt = normalize(prompt);
+    searchable = searchable.replace(new RegExp(`\\b${normalizedPrompt.replace(/\s+/g, "\\s+")}\\b`, "g"), " ");
+  }
+  const tokens = lexicalTokens(searchable).filter(token =>
+    !KNOWLEDGE_QUERY_FILLERS.has(token) && !(grade && /^\d+$/.test(token))
+  );
+  const expanded = [...tokens];
+  for (const [pattern, canonical] of KNOWLEDGE_QUERY_SYNONYMS) {
+    if (pattern.test(normalized)) expanded.push(...lexicalTokens(canonical));
+  }
+
+  // Grade cues are retained as context metadata and removed from the topic text.
+  // A subject query can therefore still find its topic card when phrased in any grade.
+  return { tokens: [...new Set(expanded)], grade };
 }
 
 addKnowledgeCards("Matematyka", [
@@ -1214,6 +1309,53 @@ addKnowledgeCards("Muzyka i plastyka", [
   ["Kontrast w sztuce", "kontrast barw kształtów", "Kontrast zestawia wyraźnie różniące się elementy.", "Może dotyczyć jasności, koloru, wielkości, kształtu lub faktury.", "Jasny obiekt na ciemnym tle jest kontrastowy.", "Kontrast może podkreślić najważniejszą część pracy.", "Podaj jeden rodzaj kontrastu.", "jasny i ciemny|kolorystyczny|wielkości"]
 ]);
 
+addKnowledgeCards("Matematyka", [
+  ["Odczytywanie wykresu liniowego", "wykres liniowy|zmiana na wykresie|odczytaj dane z wykresu", "Wykres liniowy pokazuje, jak wartości zmieniają się wraz z upływem czasu albo zmianą innej wielkości.", "Sprawdź tytuł, opisy osi, jednostki i skalę. Następnie porównuj punkty albo odczytuj wartość dla wybranego argumentu.", "Na wykresie temperatury odczytaj wartość dla godziny 12 i porównaj ją z godziną 9.", "Wykres pomaga zauważyć wzrost, spadek i okres bez zmian.", "Co należy najpierw sprawdzić przed odczytaniem wartości z wykresu?", "opisy osi&tytuł wykresu|skalę", "5-8"],
+  ["Procentowa zmiana wielkości", "o ile procent wzrosło|spadek procentowy|zmiana o procent", "Procentową zmianę obliczamy, porównując różnicę wartości z wartością początkową.", "Najpierw oblicz różnicę, potem podziel ją przez wartość początkową i pomnóż przez 100%. Wzrost i spadek opisujemy osobno.", "Cena wzrosła z 40 zł do 50 zł. Zmiana to 10 zł, czyli 10/40 = 25% wartości początkowej.", "W zadaniu ważne jest ustalenie, która liczba jest podstawą procentu.", "Cena 80 zł spadła do 60 zł. O ile złotych i o ile procent spadła?", "20 zł&25%", "6-8"],
+  ["Notacja wykładnicza", "zapis naukowy|liczba razy dziesięć do potęgi|bardzo duże liczby", "Notacja wykładnicza zapisuje liczbę jako iloczyn liczby od 1 do 10 i potęgi liczby 10.", "Przesuń przecinek tak, aby przed nim została jedna niezerowa cyfra. Liczba przesunięć określa wykładnik potęgi dziesięciu.", "3 500 000 = 3,5 × 10⁶.", "Taki zapis ułatwia porównywanie bardzo dużych i bardzo małych liczb.", "Zapisz 42 000 w notacji wykładniczej.", "4,2×10^4|4,2 × 10⁴", "7-8"]
+]);
+
+addKnowledgeCards("Język polski", [
+  ["Związki frazeologiczne", "frazeologizm|utarty zwrot|znaczenie powiedzenia", "Związek frazeologiczny to utrwalone połączenie wyrazów, którego znaczenie często nie wynika wprost z pojedynczych słów.", "Wyrażenie może mieć znaczenie przenośne, dlatego odczytujemy je w kontekście.", "„Mieć muchy w nosie” znaczy być w złym humorze, a nie mieć owady w nosie.", "Frazeologizmy wzbogacają język i pomagają wyrazić myśl obrazowo.", "Co oznacza powiedzenie „mieć serce na dłoni”?", "być życzliwym|być dobrym i otwartym", "4-8"],
+  ["Zgoda podmiotu z orzeczeniem", "zgodność podmiotu i orzeczenia|liczba czasownika w zdaniu", "Orzeczenie powinno zgadzać się z podmiotem między innymi w liczbie i osobie.", "Najpierw znajdź wykonawcę czynności, a potem sprawdź, czy forma czasownika do niego pasuje.", "„Uczniowie czytają”, a nie „uczniowie czyta”.", "Zgodność pomaga budować poprawne i jasne zdania.", "Popraw zdanie: „Dziewczynki biegnie do klasy”.", "dziewczynki biegną", "4-8"],
+  ["Imiesłowy przymiotnikowe", "imiesłów czynny|imiesłów bierny|końcówka ący ony ty", "Imiesłowy przymiotnikowe nazywają cechę związaną z czynnością i odmieniają się podobnie jak przymiotniki.", "Czynne często mają końcówkę „-ący”, a bierne „-ny”, „-ony” lub „-ty”. Dobór formy zależy od czasownika.", "„Czytający uczeń” sam czyta, a „przeczytana książka” została przeczytana.", "Imiesłów może skrócić wypowiedź, ale powinien jasno wskazywać wykonawcę czynności.", "Wskaż imiesłów przymiotnikowy w wyrażeniu „zamknięte drzwi”.", "zamknięte|zamknięte drzwi", "7-8"],
+  ["Interpretacja wiersza", "jak analizować wiersz|podmiot liryczny|sens utworu", "Interpretacja wiersza to uzasadnione odczytanie jego sensu na podstawie tekstu.", "Zwróć uwagę na osobę mówiącą, sytuację, nastrój, obrazy i środki stylistyczne. Każdy wniosek poprzyj przykładem z utworu.", "Jeśli powtarzające się słowa opisują ciszę i noc, mogą budować nastrój spokoju — sprawdź to w całym wierszu.", "Nie ma sensu zgadywać intencji autora bez dowodów w tekście.", "Czym poprzesz swoją interpretację utworu?", "przykładem z tekstu|cytatem", "5-8"]
+]);
+
+addKnowledgeCards("Język angielski", [
+  ["Past Continuous", "past continuous tense|was were ing|czynność trwająca w przeszłości", "Past Continuous opisuje czynność, która trwała w określonym momencie w przeszłości.", "Budujemy go: was lub were + czasownik z końcówką -ing. Często łączy się z krótszym zdarzeniem w Past Simple.", "At 7 p.m. I was doing my homework. — O 19 odrabiałem pracę domową.", "Ten czas pomaga opisać tło zdarzenia albo czynność przerwaną przez inną.", "Uzupełnij: They ___ (play) football at five o'clock.", "were playing", "6-8"],
+  ["First Conditional", "first conditional|if present simple will|realny warunek po angielsku", "First Conditional opisuje realny warunek i jego możliwy skutek w przyszłości.", "Po if używamy zwykle Present Simple, a w drugiej części will i czasownika w formie podstawowej.", "If it rains, we will stay at home. — Jeśli będzie padać, zostaniemy w domu.", "Po if w tym zdaniu nie wstawiamy will.", "Uzupełnij: If I finish early, I ___ (call) you.", "will call", "7-8"],
+  ["Present Perfect a Past Simple", "różnica present perfect i past simple|ever never yesterday ago", "Past Simple mówi o zakończonym wydarzeniu w określonym czasie, a Present Perfect łączy przeszłość z teraźniejszością.", "Słowa takie jak yesterday i ago zwykle wskazują Past Simple. Doświadczenia bez podanego czasu często opisujemy Present Perfect.", "I visited London last year. / I have visited London twice.", "Najpierw poszukaj w zdaniu informacji, czy podano zakończony moment w przeszłości.", "Którego czasu użyjesz z „yesterday”: Present Perfect czy Past Simple?", "Past Simple", "7-8"],
+  ["Pytania z question words po angielsku", "what where when why who which how pytajniki angielskie", "Question words służą do zadawania pytań o osobę, rzecz, miejsce, czas, powód lub sposób.", "Najczęstsze to: who, what, where, when, why i how. Zwykłe pytanie często ma szyk: słowo pytające + operator + osoba + czasownik.", "Where do you live? — Gdzie mieszkasz?", "Dobór słowa zależy od informacji, której szukamy.", "Jakiego słowa pytającego użyjesz, aby zapytać o miejsce?", "where", "4-8"]
+]);
+
+addKnowledgeCards("Biologia i przyroda", [
+  ["Bioróżnorodność", "różnorodność biologiczna|różne gatunki w ekosystemie", "Bioróżnorodność oznacza bogactwo życia: różnorodność ekosystemów, gatunków i różnic między osobnikami.", "Zdrowe środowisko daje organizmom miejsca do życia, pokarm i warunki rozmnażania.", "Łąka z wieloma gatunkami roślin i owadów jest bardziej różnorodna niż trawnik z jednym gatunkiem trawy.", "Utrata siedlisk, zanieczyszczenie i zmiany klimatu mogą zmniejszać bioróżnorodność.", "Podaj jeden przykład działania, które może chronić bioróżnorodność.", "ochrona siedlisk|sadzenie rodzimych roślin", "5-8"],
+  ["Ochrona zapylaczy", "pszczoły zapylanie roślin|owady zapylające", "Zapylacze przenoszą pyłek między kwiatami i umożliwiają rozmnażanie wielu roślin.", "Do zapylaczy należą między innymi pszczoły, trzmiele, motyle i niektóre muchówki.", "Sadzenie różnych kwitnących roślin może zapewniać owadom pokarm w różnych porach sezonu.", "Zapylacze wspierają przyrodę i produkcję części żywności.", "W jaki sposób owady pomagają roślinom kwiatowym?", "przenoszą pyłek|zapylają", "4-8"]
+]);
+
+addKnowledgeCards("Chemia", [
+  ["Reakcja zobojętniania", "kwas i zasada|neutralizacja|kwas reaguje z zasadą", "W reakcji zobojętniania kwas reaguje z zasadą, a w uproszczonym opisie powstają sól i woda.", "To szczególny rodzaj reakcji chemicznej. W doświadczeniu nie wolno próbować substancji ani mieszać odczynników bez nadzoru nauczyciela.", "Kwas solny i wodorotlenek sodu mogą reagować, tworząc chlorek sodu i wodę.", "O przebiegu reakcji decydują konkretne reagenty i ich proporcje.", "Jakie dwie klasy substancji reagują w zobojętnianiu?", "kwas i zasada|kwas z zasadą", "7-8"]
+]);
+
+addKnowledgeCards("Geografia", [
+  ["Krajobraz naturalny i przekształcony", "krajobraz kulturowy|krajobraz zmieniony przez człowieka", "Krajobraz naturalny powstał głównie pod wpływem przyrody, a przekształcony został wyraźnie zmieniony przez człowieka.", "W krajobrazie mogą współwystępować elementy przyrodnicze i zbudowane przez ludzi.", "Las z naturalnym ciekiem ma inny stopień przekształcenia niż centrum miasta z ulicami i budynkami.", "Rozpoznawanie zmian krajobrazu pomaga rozumieć wpływ człowieka na środowisko.", "Podaj jeden element krajobrazu przekształconego przez człowieka.", "droga|budynek|pole uprawne", "4-8"],
+  ["Czas miejscowy i strefy czasowe", "obliczanie różnicy czasu|strefy czasowe na świecie", "Strefy czasowe porządkują czas na Ziemi według położenia względem południków.", "Przybliżenie jednej godziny na każde 15° długości geograficznej pomaga oszacować różnicę czasu; dokładne granice stref są ustalane umownie.", "Jeśli w miejscu położonym 30° na wschód jest południe, w miejscu 30° na zachód różnica może wynosić około czterech godzin.", "Przy obliczeniach sprawdź kierunek wschód–zachód i przejście przez północ lub północ.", "Dlaczego na wschód od Greenwich czas słoneczny jest zwykle późniejszy?", "Ziemia obraca się z zachodu na wschód|wschód ma późniejszy czas", "6-8"]
+]);
+
+addKnowledgeCards("Fizyka", [
+  ["Prawo Ohma", "natężenie napięcie opór|zależność U I R|om", "Prawo Ohma opisuje zależność napięcia, natężenia prądu i oporu w określonych warunkach.", "Dla elementu spełniającego prawo Ohma: U = I × R. Jednostką napięcia jest wolt, natężenia amper, a oporu om.", "Przy napięciu 6 V i oporze 3 Ω natężenie wynosi I = 6/3 = 2 A.", "Zawsze zapisuj jednostki i sprawdź, czy wielkości dotyczą tego samego fragmentu obwodu.", "Jak obliczyć natężenie, gdy znasz napięcie i opór?", "podzielić napięcie przez opór|I=U/R", "8"]
+]);
+
+addKnowledgeCards("Informatyka", [
+  ["Pętla z warunkiem", "powtarzaj dopóki|while loop|pętla while", "Pętla z warunkiem powtarza instrukcje, dopóki określony warunek jest spełniony.", "Warunek powinien kiedyś przestać być prawdziwy, inaczej program może zapętlić się bez końca.", "Powtarzaj dodawanie 1, dopóki licznik jest mniejszy niż 5.", "Zmienianie wartości użytej w warunku pozwala kontrolować zakończenie pętli.", "Co może się stać, jeśli warunek pętli nigdy się nie zmieni?", "pętla nie będzie się kończyć|nieskończona pętla", "5-8"]
+]);
+
+for (const item of knowledge) {
+  item.grades ||= [4, 5, 6, 7, 8];
+  item.educationStage ||= "IV–VIII";
+}
+
 const teacherAnswerRules = {
   "Rzeczownik": { all: ["kot"], hint: "Poszukaj wyrazu nazywającego zwierzę." },
   "Czasownik": { all: [["graja", "grają"]], hint: "Szukaj wyrazu, który oznacza wykonywaną czynność." },
@@ -1499,7 +1641,8 @@ function phraseMatchScore(questionTokens, phrase) {
 }
 
 function findKnowledgeMatches(question) {
-  const questionTokens = lexicalTokens(question);
+  const query = expandKnowledgeQuery(question);
+  const questionTokens = query.tokens;
   if (!questionTokens.length) return [];
   const matches = [];
 
@@ -1513,6 +1656,10 @@ function findKnowledgeMatches(question) {
         score = candidate;
         matchedPhrase = phrase;
       }
+    }
+    if (query.grade && Array.isArray(item.grades)) {
+      if (!item.grades.includes(query.grade)) continue;
+      score += 12;
     }
     if (score >= 25) matches.push({ item, score, matchedPhrase });
   }
@@ -1542,7 +1689,8 @@ function isSocialMessage(question) {
 function isCurrentInformationQuestion(question) {
   const text = normalize(question);
   return /\b(aktualnie|obecnie|dzisiaj|dzis|jutro|wczoraj|najnowsz\w*|na zywo|teraz|aktualn\w*|ostatnie wiadomosci|co nowego|co wiadomo|co sie dzieje|co sie wydarzylo|ostatnie informacje|ostatnie wydarzenia|na swiecie)\b/.test(text)
-    || /\b(mecz|mecze|spotkanie|terminarz|wynik meczu|pogoda|kurs walut|kurs euro|kurs dolara|aktualnosci|wiadomosci)\b/.test(text);
+    || /\b(mecz|mecze|spotkanie|terminarz|wynik meczu|pogoda|kurs walut|kurs euro|kurs dolara|aktualnosci|wiadomosci)\b/.test(text)
+    || /\b(podstawa programowa|wymagania programowe|program nauczania|reforma26|kompas jutra|program nauczania arkona|szkola arkona)\b/.test(text);
 }
 
 function asksToSearchOnline(question) {
@@ -2553,78 +2701,145 @@ function startTeacherLesson(item) {
   return `## 🐨 Tryb wspólnej lekcji\n\n**Temat lekcji:** ${item.title}\n\n### Krok 1 — Poznajmy temat\n${item.short}\n\n### Krok 2 — Zrozumienie\n${item.explanation}\n\n### Krok 3 — Przykład\n${item.example}\n\n### 🎓 Pytanie do Ciebie\n${item.check}\n\nOdpowiedz własnymi słowami. Sprawdzę odpowiedź i dam Ci podpowiedź, jeśli będzie potrzebna.`;
 }
 
-function createStudyPlan(item) {
+function createStudyPlan(item, question = "") {
   if (!item) return null;
-  return `## 🐨 15-minutowy plan nauki: ${item.title}\n\n**Minuty 0–4 — zrozumienie**\nPrzeczytaj najważniejszą myśl: ${item.short}\n\n**Minuty 4–8 — wyjaśnij własnymi słowami**\nPrzeczytaj wyjaśnienie i spróbuj powiedzieć je bez patrzenia: ${item.explanation}\n\n**Minuty 8–12 — przykład**\nPrzeanalizuj przykład: ${item.example}\n\n**Minuty 12–15 — sprawdzenie**\nOdpowiedz bez zaglądania: ${item.check}\n\nNa koniec sprawdź, czy potrafisz połączyć temat z tym zagadnieniem: ${item.related}`;
+  return `## 🐨 15-minutowy plan nauki: ${item.title}\n\n**Minuty 0–4 — zrozumienie**\nPrzeczytaj najważniejszą myśl: ${item.short}\n\n**Minuty 4–8 — wyjaśnij własnymi słowami**\nPrzeczytaj wyjaśnienie i spróbuj powiedzieć je bez patrzenia: ${item.explanation}\n\n**Minuty 8–12 — przykład**\nPrzeanalizuj przykład: ${item.example}\n\n**Minuty 12–15 — sprawdzenie**\nOdpowiedz bez zaglądania: ${item.check}\n\nNa koniec sprawdź, czy potrafisz połączyć temat z tym zagadnieniem: ${item.related}${createCurriculumNote(question)}`;
 }
 
 function getRequestedSchoolGrade(question) {
   const text = normalize(question);
-  const gradePattern = "viii|vii|vi|iv|v|[4-8]";
+  const gradePattern = "viii|vii|vi|iv|v|[4-8]|czwartoklasisty|czwartoklasistki|czwartoklasista|czwartej|czwarta|czwarty|piatoklasisty|piatoklasistki|piatoklasista|piatej|piata|piaty|szostoklasisty|szostoklasistki|szostoklasista|szostej|szosta|szosty|siodmoklasisty|siodmoklasistki|siodmoklasista|siodmej|siodma|siodmy|osmoklasisty|osmoklasistki|osmoklasista|osmej|osma|osmy";
   const classPattern = "(?:klas(?:a|y|ie|e|ach)?|classes?|grades?)";
-  const match = text.match(new RegExp(`\\b${classPattern}\\s*(${gradePattern})\\b|\\b(${gradePattern})\\s+${classPattern}\\b`));
-  const token = match?.[1] || match?.[2];
+  const match = text.match(new RegExp(`\\b${classPattern}\\s*(${gradePattern})\\b|\\b(${gradePattern})\\s+${classPattern}\\b|\\b(?:w|dla|jestem uczniem|ucze sie w)\\s+(${gradePattern})(?:\\s+klas\\w*)?\\b`));
+  const token = match?.[1] || match?.[2] || match?.[3];
   if (!token) return null;
-  const romanGrades = { iv: 4, v: 5, vi: 6, vii: 7, viii: 8 };
-  return romanGrades[token] || Number(token) || null;
+  const gradeMap = {
+    iv: 4, v: 5, vi: 6, vii: 7, viii: 8,
+    czwarta: 4, czwartej: 4, czwarty: 4, czwartoklasisty: 4, czwartoklasistki: 4, czwartoklasista: 4,
+    piata: 5, piatej: 5, piaty: 5, piatoklasisty: 5, piatoklasistki: 5, piatoklasista: 5,
+    szosta: 6, szostej: 6, szosty: 6, szostoklasisty: 6, szostoklasistki: 6, szostoklasista: 6,
+    siodma: 7, siodmej: 7, siodmy: 7, siodmoklasisty: 7, siodmoklasistki: 7, siodmoklasista: 7,
+    osma: 8, osmej: 8, osmy: 8, osmoklasisty: 8, osmoklasistki: 8, osmoklasista: 8
+  };
+  return gradeMap[token] || Number(token) || null;
+}
+
+function getSchoolYearStart(date = new Date()) {
+  const month = date.getMonth() + 1;
+  return month >= 9 ? date.getFullYear() : date.getFullYear() - 1;
+}
+
+function getCurriculumEditionForGrade(grade, schoolYearStart = getSchoolYearStart()) {
+  if (!grade || grade < 4 || grade > 8 || schoolYearStart < 2026) return "2017";
+  const latestNewBaseGrade = Math.min(8, 4 + schoolYearStart - 2026);
+  return grade <= latestNewBaseGrade ? "2026" : "2017";
+}
+
+function getCurriculumContext(question) {
+  const grade = getRequestedSchoolGrade(question);
+  if (!grade) return null;
+  const schoolYearStart = getSchoolYearStart();
+  const schoolYear = `${schoolYearStart}/${String(schoolYearStart + 1).slice(-2)}`;
+  const edition = getCurriculumEditionForGrade(grade, schoolYearStart);
+  return { grade, schoolYear, edition };
+}
+
+function getRequestedSubject(question) {
+  const text = normalize(question);
+  const subjects = [
+    ["matematyka", /\b(matma|matmy|matematy\w*|maths?|mathematics?)\b/],
+    ["język polski", /\b(polski|polskiego|jezyk polski|gramatyka|ortografia|lektura|literatura)\b/],
+    ["język angielski", /\b(angielski|angielskiego|english)\b/],
+    ["biologia i przyroda", /\b(biologia|przyroda|organizm|ekosystem|rosliny|zwierzeta)\b/],
+    ["fizyka", /\b(fizyka|fizyczny|ruch|sila|energia|prad)\b/],
+    ["chemia", /\b(chemia|chemiczny|atom|pierwiastek|reakcja)\b/],
+    ["historia", /\b(historia|historyczny|wiek|dynastia|wojna|krol)\b/],
+    ["geografia", /\b(geografia|geograficzny|mapa|kontynent|klimat|ludnosc)\b/],
+    ["informatyka", /\b(informatyka|programowanie|algorytm|komputer|arkusz)\b/],
+    ["wiedza o społeczeństwie", /\b(wos|obywatel|konstytucja|wybory|samorzad|prawa czlowieka)\b/]
+  ];
+  return subjects.find(([, pattern]) => pattern.test(text))?.[0] || null;
+}
+
+function createCurriculumNote(question) {
+  const context = getCurriculumContext(question);
+  if (!context) return "";
+  const baseLabel = context.edition === "2026" ? "nowa podstawa MEN (2026)" : "dotychczasowa podstawa (2017)";
+  const subject = getRequestedSubject(question);
+  return `\n\n**Dopasowanie:** klasa ${context.grade}${subject ? ` · ${subject}` : ""} · rok szkolny ${context.schoolYear} · ${baseLabel}. Kolejność działów w ARKONIE może zależeć od szkolnego programu i planu nauczyciela. Szczegóły: [podstawa programowa MEN](https://www.gov.pl/web/edukacja/podstawa-programowa2) · [programy nauczania ARKONY](https://arkona.edupage.org/a/szkolne-programy-nauczania-szkola-podstawowa).`;
 }
 
 function createGeneralStudyPlan(question) {
-  const text = normalize(question);
-  const grade = getRequestedSchoolGrade(question);
-  const isMath = /\b(matma|matmy|matematy\w*|matematyka|maths?|mathematics?)\b/.test(text);
-  if (isMath && grade === 6) {
-    return `Plan 15 minut — matematyka, klasa 6
-
-Cel: krótko powtórzyć ułamki, procenty i geometrię. Przygotuj kartkę i spróbuj rozwiązać zadania przed sprawdzeniem odpowiedzi.
-
-0–2 min — rozgrzewka z ułamków
-Przypomnij sobie, że przy dodawaniu ułamków o różnych mianownikach najpierw sprowadzamy je do wspólnego mianownika. Zapisz, jak skrócić 18/24.
-
-2–6 min — ułamki zwykłe
-Oblicz 3/4 + 2/3. Sprowadź ułamki do wspólnego mianownika, dodaj liczniki i na końcu skróć wynik.
-
-6–10 min — liczby dziesiętne i procenty
-Zamień 0,35 na procenty, a potem oblicz 15% z 80. Pamiętaj: 15% = 15/100.
-
-10–13 min — geometria
-Prostokąt ma boki 8 cm i 5 cm. Oblicz jego pole ze wzoru P = a × b oraz obwód ze wzoru O = 2a + 2b. Zapisz jednostki.
-
-13–15 min — samodzielne sprawdzenie
-Bez patrzenia na wcześniejsze przykłady oblicz 25% z 64 i 2/3 + 1/6. Zaznacz, który typ zadania sprawił Ci najwięcej trudności.
-
-Odpowiedzi do sprawdzenia po próbie: 18/24 = 3/4; 3/4 + 2/3 = 17/12 = 1 5/12; 0,35 = 35%; 15% z 80 = 12; pole prostokąta = 40 cm²; obwód = 26 cm; 25% z 64 = 16; 2/3 + 1/6 = 5/6.
-
-Jeśli w szkole przerabiacie teraz konkretny dział, napisz jego nazwę, a ułożę plan tylko z tego materiału.`;
-  }
-
   const raw = String(question ?? "");
-  const topicMatch = raw.match(/\b(?:na temat|temat(?:u)?|z przedmiotu|on the topic of|about|for|z|o)\s*[:\-–]?\s*(.+)$/i);
-  const cleanedRaw = raw
+  const grade = getRequestedSchoolGrade(question);
+  const subject = getRequestedSubject(question);
+  const cleanedTopic = raw
     .replace(/^\s*(?:ułóż|uloz|rozpisz|przygotuj|zaplanuj|make|create|prepare|build)\s+(?:mi|me)?\s*/i, "")
     .replace(/^\s*(?:15[\s-]*minut\w*\s+)?(?:study |learning |revision )?plan(?:\s+(?:nauki|powtórki|powtorki))?\s*/i, "")
-    .replace(/^\s*(?:na temat|tematu|z przedmiotu|on the topic of|about|for|z|o)\s*[:\-–]?\s*/i, "");
-  const topic = (topicMatch?.[1] || cleanedRaw)
+    .replace(/^\s*(?:na temat|tematu|z przedmiotu|on the topic of|about|for|z|o)\s*[:\-–]?\s*/i, "")
+    .replace(/\b(?:klas(?:a|y|ie|e|ach)?|grade|class)\s*(?:iv|viii|vii|vi|v|[4-8]|czwartej|czwarta|czwartoklasisty|piatej|piata|piatoklasisty|szostej|szosta|szostoklasisty|siodmej|siodma|siodmoklasisty|osmej|osma|osmoklasisty)\b/gi, " ")
+    .replace(/\b(?:iv|viii|vii|vi|v|[4-8])\s+klas(?:a|y|ie|e|ach)\b/gi, " ")
     .replace(/[?!.]+$/g, "")
-    .trim()
-    .slice(0, 100) || "wybrany temat";
-  const gradeLabel = grade ? `, klasa ${grade}` : "";
-  return `Plan 15 minut — ${topic}${gradeLabel}
+    .replace(/\s+/g, " ")
+    .trim();
+  const topicOnlyLabels = {
+    matematyka: /^(?:matma|matmy|matematyka|matematyki|matematyk[eę])$/,
+    "język polski": /^(?:polski|polskiego|jezyk polski|jezyka polskiego)$/,
+    "język angielski": /^(?:angielski|angielskiego|jezyk angielski|jezyka angielskiego|english)$/,
+    "biologia i przyroda": /^(?:biologia|przyroda)$/,
+    fizyka: /^fizyka$/,
+    chemia: /^chemia$/,
+    historia: /^historia$/,
+    geografia: /^geografia$/,
+    informatyka: /^informatyka$/
+  };
+  const subjectOnly = subject && topicOnlyLabels[subject]?.test(normalize(cleanedTopic));
+  const topicSubjectLabels = {
+    matematyka: "matematyki",
+    "język polski": "języka polskiego",
+    "język angielski": "języka angielskiego",
+    "biologia i przyroda": "biologii lub przyrody",
+    fizyka: "fizyki",
+    chemia: "chemii",
+    historia: "historii",
+    geografia: "geografii",
+    informatyka: "informatyki"
+  };
+  const topic = subjectOnly
+    ? `wybrany dział z ${topicSubjectLabels[subject]}`
+    : cleanedTopic.slice(0, 100) || subject || "wybrany temat";
+  const subjectLabel = subject ? `${subject}${grade ? `, klasa ${grade}` : ""}` : `${topic}${grade ? `, klasa ${grade}` : ""}`;
+  const subjectMethod = subject === "matematyka"
+    ? "Rozwiąż jedno zadanie i przy każdym kroku zapisz, jakiej reguły używasz. Na końcu oszacuj, czy wynik ma sens."
+    : subject === "język polski"
+      ? "Przeczytaj fragment, zaznacz ważne słowa i ułóż własne zdanie lub krótką wypowiedź z użyciem poznanej reguły."
+      : subject === "język angielski"
+        ? "Powtórz pięć słów, ułóż z nimi dwa własne zdania i przeczytaj je na głos."
+        : subject === "historia"
+          ? "Ułóż trzy wydarzenia w kolejności i dopisz po jednym powodzie lub skutku każdego z nich."
+          : subject === "geografia"
+            ? "Pracuj z mapą lub wykresem: wskaż miejsce, odczytaj jedną informację i wyjaśnij ją własnymi słowami."
+            : subject === "biologia i przyroda" || subject === "fizyka" || subject === "chemia"
+              ? "Narysuj prosty schemat zjawiska, podpisz jego elementy i opowiedz, jak łączą się ze sobą."
+              : "Wypisz najważniejsze pojęcia, połącz je strzałkami i spróbuj wyjaśnić jedno połączenie bez notatek.";
+  return `## 🐨 Plan nauki na 15 minut — ${subjectLabel}
 
-0–3 min — przypomnij sobie temat
-Zapisz z pamięci trzy rzeczy, które już wiesz. Zaznacz jedną, której nie umiesz jeszcze wyjaśnić.
+**Cel:** powtórzyć temat „${topic}” aktywnie, a nie tylko przeczytać notatkę.
 
-3–7 min — zrozum główną zasadę
-Otwórz notatkę lub podręcznik i znajdź definicję, regułę albo najważniejszą przyczynę. Powiedz ją własnymi słowami w jednym lub dwóch zdaniach.
+**0–3 min — przypomnij sobie**
+Zapisz z pamięci trzy rzeczy, które już wiesz. Zaznacz jedno pytanie, na które chcesz znaleźć odpowiedź.
 
-7–11 min — przepracuj przykład
-Wybierz jeden przykład z materiału. Zakryj gotowe rozwiązanie i odtwórz kolejne kroki. Przy każdym kroku powiedz, dlaczego go wykonujesz.
+**3–7 min — uporządkuj temat**
+Otwórz zeszyt lub podręcznik i wybierz krótką część dotyczącą „${topic}”. Podkreśl definicję, regułę albo najważniejszą przyczynę.
 
-11–14 min — sprawdź się
-Odpowiedz z pamięci na pytanie: „Jaka jest najważniejsza myśl tego tematu i jaki przykład ją pokazuje?”. Potem rozwiąż jedno podobne zadanie.
+**7–11 min — ćwicz w swoim przedmiocie**
+${subjectMethod}
 
-14–15 min — zaplanuj dalszą powtórkę
-Zapisz jedno pytanie, na które nadal szukasz odpowiedzi, i wróć do niego przy następnej nauce.`;
+**11–14 min — sprawdź pamięć**
+Zamknij notatki. Wyjaśnij temat własnymi słowami i odpowiedz na jedno pytanie z podręcznika albo od nauczyciela.
+
+**14–15 min — zapisz kolejny krok**
+Zapisz, co już umiesz i co wymaga powtórki. ${subjectOnly ? "Nie podałeś dokładnego działu, więc plan opisuje sposób nauki. Wybierz temat, który teraz omawiacie, a dobiorę konkretne ćwiczenia." : "Jeśli podasz dokładny dział lub wkleisz zadanie, dopasuję plan do konkretnego materiału."}${createCurriculumNote(question)}`;
 }
 
 function formatTeacherExpectedAnswer(item) {
@@ -2796,10 +3011,10 @@ export function answerQuestion(question, history = []) {
     // Tryb nauczyciela.
     const knowledgeItem = findKnowledge(text);
     if (knowledgeItem) {
-      if (intent === "study-plan") return createStudyPlan(knowledgeItem);
+      if (intent === "study-plan") return createStudyPlan(knowledgeItem, text);
       const wantsTeacher = /\b(naucz mnie|nauczysz mnie|tryb nauczyciela|lekcja|lekcje|przygotuj mnie|przepytaj mnie|sprawdz mnie|zrob quiz|quiz|powtorka|powtorzmy)\b/.test(normalized);
-      if (wantsTeacher || intent === "quiz") return startTeacherLesson(knowledgeItem);
-      return formatKnowledge(knowledgeItem, intent);
+      if (wantsTeacher || intent === "quiz") return `${startTeacherLesson(knowledgeItem)}${createCurriculumNote(text)}`;
+      return `${formatKnowledge(knowledgeItem, intent)}${createCurriculumNote(text)}`;
     }
 
     if (intent === "study-plan") return createGeneralStudyPlan(text);

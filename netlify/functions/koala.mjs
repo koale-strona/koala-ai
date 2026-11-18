@@ -120,6 +120,14 @@ const CRAWLER_SOURCES = [
     hints: ["ortografia", "interpunkcja", "poprawność językowa", "słowniki", "poradnia językowa"]
   },
   {
+    name: "Słowniki języka polskiego PWN",
+    url: "https://sjp.pwn.pl/",
+    category: "language",
+    trust: 9,
+    aliases: ["pwn", "słownik PWN", "slownik pwn"],
+    hints: ["znaczenie słowa", "definicja", "pisownia", "odmiana", "ortografia", "frazeologia"]
+  },
+  {
     name: "Wikisłownik",
     url: "https://pl.wiktionary.org/wiki/Wikis%C5%82ownik:Strona_g%C5%82%C3%B3wna",
     category: "language",
@@ -181,6 +189,14 @@ const CRAWLER_SOURCES = [
     hints: ["english", "angielski", "język angielski", "definition", "pronunciation", "translation"]
   },
   {
+    name: "Oxford Learner's Dictionaries",
+    url: "https://www.oxfordlearnersdictionaries.com/",
+    category: "language",
+    trust: 9,
+    aliases: ["oxford dictionary", "oxford learners dictionary", "oxford"],
+    hints: ["english", "angielski", "język angielski", "definition", "pronunciation", "grammar", "example sentence"]
+  },
+  {
     name: "Real Academia Española — DLE",
     url: "https://dle.rae.es/",
     category: "language",
@@ -202,6 +218,38 @@ const CRAWLER_SOURCES = [
     category: "education",
     trust: 8,
     hints: ["edukacja", "szkoła", "lekcja", "nauka", "materiały"]
+  },
+  {
+    name: "Ministerstwo Edukacji Narodowej — podstawa programowa",
+    url: "https://www.gov.pl/web/edukacja/podstawa-programowa2",
+    category: "education",
+    trust: 10,
+    aliases: ["men", "ministerstwo edukacji", "podstawa programowa men"],
+    hints: ["podstawa programowa", "wymagania", "klasa 4", "klasa 5", "klasa 6", "klasa 7", "klasa 8", "2026/2027", "reforma26"]
+  },
+  {
+    name: "Dziennik Ustaw — podstawa programowa 2026",
+    url: "https://eli.gov.pl/eli/DU/2026/378/ogl",
+    category: "education",
+    trust: 10,
+    aliases: ["dziennik ustaw 2026", "rozporządzenie 2026", "eli podstawa programowa"],
+    hints: ["rozporządzenie", "podstawa programowa", "2026/2027", "wdrażanie etapami", "klasy IV–VIII"]
+  },
+  {
+    name: "Reforma26 — Kompas Jutra MEN",
+    url: "https://reforma26.men.gov.pl/",
+    category: "education",
+    trust: 9,
+    aliases: ["reforma26", "kompas jutra"],
+    hints: ["nowa podstawa programowa", "zmiany w szkole", "reforma edukacji", "przyroda", "edukacja obywatelska"]
+  },
+  {
+    name: "Prywatna Szkoła Podstawowa ARKONA",
+    url: "https://arkona.edupage.org/",
+    category: "school",
+    trust: 9,
+    aliases: ["arkona", "nasza szkoła", "szkoła arkona", "szkolne programy arkona"],
+    hints: ["ARKONA", "szkolne programy nauczania", "aktualności szkolne", "laboratoria", "z życia szkoły"]
   },
   {
     name: "e-podręczniki",
@@ -1088,12 +1136,16 @@ function selectCrawlerSources(question) {
   const astronomy = has(/\b(kosmos|kosmosu|astronomia|planeta|planety|nasa|eksploracji kosmosu|misja kosmiczna)\b/);
   const science = has(/\b(nauka|naukowy|badania|biologia|fizyka|chemia|fotosynteza|chlorofil)\b/);
   const education = has(/\b(szkola|szkolny|lekcja|edukacja|zadanie|egzamin|matura|podstawa programowa|lektura|literatura)\b/);
+  const curriculum = has(/\b(podstawa programowa|wymagania programowe|reforma26|kompas jutra|program nauczania|podstawa men|nowa podstawa)\b/);
+  const arkona = has(/\b(arkona|nasza szkola|w naszej szkole|szkola arkona|program nauczania arkona)\b/);
   const statistics = has(/\b(statystyka|statystyki|dane|demografia|ludnosc|populacja|bezrobocie|inflacja)\b/);
   const officialPoland = has(/\b(gov|urzad|ministerstwo|ustawa|prawo|przepisy|wniosek|swiadczenie|podatki|sejm|senat|gus|statystyka|demografia|ludnosc)\b/);
   const PolandFocus = has(/\b(w polsce|polska|polski|polskie|polskich)\b/);
 
   let categories;
   if (sports) categories = ["sport"];
+  else if (arkona) categories = ["school", "education", "general"];
+  else if (curriculum) categories = ["education", "poland", "general"];
   else if (language) categories = ["language", "education", "general"];
   else if (news && PolandFocus && officialPoland) categories = ["news", "poland"];
   else if (news) categories = ["news"];
@@ -1108,7 +1160,11 @@ function selectCrawlerSources(question) {
     .filter(source => categories.includes(source.category))
     .sort((a, b) => {
       const relevance = source => scoreCrawlerText(`${source.name} ${(source.hints || []).join(" ")}`, getCrawlerTerms(question));
-      return categories.indexOf(a.category) - categories.indexOf(b.category)
+      const curriculumBoost = source => curriculum && /ministerstwo|dziennik ustaw|reforma26|zintegrowana platforma/i.test(source.name) ? 100 : 0;
+      const schoolBoost = source => arkona && source.category === "school" ? 100 : 0;
+      return schoolBoost(b) - schoolBoost(a)
+        || curriculumBoost(b) - curriculumBoost(a)
+        || categories.indexOf(a.category) - categories.indexOf(b.category)
         || relevance(b) - relevance(a)
         || (b.trust || 0) - (a.trust || 0);
     });
