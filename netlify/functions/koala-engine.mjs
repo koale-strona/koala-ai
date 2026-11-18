@@ -1,5 +1,5 @@
 /*
- * Koala.ai v8 — Brain — lokalny silnik edukacyjny z kontekstem, ćwiczeniami i rozszerzoną bazą wiedzy.
+ * Koala.ai v9 — Brain — lokalny silnik edukacyjny z kontekstem, ćwiczeniami i rozszerzoną bazą wiedzy.
  * Bez zewnętrznych modeli AI, kluczy API i dodatkowych zależności.
  * Zachowuje bazę wiedzy, matematykę, historię rozmowy i tryb nauczyciela.
  * To nie jest ogólny model językowy — odpowiedzi wynikają z reguł i wiedzy w pliku.
@@ -1154,6 +1154,10 @@ function getQuestionRoute(question, localAnswer = "", history = []) {
   const math = calculate(text) !== null;
   if (math) return { kind: "math", shouldSearchWeb: false };
 
+  if (getIntent(text) === "study-plan" && !asksToSearchOnline(text) && !isCurrentInformationQuestion(text)) {
+    return { kind: "study-plan", shouldSearchWeb: false, topic: findKnowledge(text)?.title || null };
+  }
+
   const followUpQuery = buildFollowUpSearchQuery(text, history);
   if (followUpQuery) {
     const anchor = getContextAnchorQuestion(history) || "";
@@ -1187,7 +1191,7 @@ function getQuestionRoute(question, localAnswer = "", history = []) {
 
 function getIntent(question) {
   const text = normalize(question);
-  if (/\b(plan nauki|rozpisz plan|przygotuj plan|plan powtorki|plan nauki do)\b/.test(text)) return "study-plan";
+  if (/\b(plan nauki|rozpisz plan|przygotuj plan|uloz plan|plan powtorki|plan nauki do|zaplanuj nauke|15 minut(?:owy|owa|owe)? plan)\b/.test(text)) return "study-plan";
   if (/\b(quiz|test|sprawdz mnie|przepytaj mnie|zrob quiz|pytanie sprawdzajace)\b/.test(text)) return "quiz";
   if (/\b(notatk\w*|streszcz\w*|stresc\w*|podsumuj\w*|podsumowani\w*|skroc\w*|najwazniejsz\w*)\b/.test(text)) return "summary";
   if (/\b(porownaj|roznica miedzy|czym sie rozni|podobienstwa)\b/.test(text)) return "compare";
@@ -2137,6 +2141,70 @@ function createStudyPlan(item) {
   return `## 🐨 15-minutowy plan nauki: ${item.title}\n\n**Minuty 0–4 — zrozumienie**\nPrzeczytaj najważniejszą myśl: ${item.short}\n\n**Minuty 4–8 — wyjaśnij własnymi słowami**\nPrzeczytaj wyjaśnienie i spróbuj powiedzieć je bez patrzenia: ${item.explanation}\n\n**Minuty 8–12 — przykład**\nPrzeanalizuj przykład: ${item.example}\n\n**Minuty 12–15 — sprawdzenie**\nOdpowiedz bez zaglądania: ${item.check}\n\nNa koniec sprawdź, czy potrafisz połączyć temat z tym zagadnieniem: ${item.related}`;
 }
 
+function getRequestedSchoolGrade(question) {
+  const text = normalize(question);
+  const gradePattern = "viii|vii|vi|iv|v|[4-8]";
+  const match = text.match(new RegExp(`\\bklas(?:a|y|ie|e|ach)?\\s*(${gradePattern})\\b|\\b(${gradePattern})\\s+klas(?:a|y|ie|e|ach)?\\b`));
+  const token = match?.[1] || match?.[2];
+  if (!token) return null;
+  const romanGrades = { iv: 4, v: 5, vi: 6, vii: 7, viii: 8 };
+  return romanGrades[token] || Number(token) || null;
+}
+
+function createGeneralStudyPlan(question) {
+  const text = normalize(question);
+  const grade = getRequestedSchoolGrade(question);
+  const isMath = /\b(matma|matmy|matematy\w*)\b/.test(text);
+  if (isMath && grade === 6) {
+    return `Plan 15 minut — matematyka, klasa 6
+
+Cel: krótko powtórzyć ułamki, procenty i geometrię. Przygotuj kartkę i spróbuj rozwiązać zadania przed sprawdzeniem odpowiedzi.
+
+0–2 min — rozgrzewka z ułamków
+Przypomnij sobie, że przy dodawaniu ułamków o różnych mianownikach najpierw sprowadzamy je do wspólnego mianownika. Zapisz, jak skrócić 18/24.
+
+2–6 min — ułamki zwykłe
+Oblicz 3/4 + 2/3. Sprowadź ułamki do wspólnego mianownika, dodaj liczniki i na końcu skróć wynik.
+
+6–10 min — liczby dziesiętne i procenty
+Zamień 0,35 na procenty, a potem oblicz 15% z 80. Pamiętaj: 15% = 15/100.
+
+10–13 min — geometria
+Prostokąt ma boki 8 cm i 5 cm. Oblicz jego pole ze wzoru P = a × b oraz obwód ze wzoru O = 2a + 2b. Zapisz jednostki.
+
+13–15 min — samodzielne sprawdzenie
+Bez patrzenia na wcześniejsze przykłady oblicz 25% z 64 i 2/3 + 1/6. Zaznacz, który typ zadania sprawił Ci najwięcej trudności.
+
+Odpowiedzi do sprawdzenia po próbie: 18/24 = 3/4; 3/4 + 2/3 = 17/12 = 1 5/12; 0,35 = 35%; 15% z 80 = 12; pole prostokąta = 40 cm²; obwód = 26 cm; 25% z 64 = 16; 2/3 + 1/6 = 5/6.
+
+Jeśli w szkole przerabiacie teraz konkretny dział, napisz jego nazwę, a ułożę plan tylko z tego materiału.`;
+  }
+
+  const raw = String(question ?? "");
+  const topicMatch = raw.match(/(?:na temat|temat(?:u)?|o)\s*[:\-–]?\s*(.+)$/i);
+  const topic = (topicMatch?.[1] || raw)
+    .replace(/[?!.]+$/g, "")
+    .trim()
+    .slice(0, 100) || "wybrany temat";
+  const gradeLabel = grade ? `, klasa ${grade}` : "";
+  return `Plan 15 minut — ${topic}${gradeLabel}
+
+0–3 min — przypomnij sobie temat
+Zapisz z pamięci trzy rzeczy, które już wiesz. Zaznacz jedną, której nie umiesz jeszcze wyjaśnić.
+
+3–7 min — zrozum główną zasadę
+Otwórz notatkę lub podręcznik i znajdź definicję, regułę albo najważniejszą przyczynę. Powiedz ją własnymi słowami w jednym lub dwóch zdaniach.
+
+7–11 min — przepracuj przykład
+Wybierz jeden przykład z materiału. Zakryj gotowe rozwiązanie i odtwórz kolejne kroki. Przy każdym kroku powiedz, dlaczego go wykonujesz.
+
+11–14 min — sprawdź się
+Odpowiedz z pamięci na pytanie: „Jaka jest najważniejsza myśl tego tematu i jaki przykład ją pokazuje?”. Potem rozwiąż jedno podobne zadanie.
+
+14–15 min — zaplanuj dalszą powtórkę
+Zapisz jedno pytanie, na które nadal szukasz odpowiedzi, i wróć do niego przy następnej nauce.`;
+}
+
 function createLearningHint(topic) {
   return `## 🐨 Zróbmy to razem\n\nNie mam jeszcze wystarczającej wiedzy zapisanej lokalnie o temacie **„${topic}”**. Nie chcę zgadywać.\n\nNapisz, z jakiego to przedmiotu i dla której klasy (IV–VIII), albo wklej fragment z podręcznika czy treść zadania. Wyjaśnię materiał prostym językiem, pokażę przykład i przygotuję krótkie ćwiczenie. Możesz też poprosić mnie o poszukanie materiałów w źródłach edukacyjnych.`;
 }
@@ -2284,6 +2352,8 @@ export function answerQuestion(question, history = []) {
       if (wantsTeacher || intent === "quiz") return startTeacherLesson(knowledgeItem);
       return formatKnowledge(knowledgeItem, intent);
     }
+
+    if (intent === "study-plan") return createGeneralStudyPlan(text);
 
     // Matematyka — usuń polecenie, aby parser dostał samo działanie.
     const mathInput = text

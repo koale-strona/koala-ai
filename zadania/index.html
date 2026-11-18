@@ -4764,6 +4764,14 @@ function addAIMessage(
 
 }
 
+function cleanKoalaAnswerForDisplay(answer) {
+  return String(answer ?? "")
+    .replace(/^[ \t]{0,3}#{1,6}[ \t]*/gm, "")
+    .replace(/^[ \t]*---+[ \t]*$/gm, "")
+    .replace(/\*\*/g, "")
+    .trim();
+}
+
 let koalaHistory = [];
 let koalaRequestPending = false;
 async function askKoala() {
@@ -4900,7 +4908,7 @@ koalaHistory.push(
 );
 koalaHistory = koalaHistory.slice(-24);
 
-const cleanAnswer = answer.replace(/\*\*/g, "");
+const cleanAnswer = cleanKoalaAnswerForDisplay(answer);
 addAIMessage(cleanAnswer, "bot");
 
 
