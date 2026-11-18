@@ -1,5 +1,5 @@
 /*
- * Koala.ai v7 — Brain — lokalny, edukacyjny silnik regułowy z kontekstem i dodatkową wiedzą historyczną.
+ * Koala.ai v8 — Brain — lokalny silnik edukacyjny z kontekstem, ćwiczeniami i rozszerzoną bazą wiedzy.
  * Bez zewnętrznych modeli AI, kluczy API i dodatkowych zależności.
  * Zachowuje bazę wiedzy, matematykę, historię rozmowy i tryb nauczyciela.
  * To nie jest ogólny model językowy — odpowiedzi wynikają z reguł i wiedzy w pliku.
@@ -735,6 +735,66 @@ const knowledge = [
     example: "Przed udostępnieniem sensacyjnej wiadomości poszukaj jej w serwisie instytucji lub redakcji, która podaje źródła.",
     related: "Brak autora, daty i źródeł może być powodem do ostrożności, ale sam w sobie nie rozstrzyga, czy coś jest fałszywe.",
     check: "Wymień dwa elementy, które warto sprawdzić przed udostępnieniem wiadomości."
+  },
+  {
+    title: "Największy wspólny dzielnik i najmniejsza wspólna wielokrotność",
+    keywords: ["największy wspólny dzielnik", "najmniejsza wspólna wielokrotność", "nwd i nww"],
+    aliases: ["NWD", "NWW", "wspólny dzielnik", "wspólna wielokrotność"],
+    short: "NWD to największa liczba, która dzieli podane liczby bez reszty. NWW to najmniejsza dodatnia liczba będąca wielokrotnością każdej z nich.",
+    explanation: "NWD można znaleźć algorytmem Euklidesa. Dla dwóch dodatnich liczb NWW obliczamy ze wzoru NWW(a,b) = a × b ÷ NWD(a,b).",
+    example: "Dla 12 i 18: NWD = 6, a NWW = 12 × 18 ÷ 6 = 36.",
+    related: "NWD przydaje się przy skracaniu ułamków, a NWW przy sprowadzaniu ich do wspólnego mianownika.",
+    check: "Jaki jest NWD liczb 12 i 18?"
+  },
+  {
+    title: "Rozkład na czynniki pierwsze",
+    keywords: ["rozkład na czynniki pierwsze", "rozklad na czynniki pierwsze", "czynniki pierwsze liczby"],
+    aliases: ["rozkładu na czynniki pierwsze", "faktoryzacja liczby"],
+    short: "Rozkład na czynniki pierwsze zapisuje liczbę jako iloczyn liczb pierwszych.",
+    explanation: "Dzielimy liczbę przez najmniejsze liczby pierwsze: 2, 3, 5, 7 i kolejne. Kontynuujemy, aż otrzymamy 1.",
+    example: "60 = 2 × 2 × 3 × 5 = 2² × 3 × 5.",
+    related: "Jednoznaczny rozkład na czynniki pierwsze pomaga wyznaczać NWD i NWW.",
+    check: "Rozłóż 12 na czynniki pierwsze."
+  },
+  {
+    title: "Pierwiastek kwadratowy",
+    keywords: ["pierwiastek kwadratowy", "pierwiastki kwadratowe", "pierwiastkowanie", "pierwiastek z liczby"],
+    aliases: ["pierwiastka kwadratowego", "pierwiastka z liczby"],
+    short: "Pierwiastek kwadratowy z liczby nieujemnej to liczba, której kwadrat daje tę liczbę.",
+    explanation: "√a = b oznacza, że b × b = a. Na przykład √49 = 7, ponieważ 7² = 49. W liczbach rzeczywistych nie pierwiastkujemy kwadratowo liczb ujemnych.",
+    example: "√64 = 8, bo 8 × 8 = 64.",
+    related: "Pierwiastkowanie jest działaniem odwrotnym do podnoszenia do kwadratu.",
+    check: "Ile wynosi √81 i jak możesz sprawdzić wynik?"
+  },
+  {
+    title: "Potęgi",
+    keywords: ["potęga", "potęgi", "podnoszenie do potęgi", "wykładnik potęgi"],
+    aliases: ["potęgi liczby", "potęgowania"],
+    short: "Potęga skraca zapis wielokrotnego mnożenia tej samej liczby: aⁿ oznacza n czynników równych a.",
+    explanation: "W zapisie aⁿ liczba a jest podstawą, a n wykładnikiem. Na przykład 2⁴ = 2 × 2 × 2 × 2 = 16. Dla a różnego od zera a⁰ = 1.",
+    example: "3² = 3 × 3 = 9, a 3³ = 3 × 3 × 3 = 27.",
+    related: "Kwadrat liczby ma wykładnik 2, a sześcian — wykładnik 3.",
+    check: "Zapisz 5³ jako mnożenie i oblicz wynik."
+  },
+  {
+    title: "Cechy podzielności",
+    keywords: ["cechy podzielności", "cechy podzielnosci", "podzielność przez 2 3 5 10"],
+    aliases: ["podzielności liczby", "podzielność przez 3"],
+    short: "Cechy podzielności pozwalają sprawdzić, czy liczba dzieli się przez inną bez wykonywania dzielenia pisemnego.",
+    explanation: "Liczba parzysta dzieli się przez 2. Liczba dzieli się przez 5, gdy kończy się na 0 lub 5, a przez 10 — gdy kończy się na 0. Przez 3 dzieli się, gdy suma jej cyfr dzieli się przez 3.",
+    example: "234 dzieli się przez 3, bo 2 + 3 + 4 = 9, a 9 dzieli się przez 3.",
+    related: "Cechy podzielności ułatwiają skracanie ułamków i rozkład liczb na czynniki.",
+    check: "Czy 735 dzieli się przez 5? Uzasadnij odpowiedź."
+  },
+  {
+    title: "Pole powierzchni prostopadłościanu",
+    keywords: ["pole powierzchni prostopadłościanu", "pole powierzchni prostopadloscianu", "pole powierzchni bryły"],
+    aliases: ["powierzchni prostopadłościanu", "pole sześciu ścian"],
+    short: "Pole powierzchni prostopadłościanu to suma pól jego sześciu ścian. Dla wymiarów a, b i c: P = 2ab + 2ac + 2bc.",
+    explanation: "Każdy z trzech różnych prostokątów występuje w dwóch przeciwległych ścianach. Wynik zapisujemy w jednostkach kwadratowych.",
+    example: "Dla 2 cm, 3 cm i 4 cm: P = 2×6 + 2×8 + 2×12 = 52 cm².",
+    related: "Pole powierzchni opisuje zewnętrzne ściany, a objętość — przestrzeń wewnątrz bryły.",
+    check: "Ile par jednakowych ścian ma prostopadłościan?"
   }
 ];
 
@@ -744,7 +804,7 @@ const teacherAnswerRules = {
   "Przymiotnik": { all: ["maly"], hint: "Przymiotnik odpowiada między innymi na pytanie: jaki?" },
   "Przysłówek": { all: ["kiedy"], hint: "Zastanów się, na jakie pytanie odpowiada wyraz „wczoraj”." },
   "Zaimek": { all: ["ona", "swoja"], hint: "W zdaniu są dwa wyrazy zastępujące inne części mowy." },
-  "Liczby pierwsze": { all: ["3"], hint: "Sprawdź, czy 15 można podzielić przez 3 bez reszty." },
+  "Liczby pierwsze": { any: ["dzieli sie przez 3", "dzieli sie przez 5", "ma dzielnik 3", "ma dzielnik 5"], hint: "15 dzieli się bez reszty przez 3 i przez 5, więc ma więcej niż dwa dzielniki." },
   "Ułamki zwykłe": { all: ["2", "5"], hint: "Licznik jest nad kreską, a mianownik pod kreską." },
   "Procenty": { all: ["8"], hint: "10% to jedna dziesiąta liczby. Oblicz jedną dziesiątą z 80." },
   "Pole kwadratu": { all: ["25"], hint: "Pomnóż długość boku przez samą siebie: 5 × 5." },
@@ -767,7 +827,7 @@ const teacherAnswerRules = {
   "Podmiot i orzeczenie": { all: ["ptaki", "spiewaja"], hint: "Podmiot odpowiada na pytanie „kto?”, a orzeczenie mówi, co robi." },
   "Stany skupienia": { all: ["ciecz"], hint: "Woda w szklance przyjmuje kształt naczynia." },
   "Obieg wody w przyrodzie": { all: ["parowanie"], hint: "Proces zaczyna się, gdy woda ogrzana przez Słońce zamienia się w parę." },
-  "Układ krwionośny": { all: ["pompa"], hint: "Ten narząd rytmicznie kurczy się i wprawia krew w ruch." },
+  "Układ krwionośny": { any: ["serce", "pompa"], hint: "Ten narząd rytmicznie kurczy się i wprawia krew w ruch." },
   "Kontynenty i oceany": { all: ["atlantycki"], hint: "Jeden z oceanów leży między Europą i Afryką a Amerykami." },
   "Epoki historyczne": { all: ["sredniowiecze"], hint: "Ta epoka zaczyna się po starożytności." },
   "Twierdzenie Pitagorasa": { all: ["5"], hint: "Policz pierwiastek z 3² + 4²." },
@@ -800,7 +860,7 @@ const teacherAnswerRules = {
   "Środki stylistyczne": { any: ["porownanie", "porownaniem"], hint: "Słowo „jak” łączy zestawiane ze sobą zjawiska." },
   "Fotosynteza — równanie i warunki": { all: ["glukoza", "tlen"], hint: "Powstaje cukier będący źródłem energii oraz gaz uwalniany do otoczenia." },
   "Siła i jej pomiar": { all: ["niuton"], hint: "Nazwa jednostki zaczyna się na literę N." },
-  "Masa i ciężar": { all: ["pozostaje taka sama"], hint: "Masa astronauty pozostaje taka sama, choć ciężar na Księżycu jest mniejszy." },
+  "Masa i ciężar": { any: ["nie zmieni sie", "pozostaje taka sama", "taka sama"], hint: "Masa astronauty pozostaje taka sama, choć ciężar na Księżycu jest mniejszy." },
   "Mieszaniny jednorodne i niejednorodne": { any: ["niejednorodna", "nie jednorodna", "heterogeniczna"], hint: "Widać osobno składniki piasku i wody." },
   "Odczyn kwaśny, obojętny i zasadowy": { all: ["zasadowy"], hint: "pH większe od 7 oznacza odczyn zasadowy." },
   "Pogoda i klimat": { all: ["klimat"], hint: "To pojęcie opisuje typowe warunki z wielolecia." },
@@ -809,13 +869,22 @@ const teacherAnswerRules = {
   "Konstytucja i trójpodział władzy": { all: ["sadowa"], hint: "Sądy sprawują władzę sądowniczą." },
   "Unia Europejska": { all: ["nie wszystkie"], hint: "Polska jest przykładem państwa UE, które nadal ma własną walutę." },
   "Prawa i obowiązki ucznia": { all: ["statut", "szkoly"], hint: "Sprawdź dokument określający zasady w twojej szkole." },
-  "Bezpieczne źródła informacji": { all: ["autora", "date"], hint: "Sprawdź, kto opublikował informację i kiedy." }
+  "Bezpieczne źródła informacji": { all: ["autora", ["datę", "date"]], hint: "Sprawdź, kto opublikował informację i kiedy." },
+  "Największy wspólny dzielnik i najmniejsza wspólna wielokrotność": { all: ["6"], hint: "Szukamy największej liczby, która dzieli zarówno 12, jak i 18." },
+  "Rozkład na czynniki pierwsze": { any: ["2 × 2 × 3", "2^2 × 3", "2 razy 2 razy 3"], hint: "Podziel 12 przez 2, a wynik 6 jeszcze raz przez 2." },
+  "Pierwiastek kwadratowy": { all: ["9"], hint: "Sprawdź, jaka liczba pomnożona przez siebie daje 81." },
+  "Potęgi": { all: ["125"], hint: "5³ oznacza 5 × 5 × 5." },
+  "Cechy podzielności": { any: ["konczy sie na 5", "ostatnia cyfra to 5"], hint: "Spójrz na ostatnią cyfrę liczby. Liczby kończące się na 0 lub 5 dzielą się przez 5." },
+  "Pole powierzchni prostopadłościanu": { any: ["3", "trzy"], hint: "Przeciwległe ściany tworzą trzy pary." }
 };
 
 function isNewQuestionDuringLesson(value) {
   const text = normalize(value);
-  return String(value ?? "").includes("?")
-    || /^(co to jest|czym jest|jak dziala|dlaczego|czemu|kto|gdzie|kiedy|ile wynosi|wyjasnij|wytlumacz)\b/.test(text);
+  const raw = String(value ?? "");
+  if (raw.includes("?") || /^(co to jest|czym jest|jak dziala|dlaczego|czemu|kto|gdzie|kiedy|ile wynosi|wyjasnij|wytlumacz)\b/.test(text)) {
+    return true;
+  }
+  return /\d/.test(raw) && calculate(value) !== null;
 }
 
 const STOPWORDS = new Set([
@@ -937,7 +1006,7 @@ function getActiveTextQuiz(history) {
   if (latestAssistantIndex < 0) return null;
 
   const latestAnswer = safeHistory[latestAssistantIndex].text;
-  const step = latestAnswer.match(/## 🧩 Quiz — pytanie (\d+)\/(\d+)/);
+  const step = latestAnswer.match(/## 🧩 (?:Quiz|Podpowiedź|Spróbuj jeszcze raz) — pytanie (\d+)\/(\d+)/);
   if (!step) return null;
   const currentIndex = Number(step[1]) - 1;
   let sourcePrompt = "";
@@ -1380,8 +1449,9 @@ function buildFollowUpSearchQuery(question, history) {
 }
 
 function calculatePercent(input) {
-  const original = normalize(input).replace(/^(ile to|oblicz|policz) /, "");
-  const match = original.match(/^(-?\d+(?:[.,]\d+)?)\s*(?:%|procent(?:y|ow|a)?)\s*(?:z\s*)?(-?\d+(?:[.,]\d+)?)$/);
+  const decimalInput = String(input ?? "").replace(/(\d),(\d)/g, "$1.$2");
+  const original = normalize(decimalInput).replace(/^(ile (?:to|wynosi|jest)|oblicz|policz) /, "");
+  const match = original.match(/^(-?\d+(?:\.\d+)?)\s*(?:%|procent(?:y|ow|a)?)\s*(?:z\s*)?(-?\d+(?:\.\d+)?)$/);
   if (!match) return null;
   const percentage = Number(match[1].replace(",", "."));
   const whole = Number(match[2].replace(",", "."));
@@ -1483,7 +1553,7 @@ function solveUnitConversion(input) {
     .replace(/²/g, "2")
     .replace(/,/g, ".")
     .trim();
-  const match = text.match(/^\s*(?:(?:zamien|przelicz|ile to|oblicz|policz)\s+)?([+-]?\d+(?:\.\d+)?)\s*([a-z0-9]+)\s+(?:na|w|to)\s+([a-z0-9]+)\s*\??\s*$/);
+  const match = text.match(/^\s*(?:(?:zamien|przelicz|ile to|ile wynosi|oblicz|policz)\s+)?([+-]?\d+(?:\.\d+)?)\s*([a-z0-9]+)\s+(?:na|w|to)\s+([a-z0-9]+)\s*\??\s*$/);
   if (!match) return null;
 
   const [, valueText, fromText, toText] = match;
@@ -1578,6 +1648,107 @@ function solveAverageProblem(question) {
   const sum = values.reduce((total, value) => total + value, 0);
   const mean = sum / values.length;
   return `## 🐨 Średnia arytmetyczna krok po kroku\n\n1. Dodajemy liczby: ${values.map(formatNumber).join(" + ")} = ${formatNumber(sum)}.\n2. Dzielimy sumę przez liczbę wartości: ${formatNumber(sum)} ÷ ${values.length}.\n\n**Średnia wynosi ${formatNumber(mean)}.**`;
+}
+
+function solveGcdLcmProblem(question) {
+  const text = normalize(question);
+  const isGcd = /\b(nwd|najwieksz\w* wspoln\w* dzielnik)\b/.test(text);
+  const isLcm = /\b(nww|najmniejsz\w* wspoln\w* wielokrotn\w*)\b/.test(text);
+  if (!isGcd && !isLcm) return null;
+
+  const rawValues = String(question ?? "").match(/\d{1,15}/g) || [];
+  if (rawValues.length < 2 || rawValues.length > 12) return null;
+  const values = rawValues.map(value => BigInt(value));
+  const gcdWithSteps = (leftValue, rightValue) => {
+    let left = leftValue < 0n ? -leftValue : leftValue;
+    let right = rightValue < 0n ? -rightValue : rightValue;
+    const steps = [];
+    while (right !== 0n) {
+      const remainder = left % right;
+      steps.push(`${left} = ${left / right} × ${right} + ${remainder}`);
+      [left, right] = [right, remainder];
+    }
+    return { value: left, steps };
+  };
+
+  let gcdResult = values[0];
+  let lcmResult = values[0];
+  const gcdSteps = [];
+  const lcmSteps = [];
+  for (let index = 1; index < values.length; index++) {
+    const next = values[index];
+    if (isGcd) {
+      const { value: gcd, steps: euclid } = gcdWithSteps(gcdResult, next);
+      gcdSteps.push(`NWD(${gcdResult}, ${next}): ${euclid.length ? `${euclid.join("; ")}.` : `${gcdResult} = ${gcd}.`}`);
+      gcdResult = gcd;
+    }
+    if (isLcm) {
+      const { value: gcd } = gcdWithSteps(lcmResult, next);
+      const lcm = gcd === 0n ? 0n : (lcmResult / gcd) * next;
+      const explanation = gcd === 0n
+        ? `NWW(${lcmResult}, ${next}) = 0.`
+        : `NWW(${lcmResult}, ${next}) = |${lcmResult} × ${next}| ÷ ${gcd} = ${lcm}.`;
+      lcmSteps.push(explanation);
+      lcmResult = lcm;
+    }
+  }
+  const sections = [];
+  if (isGcd) sections.push(`### Największy wspólny dzielnik\n${gcdSteps.map((step, index) => `${index + 1}. ${step}`).join("\n")}`);
+  if (isLcm) sections.push(`### Najmniejsza wspólna wielokrotność\n${lcmSteps.map((step, index) => `${index + 1}. ${step}`).join("\n")}`);
+  const result = isGcd && isLcm
+    ? `NWD = ${gcdResult}; NWW = ${lcmResult}`
+    : isGcd ? String(gcdResult) : String(lcmResult);
+  const title = isGcd && isLcm ? "NWD i NWW" : isGcd ? "NWD" : "NWW";
+  return `## 🐨 ${title} krok po kroku\n\n${sections.join("\n\n")}\n\n**Wynik: ${result}**`;
+}
+
+function solvePrimeFactorization(question) {
+  const text = normalize(question);
+  if (!/\b(rozloz|rozklad|czynniki pierwsze|faktoryzuj)\b/.test(text)) return null;
+  const rawValues = String(question ?? "").match(/\d{1,10}/g) || [];
+  if (rawValues.length !== 1) return null;
+  const value = Number(rawValues[0]);
+  if (!Number.isSafeInteger(value) || value < 2 || value > 1_000_000_000) return null;
+
+  let remainder = value;
+  const factors = [];
+  const divisions = [];
+  for (let divisor = 2; divisor * divisor <= remainder; divisor = divisor === 2 ? 3 : divisor + 2) {
+    while (remainder % divisor === 0) {
+      factors.push(divisor);
+      divisions.push(`${remainder} ÷ ${divisor} = ${remainder / divisor}`);
+      remainder /= divisor;
+    }
+  }
+  if (remainder > 1) {
+    factors.push(remainder);
+    divisions.push(`${remainder} jest liczbą pierwszą`);
+  }
+
+  const grouped = [...new Set(factors)].map(factor => {
+    const exponent = factors.filter(item => item === factor).length;
+    return exponent > 1 ? `${factor}^${exponent}` : String(factor);
+  });
+  return `## 🐨 Rozkład na czynniki pierwsze\n\n${divisions.map((step, index) => `${index + 1}. ${step}`).join("\n")}\n\n**${value} = ${grouped.join(" × ")}**`;
+}
+
+function solveSquareRoot(question) {
+  const raw = String(question ?? "").trim();
+  const text = normalize(raw);
+  const asksSquareRoot = raw.includes("√") || /\b(sqrt|pierwiastek kwadratowy|pierwiastek z|oblicz pierwiastek)\b/.test(text);
+  if (!asksSquareRoot || /\b(stopnia|stopien)\b/.test(text)) return null;
+  const numberMatch = raw.match(/-?\d+(?:[.,]\d+)?/);
+  if (!numberMatch) return null;
+  const value = Number(numberMatch[0].replace(",", "."));
+  if (!Number.isFinite(value) || Math.abs(value) > 1e16) return null;
+  if (value < 0) return "## 🐨 Pierwiastek kwadratowy\n\nW zbiorze liczb rzeczywistych nie ma pierwiastka kwadratowego z liczby ujemnej. Jeśli właśnie poznajesz liczby zespolone, napisz o tym.";
+
+  const root = Math.sqrt(value);
+  const rounded = Math.round(root * 1e8) / 1e8;
+  if (Number.isInteger(root)) {
+    return `## 🐨 Pierwiastek kwadratowy krok po kroku\n\nSzukamy liczby, która pomnożona przez siebie daje ${formatNumber(value)}.\n\n**√${formatNumber(value)} = ${formatNumber(root)}, ponieważ ${formatNumber(root)} × ${formatNumber(root)} = ${formatNumber(value)}.**`;
+  }
+  return `## 🐨 Pierwiastek kwadratowy krok po kroku\n\nSzukamy liczby, której kwadrat jest równy ${formatNumber(value)}. Ponieważ ${formatNumber(Math.floor(root))}² < ${formatNumber(value)} < ${formatNumber(Math.ceil(root))}², wynik nie jest liczbą całkowitą.\n\n**√${formatNumber(value)} ≈ ${formatNumber(rounded)}**`;
 }
 
 function solveMotionProblem(question) {
@@ -1687,7 +1858,7 @@ function convertRomanNumerals(question) {
 }
 
 function solveLinearEquation(question) {
-  const text = normalize(question);
+  const text = normalize(String(question ?? "").replace(/(\d),(\d)/g, "$1.$2"));
   const equalsAt = text.indexOf("=");
   if (equalsAt < 0 || text.indexOf("=", equalsAt + 1) >= 0) return null;
 
@@ -1803,6 +1974,13 @@ function solveLinearEquation(question) {
 }
 
 function calculate(input) {
+  const gcdLcm = solveGcdLcmProblem(input);
+  if (gcdLcm) return gcdLcm;
+  const factorization = solvePrimeFactorization(input);
+  if (factorization) return factorization;
+  const squareRoot = solveSquareRoot(input);
+  if (squareRoot) return squareRoot;
+
   const expression = cleanMathExpression(input);
   if (!expression || expression.length > MAX_MATH_LENGTH) return null;
 
@@ -1878,23 +2056,23 @@ function calculate(input) {
   function unary() {
     if (tokens[index] === "+") { index++; return unary(); }
     if (tokens[index] === "-") { index++; return -unary(); }
-    return primary();
+    return power();
   }
   function power() {
-    const left = unary();
+    const left = primary();
     if (tokens[index] === "^") {
       index++;
-      const right = power();
+      const right = unary();
       if (Math.abs(right) > 10) throw new Error("Potęga");
       return left ** right;
     }
     return left;
   }
   function multiplication() {
-    let value = power();
+    let value = unary();
     while (["*", "/"].includes(tokens[index])) {
       const operator = tokens[index++];
-      const right = power();
+      const right = unary();
       if (operator === "/" && right === 0) throw new Error("Zero");
       value = operator === "*" ? value * right : value / right;
     }
@@ -1967,7 +2145,7 @@ export function classifyQuestion(question, localAnswer = "", history = []) {
   const safeHistory = getSafeHistory(history);
   if (extractStudyMaterial(question)) return { kind: "local-study", shouldSearchWeb: false, topic: null, searchQuery: null };
   const activeTextQuiz = getActiveTextQuiz(safeHistory);
-  if (activeTextQuiz && !/[?]/.test(String(question ?? "")) && !/^(co|jak|dlaczego|czemu|wyjasnij|wytlumacz)\b/.test(normalize(question))) {
+  if (activeTextQuiz && !isNewQuestionDuringLesson(question)) {
     return { kind: "quiz-answer", shouldSearchWeb: false, topic: null, searchQuery: null };
   }
   const route = getQuestionRoute(question, localAnswer, safeHistory);
@@ -2018,7 +2196,7 @@ export function answerQuestion(question, history = []) {
       if (/^(koniec quizu|zakoncz quiz|stop)$/i.test(normalized)) {
         return "🐨 Quiz zakończony. Możemy wrócić do notatki albo zacząć nowy temat.";
       }
-      const asksNewQuestion = text.includes("?") || /^(co|jak|dlaczego|czemu|wyjasnij|wytlumacz)\b/.test(normalized);
+      const asksNewQuestion = isNewQuestionDuringLesson(text);
       if (!asksNewQuestion) {
         return gradeTextQuizAnswer(activeTextQuiz.quiz, activeTextQuiz.currentIndex, text);
       }
@@ -2073,6 +2251,13 @@ export function answerQuestion(question, history = []) {
 
     const equationAnswer = solveLinearEquation(text);
     if (equationAnswer) return equationAnswer;
+
+    const gcdLcmAnswer = solveGcdLcmProblem(text);
+    if (gcdLcmAnswer) return gcdLcmAnswer;
+    const factorizationAnswer = solvePrimeFactorization(text);
+    if (factorizationAnswer) return factorizationAnswer;
+    const squareRootAnswer = solveSquareRoot(text);
+    if (squareRootAnswer) return squareRootAnswer;
 
     const percentAnswer = calculatePercent(text);
     if (percentAnswer) return percentAnswer;

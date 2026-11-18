@@ -1,7 +1,7 @@
 import { answerQuestion, classifyQuestion } from "./koala-engine.mjs";
 
 /*
- * Koala.ai v5 — backend + selektywny crawler artykułów i terminarzy.
+ * Koala.ai v6 — backend + edukacyjny crawler z wyszukiwaniem indeksowym Wikipedii.
  * - Bez zewnętrznych modeli AI, kluczy API i bibliotek.
  * - Zachowuje interfejs Netlify: POST { message, history } -> { answer }.
  * - Crawler odwiedza wyłącznie jawnie skonfigurowane domeny.
@@ -1503,6 +1503,78 @@ function isBarcaFixtureQuestion(question) {
     /\b(mecz|mecze|terminarz|spotkanie|najblizszy|najblizsza|kiedy|kalendarz|gra)\b/.test(text);
 }
 
+async function searchWikipedia(question, terms, deadline) {
+  const source = CRAWLER_SOURCES.find(item => item.name === "Wikipedia Polska");
+  if (!source || Date.now() >= deadline) return [];
+
+  const seed = new URL(source.url);
+  const host = seed.hostname;
+  const robots = await getCrawlerRobots(seed.origin, host, deadline);
+  if (!robots) return [];
+
+  const query = String(question ?? "")
+    .replace(/https?:\/\/[^\s<>()]+/gi, " ")
+    .replace(/\b(wyszukaj|poszukaj|szukaj|znajd[zź]|sprawd[zź]|zweryfikuj|online|w internecie|w sieci|wikipedi\w*|wiki|prosz[eę])\b/giu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 180);
+  if (query.length < 2) return [];
+
+  const apiUrl = new URL("/w/api.php", seed.origin);
+  apiUrl.search = new URLSearchParams({
+    action: "query",
+    generator: "search",
+    gsrsearch: query,
+    gsrnamespace: "0",
+    gsrlimit: "5",
+    prop: "extracts|info|pageprops",
+    exintro: "1",
+    explaintext: "1",
+    exsentences: "8",
+    inprop: "url",
+    format: "json",
+    formatversion: "2"
+  }).toString();
+  if (!crawlerCanVisit(apiUrl.href, robots)) return [];
+
+  const response = await requestSiteText(apiUrl.href, host, "application/json", 350_000, deadline);
+  if (!response?.text) return [];
+
+  let pages;
+  try {
+    pages = JSON.parse(response.text)?.query?.pages;
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(pages)) return [];
+
+  return pages
+    .filter(page => page && page.ns === 0 && !page.missing && !Object.hasOwn(page.pageprops || {}, "disambiguation"))
+    .map(page => {
+      const url = safeSourceUrl(page.fullurl);
+      const text = String(page.extract ?? "").replace(/\s+/g, " ").trim();
+      if (!url || text.length < 80) return null;
+      const paragraphs = text.split(/(?<=[.!?])\s+/).filter(part => part.length > 35);
+      const relevance = getDocumentRelevance({
+        title: page.title || "",
+        description: paragraphs[0] || "",
+        paragraphs,
+        text
+      }, url, terms);
+      return {
+        source: source.name,
+        sourceTrust: source.trust || 5,
+        title: cleanDisplayText(page.title || "Artykuł Wikipedii", 180),
+        url,
+        description: paragraphs[0] || "",
+        text: text.slice(0, 6000),
+        score: relevance.score + 8,
+        category: "general"
+      };
+    })
+    .filter(Boolean);
+}
+
 async function searchAllSources(question) {
   const normalizedQuestion = normalizeSearchText(question);
   const cacheKey = normalizedQuestion;
@@ -1520,7 +1592,11 @@ async function searchAllSources(question) {
     .filter(Boolean)
     .slice(0, CRAWLER_MAX_SOURCES);
 
-  const resultsBySite = await Promise.all(sources.map(source => crawlPublicSite(source, question, terms, deadline)));
+  const resultsBySite = await Promise.all(sources.map(async source => {
+    if (source.name !== "Wikipedia Polska") return crawlPublicSite(source, question, terms, deadline);
+    const indexedResults = await searchWikipedia(question, terms, deadline);
+    return indexedResults.length ? indexedResults : crawlPublicSite(source, question, terms, deadline);
+  }));
   const allResults = resultsBySite.flat();
   const seen = new Set();
   const uniqueResults = allResults.filter(result => {
