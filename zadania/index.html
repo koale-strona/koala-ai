@@ -1611,6 +1611,7 @@ html.auth-failed body>*:not(#authTransition){visibility:hidden!important}
       <button type="button" class="button secondary" onclick="setKoalaPrompt('Ułóż mi 15-minutowy plan nauki na temat: ')">🗓️ Plan nauki</button>
       <button type="button" class="button secondary" onclick="setKoalaPrompt('Przepytaj mnie z tematu: ')">✅ Sprawdź mnie</button>
       <button type="button" class="button secondary" onclick="setKoalaPrompt('Wyszukaj w internecie wiarygodne materiały edukacyjne na temat: ')">🌐 Znajdź źródła online</button>
+      <button type="button" id="koalaTeacherPrompt" class="button secondary hidden" onclick="setKoalaPrompt('NAUCZYCIEL: Przygotuj scenariusz lekcji i mini-kartkówkę z tematu: ')">🎓 Narzędzia nauczyciela</button>
     </div>
 
     <p class="ai-learning-note">Koala odpowiada własnym silnikiem i bazą wiedzy. Nie korzysta z zewnętrznego modelu AI; w razie potrzeby może szukać materiałów w wybranych źródłach edukacyjnych.</p>
@@ -2350,6 +2351,8 @@ function updateAccess() {
 
   const userArea = document.getElementById("userArea");
   const userInfo = document.getElementById("userInfo");
+  const koalaTeacherPrompt = document.getElementById("koalaTeacherPrompt");
+  if (koalaTeacherPrompt) koalaTeacherPrompt.classList.toggle("hidden", role !== "nauczyciel" || !currentUser);
   const guestBackLogin = document.getElementById("guestBackLogin");
   const maintenanceButton = document.getElementById("maintenanceButton");
   if (maintenanceButton) {
@@ -4766,10 +4769,20 @@ function addAIMessage(
 
 function cleanKoalaAnswerForDisplay(answer) {
   return String(answer ?? "")
-    .replace(/^[ \t]{0,3}#{1,6}[ \t]*/gm, "")
+    .replace(/^[ \t]*\\?#{1,6}[ \t]*/gm, "")
     .replace(/^[ \t]*---+[ \t]*$/gm, "")
-    .replace(/\*\*/g, "")
+    .replace(/\\([#*_`\[\]()\-\.])/g, "$1")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, "$1 ($2)")
+    .replace(/\*\*|__/g, "")
+    .replace(/(^|\s)[*_]([^*_\n]+)[*_](?=\s|$)/g, "$1$2")
+    .replace(/`([^`]+)`/g, "$1")
     .trim();
+}
+
+function isKoalaTeacherTask(question) {
+  const text = String(question || "").toLocaleLowerCase("pl-PL");
+  return /^(?:tryb nauczycielski|nauczyciel)\s*:/i.test(text)
+    || /\b(scenariusz lekcji|konspekt lekcji|cele lekcji|przygotuj kartk[oó]wk[eę]|stw[oó]rz kartk[oó]wk[eę]|przygotuj sprawdzian|stw[oó]rz sprawdzian|materia[lł]y dla nauczyciela)\b/i.test(text);
 }
 
 let koalaHistory = [];
@@ -4778,7 +4791,7 @@ async function askKoala() {
 
   if (koalaRequestPending) return;
 
-  if (role === "guest" || role === "nauczyciel") {
+  if (role === "guest") {
 
     addAIMessage(
       "🔒 Zaloguj się, aby korzystać z Koala.ai.",
@@ -4856,20 +4869,14 @@ const response =
       signal: controller.signal,
       body: JSON.stringify({
         message: question,
-        history: koalaHistory
+        history: koalaHistory,
+        ...(role === "nauczyciel" && currentUser && isKoalaTeacherTask(question) ? {
+          sessionToken: maintenanceToken(),
+          userName: currentUser.name
+        } : {})
       })
     }
   );
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        "HTTP " +
-        response.status
-      );
-
-    }
 
 
     const result =
@@ -4894,6 +4901,14 @@ const response =
 
       last.remove();
 
+    }
+
+    if (!response.ok) {
+      addAIMessage(
+        cleanKoalaAnswerForDisplay(result.answer || "🔒 Ta funkcja wymaga zweryfikowanego konta nauczyciela."),
+        "bot"
+      );
+      return;
     }
 
 

@@ -1,7 +1,7 @@
-import { answerQuestion, classifyQuestion } from "./koala-engine.mjs";
+import { answerQuestion, classifyQuestion, createTeacherMaterials } from "./koala-engine.mjs";
 
 /*
- * Koala.ai v6 — backend + edukacyjny crawler z wyszukiwaniem indeksowym Wikipedii.
+ * Koala.ai v8 — wyszukiwanie szkolne i wielojęzyczne oraz narzędzia nauczyciela.
  * - Bez zewnętrznych modeli AI, kluczy API i bibliotek.
  * - Zachowuje interfejs Netlify: POST { message, history } -> { answer }.
  * - Crawler odwiedza wyłącznie jawnie skonfigurowane domeny.
@@ -28,9 +28,10 @@ const CRAWLER_MAX_SITEMAP_SIZE = 300_000;
 const CRAWLER_MAX_PAGES_PER_SITE = 9;
 const CRAWLER_MAX_SITEMAPS_PER_SITE = 2;
 const CRAWLER_MAX_RESULTS = 8;
-const CRAWLER_MAX_SOURCES = 5;
+const CRAWLER_MAX_SOURCES = 7;
 const CRAWLER_MAX_LINKS_PER_PAGE = 120;
 const CRAWLER_MAX_TERMS = 24;
+const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzDcUrRptgsCjE__4vaiY51H52XQe6WBtZoaxWJPC9Cl7hFB36JWTmDmszDCeiRP8hgrg/exec";
 
 const FRONTEND_ORIGIN = "https://koalezadania.netlify.app";
 const ALLOWED_ORIGINS = new Set([
@@ -95,6 +96,107 @@ const CRAWLER_SOURCES = [
     hints: ["encyklopedia", "informacje", "historia", "geografia"]
   },
   {
+    name: "Wielki słownik języka polskiego PAN",
+    url: "https://wsjp.pl/",
+    category: "language",
+    trust: 10,
+    aliases: ["wsjp"],
+    hints: ["słownik", "znaczenie", "definicja", "odmiana", "frazeologia", "polszczyzna"]
+  },
+  {
+    name: "Słownik Gramatyczny Języka Polskiego",
+    url: "https://sgjp.pl/leksemy/",
+    category: "language",
+    trust: 9,
+    aliases: ["sgjp"],
+    hints: ["odmiana", "gramatyka", "formy wyrazów", "fleksja", "rzeczownik", "czasownik"]
+  },
+  {
+    name: "Rada Języka Polskiego PAN",
+    url: "https://rjp.pan.pl/slowniki-i-poradniki-jezykowe/",
+    category: "language",
+    trust: 10,
+    aliases: ["rjp", "rada języka polskiego"],
+    hints: ["ortografia", "interpunkcja", "poprawność językowa", "słowniki", "poradnia językowa"]
+  },
+  {
+    name: "Wikisłownik",
+    url: "https://pl.wiktionary.org/wiki/Wikis%C5%82ownik:Strona_g%C5%82%C3%B3wna",
+    category: "language",
+    trust: 8,
+    aliases: ["wikisłownik", "wikislownik"],
+    searchApi: true,
+    hints: ["słownik", "wyraz", "znaczenie", "synonim", "antonim", "etymologia", "języki"]
+  },
+  {
+    name: "Wiktionary — English",
+    url: "https://en.wiktionary.org/wiki/Wiktionary:Main_Page",
+    category: "language",
+    trust: 8,
+    aliases: ["wiktionary"],
+    searchApi: true,
+    hints: ["english", "translation", "pronunciation", "etymology", "definition", "dictionary"]
+  },
+  {
+    name: "Wiktionary — Deutsch",
+    url: "https://de.wiktionary.org/wiki/Wiktionary:Hauptseite",
+    category: "language",
+    trust: 8,
+    aliases: ["deutsches wiktionary", "wiktionary deutsch"],
+    searchApi: true,
+    hints: ["deutsch", "niemiecki", "język niemiecki", "german", "übersetzung", "wortbedeutung"]
+  },
+  {
+    name: "Wiktionnaire — français",
+    url: "https://fr.wiktionary.org/wiki/Wiktionnaire:Page_d’accueil",
+    category: "language",
+    trust: 8,
+    aliases: ["wiktionary français", "francuski wiktionary"],
+    searchApi: true,
+    hints: ["français", "francuski", "język francuski", "french", "traduction", "définition"]
+  },
+  {
+    name: "Wikcionario — español",
+    url: "https://es.wiktionary.org/wiki/Wikcionario:Portada",
+    category: "language",
+    trust: 8,
+    aliases: ["wiktionary español", "hiszpański wiktionary"],
+    searchApi: true,
+    hints: ["español", "hiszpański", "język hiszpański", "spanish", "traducción", "significado"]
+  },
+  {
+    name: "Duden — słownik języka niemieckiego",
+    url: "https://www.duden.de/",
+    category: "language",
+    trust: 9,
+    aliases: ["duden"],
+    hints: ["duden", "niemiecki", "deutsch", "ortografia", "znaczenie wyrazu"]
+  },
+  {
+    name: "Cambridge Dictionary",
+    url: "https://dictionary.cambridge.org/",
+    category: "language",
+    trust: 9,
+    aliases: ["cambridge dictionary", "cambridge"],
+    hints: ["english", "angielski", "język angielski", "definition", "pronunciation", "translation"]
+  },
+  {
+    name: "Real Academia Española — DLE",
+    url: "https://dle.rae.es/",
+    category: "language",
+    trust: 10,
+    aliases: ["rae", "diccionario de la lengua española"],
+    hints: ["español", "hiszpański", "język hiszpański", "rae", "definición", "ortografía"]
+  },
+  {
+    name: "CNRTL — zasoby języka francuskiego",
+    url: "https://www.cnrtl.fr/",
+    category: "language",
+    trust: 9,
+    aliases: ["cnrtl"],
+    hints: ["français", "francuski", "język francuski", "cnrtl", "définition", "étymologie"]
+  },
+  {
     name: "Zintegrowana Platforma Edukacyjna",
     url: "https://zpe.gov.pl/",
     category: "education",
@@ -114,6 +216,22 @@ const CRAWLER_SOURCES = [
     category: "education",
     trust: 8,
     hints: ["matematyka", "biologia", "chemia", "fizyka", "kurs"]
+  },
+  {
+    name: "Ośrodek Rozwoju Edukacji",
+    url: "https://ore.edu.pl/",
+    category: "education",
+    trust: 9,
+    hints: ["scenariusz lekcji", "metody nauczania", "materiały edukacyjne", "nauczyciel", "uczeń"]
+  },
+  {
+    name: "Wikibooks — wolne podręczniki",
+    url: "https://pl.wikibooks.org/wiki/Strona_g%C5%82%C3%B3wna",
+    category: "education",
+    trust: 7,
+    aliases: ["wikibooks"],
+    searchApi: true,
+    hints: ["podręcznik", "wolna książka", "nauka", "ćwiczenia", "szkoła"]
   },
   {
     name: "Centralna Komisja Egzaminacyjna",
@@ -231,7 +349,23 @@ const STOP_WORDS = new Set([
   "czesc", "siema", "witaj", "witam", "koala", "nowego", "wiadomo",
   "opowiedz", "wyjasnij", "prosze", "znajdz", "wyszukaj", "poszukaj",
   "wiarygodne", "edukacyjne", "materialy", "temat", "temacie", "o", "oraz",
-  "w", "na", "z", "ze", "do", "od", "to", "co", "kto", "czyli"
+  "w", "na", "z", "ze", "do", "od", "to", "co", "kto", "czyli",
+  "i", "ale", "albo", "plan", "nauki", "nauke", "lekcji", "lekcja",
+  "klasa", "klasy", "klasie", "szkolny", "szkolna", "szkolne", "uczniow",
+  "godzina", "minut", "minutowy", "minutowa", "znajdz", "wyszukaj",
+  "slownik", "slowniku", "material", "materialy", "strone", "strony"
+]);
+
+const INDEX_QUERY_STOP_WORDS = new Set([
+  "uloz", "rozpisz", "przygotuj", "zrob", "stworz", "utworz", "wyszukaj",
+  "poszukaj", "znajdz", "szukaj", "sprawdz", "zweryfikuj", "online",
+  "internet", "internecie", "sieci", "wiarygodne", "rzetelne", "materialy",
+  "edukacyjne", "strone", "strony", "slownik", "slowniku", "wikipedia",
+  "wiki", "plan", "nauki", "nauke", "powtorki", "lekcji", "lekcja",
+  "temat", "temacie", "klasa", "klasy", "klasie", "uczniow", "uczniowie",
+  "wyjasnij", "wytlumacz", "opowiedz", "podaj", "pokaz", "znaczenie",
+  "znaczy", "co", "to", "czy", "jak", "jaki", "jaka", "jakie", "jest",
+  "oraz", "dla", "przez", "mi", "mnie", "sie", "w", "na", "z", "ze", "do"
 ]);
 
 const QUERY_EXPANSIONS = [
@@ -250,8 +384,28 @@ const QUERY_EXPANSIONS = [
   { match: /\b(polska|polski|polskie|urzad|prawo|przepisy|ministerstwo)\b/, terms: ["polska", "polski", "gov"] },
   { match: /\b(historia|historyczny|historyczna)\b/, terms: ["historia", "history", "historyczny"] },
   { match: /\b(wiadomosci|aktualnosci|wydarzenia|co sie dzieje|co nowego|na swiecie|ze swiata|swiata|podsumuj)\b/, terms: ["news", "latest", "world", "global", "current affairs", "breaking"] },
-  { match: /\b(polska|w polsce)\b/, terms: ["poland", "polska", "national"] }
+  { match: /\b(polska|w polsce)\b/, terms: ["poland", "polska", "national"] },
+  { match: /\b(angielsk\w*|jezyk angielski|english)\b/, terms: ["english", "dictionary", "definition", "translation"] },
+  { match: /\b(niemieck\w*|jezyk niemiecki|deutsch|german)\b/, terms: ["deutsch", "german", "wort", "ubersetzung", "bedeutung"] },
+  { match: /\b(francusk\w*|jezyk francuski|francais|french)\b/, terms: ["francais", "french", "mot", "traduction", "definition"] },
+  { match: /\b(hiszpansk\w*|jezyk hiszpanski|espanol|spanish)\b/, terms: ["espanol", "spanish", "palabra", "traduccion", "significado"] }
 ];
+
+function buildIndexedSearchQuery(question) {
+  const text = normalizeSearchText(question)
+    .replace(/https?:\/\/[^\s]+/g, " ")
+    .replace(/\b(?:[4-8]|iv|v|vi|vii|viii)\s+klas(?:a|y|ie|e|ach)?\b|\bklas(?:a|y|ie|e|ach)?\s+(?:[4-8]|iv|v|vi|vii|viii)\b/g, " ")
+    .replace(/\b\d{1,2}[\s-]*minut\w*\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const terms = tokenize(text).filter(term => !STOP_WORDS.has(term) && !INDEX_QUERY_STOP_WORDS.has(term));
+  const expanded = [...terms];
+  const normalizedQuestion = normalizeSearchText(question);
+  for (const expansion of QUERY_EXPANSIONS) {
+    if (expansion.match.test(normalizedQuestion)) expanded.push(...expansion.terms);
+  }
+  return unique(expanded).slice(0, 8).join(" ").slice(0, 180);
+}
 
 function getCrawlerTerms(question) {
   const normalized = normalizeSearchText(question);
@@ -930,6 +1084,7 @@ function selectCrawlerSources(question) {
 
   const sports = has(/\b(mecz|mecze|spotkanie|terminarz|fcbarcelona|fcbarcelony|barcelona|barcelony|barca|liga|pilka|pilkarski|uefa|najblizszy mecz)\b/);
   const news = has(/\b(co sie dzieje|co sie wydarzylo|wiadomosci|wiadomosciami|aktualnosci|newsy|wydarzenia|na swiecie|ze swiata|swiata|dzisiejsze informacje|ostatnie wydarzenia|co nowego)\b/);
+  const language = has(/\b(jezyk|jezyka|polszczyzna|slownik|slowniki|slownikowy|znaczenie|znaczy|synonim|synonimy|antonim|antonimy|odmiana|odmienic|fleksja|gramatyka|ortografia|pisownia|interpunkcja|przecinek|wymowa|fonetyka|etymologia|frazeologizm|frazeologia|poprawnie|poprawnosc|tlumaczenie|przetlumacz|rzeczownik|czasownik|przymiotnik|angielski|angielsku|niemiecki|niemiecku|francuski|francusku|hiszpanski|hiszpansku|english|german|french|spanish|deutsch|francais|espanol|meaning|definition|dictionary|translation|translate|grammar|vocabulary|pronunciation|etymology|synonym|antonym)\b/);
   const astronomy = has(/\b(kosmos|kosmosu|astronomia|planeta|planety|nasa|eksploracji kosmosu|misja kosmiczna)\b/);
   const science = has(/\b(nauka|naukowy|badania|biologia|fizyka|chemia|fotosynteza|chlorofil)\b/);
   const education = has(/\b(szkola|szkolny|lekcja|edukacja|zadanie|egzamin|matura|podstawa programowa|lektura|literatura)\b/);
@@ -939,6 +1094,7 @@ function selectCrawlerSources(question) {
 
   let categories;
   if (sports) categories = ["sport"];
+  else if (language) categories = ["language", "education", "general"];
   else if (news && PolandFocus && officialPoland) categories = ["news", "poland"];
   else if (news) categories = ["news"];
   else if (astronomy) categories = ["science", "general"];
@@ -989,6 +1145,14 @@ function extractAllowedSourceFromMessage(message) {
       // Ignorujemy nieprawidłowy adres.
     }
   }
+  const normalizedMessage = normalizeSearchText(message);
+  const explicitSource = CRAWLER_SOURCES.find(source =>
+    [source.name, ...(source.aliases || [])].some(alias => {
+      const normalizedAlias = normalizeSearchText(alias);
+      return normalizedAlias.length >= 3 && (` ${normalizedMessage} `).includes(` ${normalizedAlias} `);
+    })
+  );
+  if (explicitSource) return explicitSource;
   return null;
 }
 
@@ -1503,21 +1667,15 @@ function isBarcaFixtureQuestion(question) {
     /\b(mecz|mecze|terminarz|spotkanie|najblizszy|najblizsza|kiedy|kalendarz|gra)\b/.test(text);
 }
 
-async function searchWikipedia(question, terms, deadline) {
-  const source = CRAWLER_SOURCES.find(item => item.name === "Wikipedia Polska");
-  if (!source || Date.now() >= deadline) return [];
+async function searchMediaWiki(source, question, terms, deadline) {
+  if (!source?.searchApi || Date.now() >= deadline) return [];
 
   const seed = new URL(source.url);
   const host = seed.hostname;
   const robots = await getCrawlerRobots(seed.origin, host, deadline);
   if (!robots) return [];
 
-  const query = String(question ?? "")
-    .replace(/https?:\/\/[^\s<>()]+/gi, " ")
-    .replace(/\b(wyszukaj|poszukaj|szukaj|znajd[zź]|sprawd[zź]|zweryfikuj|online|w internecie|w sieci|wikipedi\w*|wiki|prosz[eę])\b/giu, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 180);
+  const query = buildIndexedSearchQuery(question);
   if (query.length < 2) return [];
 
   const apiUrl = new URL("/w/api.php", seed.origin);
@@ -1561,15 +1719,16 @@ async function searchWikipedia(question, terms, deadline) {
         paragraphs,
         text
       }, url, terms);
+      if (!relevance.strongMatch || relevance.score < 7) return null;
       return {
         source: source.name,
         sourceTrust: source.trust || 5,
-        title: cleanDisplayText(page.title || "Artykuł Wikipedii", 180),
+        title: cleanDisplayText(page.title || source.name, 180),
         url,
         description: paragraphs[0] || "",
         text: text.slice(0, 6000),
-        score: relevance.score + 8,
-        category: "general"
+        score: relevance.score + (source.category === "language" ? 10 : 8),
+        category: source.category || "general"
       };
     })
     .filter(Boolean);
@@ -1593,8 +1752,8 @@ async function searchAllSources(question) {
     .slice(0, CRAWLER_MAX_SOURCES);
 
   const resultsBySite = await Promise.all(sources.map(async source => {
-    if (source.name !== "Wikipedia Polska") return crawlPublicSite(source, question, terms, deadline);
-    const indexedResults = await searchWikipedia(question, terms, deadline);
+    if (!source.searchApi) return crawlPublicSite(source, question, terms, deadline);
+    const indexedResults = await searchMediaWiki(source, question, terms, deadline);
     return indexedResults.length ? indexedResults : crawlPublicSite(source, question, terms, deadline);
   }));
   const allResults = resultsBySite.flat();
@@ -1750,6 +1909,62 @@ function getSafeHistory(history) {
     }));
 }
 
+function isTeacherMaterialsRequest(message) {
+  const text = normalizeSearchText(message);
+  return /^(?:tryb nauczycielski|nauczyciel)\b/.test(text)
+    || /\b(scenariusz lekcji|konspekt lekcji|cele lekcji|przygotuj kartkowke|stworz kartkowke|przygotuj sprawdzian|stworz sprawdzian|materialy dla nauczyciela)\b/.test(text);
+}
+
+function parseTeacherBootstrapResponse(text) {
+  const trimmed = String(text || "").trim();
+  const marker = "koalaTeacherVerify(";
+  const start = trimmed.indexOf(marker);
+  if (start >= 0) {
+    const jsonStart = start + marker.length;
+    const end = trimmed.lastIndexOf(")");
+    if (end <= jsonStart) return null;
+    try { return JSON.parse(trimmed.slice(jsonStart, end).trim().replace(/;$/, "")); } catch { return null; }
+  }
+  try { return JSON.parse(trimmed); } catch { return null; }
+}
+
+async function verifyTeacherSession(sessionToken, userName) {
+  const token = String(sessionToken || "").trim();
+  const requestedName = normalizeSearchText(userName);
+  if (!token || token.length > 4096 || !requestedName) return false;
+
+  const endpoint = new URL(GOOGLE_SHEETS_URL);
+  endpoint.searchParams.set("action", "bootstrap");
+  endpoint.searchParams.set("token", token);
+  endpoint.searchParams.set("callback", "koalaTeacherVerify");
+  endpoint.searchParams.set("_", String(Date.now()));
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4000);
+  try {
+    const response = await fetch(endpoint.href, {
+      method: "GET",
+      redirect: "follow",
+      headers: { Accept: "application/javascript, application/json, text/plain" },
+      signal: controller.signal
+    });
+    const declaredSize = Number(response.headers.get("content-length") || 0);
+    if (!response.ok || (declaredSize && declaredSize > 1_000_000)) return false;
+    const payloadText = await response.text();
+    if (payloadText.length > 1_000_000) return false;
+    const payload = parseTeacherBootstrapResponse(payloadText);
+    if (!payload || payload.success === false) return false;
+    const result = payload.result && typeof payload.result === "object" ? payload.result : payload;
+    const identity = result.authenticatedUser || result.currentUser || result.user || result.account || result.session?.user;
+    return normalizeSearchText(identity?.name || identity?.username) === requestedName
+      && normalizeSearchText(identity?.role) === "nauczyciel";
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // CORS I ODPOWIEDZI JSON
 // ---------------------------------------------------------------------------
@@ -1834,6 +2049,16 @@ export default async function handler(request) {
 
   const history = getSafeHistory(body.history);
 
+  if (isTeacherMaterialsRequest(message)) {
+    const teacherSessionValid = await verifyTeacherSession(body.sessionToken, body.userName);
+    if (!teacherSessionValid) {
+      return jsonResponse({
+        answer: "🔒 Narzędzia nauczyciela są dostępne wyłącznie po zalogowaniu na zweryfikowane konto z rolą nauczyciel."
+      }, 403, origin);
+    }
+    return jsonResponse({ answer: createTeacherMaterials(message) }, 200, origin);
+  }
+
   try {
     const localAnswer = answerQuestion(message, history);
     let finalAnswer = typeof localAnswer === "string"
@@ -1844,7 +2069,7 @@ export default async function handler(request) {
     const route = classifyQuestion(message, finalAnswer, history);
     const onlineSearch = shouldSearchOnline(message, finalAnswer, history);
 
-    if (onlineSearch && !["greeting", "thanks", "social", "math", "knowledge", "teacher-answer"].includes(route.kind)) {
+    if (onlineSearch && !["greeting", "thanks", "social", "math", "knowledge", "knowledge-comparison", "study-plan", "local-study", "quiz-answer", "teacher-answer"].includes(route.kind)) {
       const internetAnswer = await searchAllSources(route.searchQuery || message);
       const searchIsPrimary = !route.topic || localUnknown || asksForCurrentInformation(message) || Boolean(route.searchQuery);
       if (internetAnswer) {
