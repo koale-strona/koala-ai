@@ -2190,6 +2190,31 @@ function tokenStemMatch(left, right) {
     return value;
   };
   if (stem(left) === stem(right)) return true;
+  if (Math.min(left.length, right.length) >= 5 && Math.max(left.length, right.length) >= 6 && Math.abs(left.length - right.length) <= 1) {
+    let leftIndex = 0;
+    let rightIndex = 0;
+    let edits = 0;
+    while (leftIndex < left.length && rightIndex < right.length) {
+      if (left[leftIndex] === right[rightIndex]) {
+        leftIndex++;
+        rightIndex++;
+        continue;
+      }
+      edits++;
+      if (edits > 1) break;
+      if (left.length > right.length) leftIndex++;
+      else if (right.length > left.length) rightIndex++;
+      else if (left[leftIndex + 1] === right[rightIndex] && left[leftIndex] === right[rightIndex + 1]) {
+        leftIndex += 2;
+        rightIndex += 2;
+      } else {
+        leftIndex++;
+        rightIndex++;
+      }
+    }
+    if (leftIndex < left.length || rightIndex < right.length) edits++;
+    if (edits <= 1) return true;
+  }
   if (Math.min(left.length, right.length) < 5) return false;
   const common = Math.min(left.length, right.length, 7);
   return left.slice(0, common) === right.slice(0, common);
