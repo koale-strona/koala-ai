@@ -802,9 +802,16 @@ function addKnowledgeCards(subject, rows) {
   const entries = rows.map(([title, aliasText, short, explanation, example, related, check, answerText, gradeRange]) => {
     const aliases = aliasText ? aliasText.split("|").filter(Boolean) : [];
     const all = answerText.split("&").map(group => group.split("|").filter(Boolean));
-    const grades = gradeRange
-      ? gradeRange.split("-").map(value => Number(value)).filter(value => value >= 4 && value <= 8)
-      : undefined;
+    let grades;
+    if (gradeRange) {
+      const bounds = gradeRange.split("-").map(value => Number(value));
+      if (bounds.length === 2 && bounds.every(value => Number.isInteger(value) && value >= 4 && value <= 8)) {
+        const [first, last] = bounds;
+        grades = Array.from({ length: Math.abs(last - first) + 1 }, (_, index) => first <= last ? first + index : first - index);
+      } else {
+        grades = bounds.filter(value => Number.isInteger(value) && value >= 4 && value <= 8);
+      }
+    }
     return {
       title,
       subject,
@@ -888,7 +895,19 @@ const KNOWLEDGE_QUERY_SYNONYMS = [
   [/\b(pani twardowska|powrot taty)\b/, "Powrót taty i Pani Twardowska"],
   [/\b(reduta ordona|smierc pulkownika)\b/, "Reduta Ordona i Śmierć Pułkownika"],
   [/\b(switezianka|sonet krymski)\b/, "Świtezianka i wybrany Sonet krymski"],
-  [/\b(tren vii|tren viii|fraszki kochanowskiego)\b/, "Tren VII i Tren VIII oraz wybrane fraszki"]
+  [/\b(tren vii|tren viii|fraszki kochanowskiego)\b/, "Tren VII i Tren VIII oraz wybrane fraszki"],
+  [/\b(nwd|najwiekszy wspolny dzielnik|wspolny dzielnik dwoch liczb)\b/, "Największy wspólny dzielnik"],
+  [/\b(nww|najmniejsza wspolna wielokrotnosc|wspolna wielokrotnosc dwoch liczb)\b/, "Najmniejsza wspólna wielokrotność"],
+  [/\b(diagram kolowy|wykres kolowy|procent na wykresie kolowym)\b/, "Odczytywanie diagramu kołowego"],
+  [/\b(pole powierzchni prostopadloscianu|ile papieru na pudelko)\b/, "Pole powierzchni prostopadłościanu"],
+  [/\b(objetosc graniastoslupa|pole podstawy razy wysokosc)\b/, "Objętość graniastosłupa prostego"],
+  [/\b(zdanie pojedyncze czy zlozone|ile orzeczen w zdaniu)\b/, "Zdanie pojedyncze i złożone"],
+  [/\b(argument do tezy|jak uzasadnic teze|wstep rozwiniecie zakonczenie rozprawki)\b/, "Rozprawka"],
+  [/\b(chrzest polski|mieszko przyjal chrzest|rok 966)\b/, "Chrzest Polski i Mieszko I"],
+  [/\b(bitwa warszawska|cud nad wisla|wojna polsko bolszewicka)\b/, "Wojna polsko-bolszewicka i Bitwa Warszawska"],
+  [/\b(budowa jadra|protony i neutrony|z czego sklada sie jadro atomu)\b/, "Budowa jądra atomowego"],
+  [/\b(wiazanie jonowe czy kowalencyjne|wiazanie kowalencyjne|wiazanie jonowe)\b/, "Wiązanie jonowe i kowalencyjne"],
+  [/\b(schemat obwodu|symbole obwodu elektrycznego|narysuj obwod)\b/, "Schemat obwodu elektrycznego"]
 ];
 
 const KNOWLEDGE_QUERY_FILLERS = new Set([
@@ -1492,6 +1511,61 @@ addKnowledgeCards("Chemia", [
   ["Elektrony walencyjne", "elektrony na zewnętrznej powłoce|wartościowość", "Elektrony walencyjne znajdują się na zewnętrznej powłoce atomu i uczestniczą w tworzeniu wiązań.", "W prostych modelach szkolnych pomagają przewidywać, jak atomy łączą się w związki.", "Atom sodu łatwo oddaje jeden elektron, tworząc jon Na⁺.", "Pełniejszy opis wiązań wymaga modelu elektronowego, a nie tylko reguły oktetu.", "Które elektrony atomu biorą udział w tworzeniu wiązań?", "walencyjne", "8"],
   ["Polimery i tworzywa sztuczne", "czym są polimery|plastik recykling", "Polimery to bardzo duże cząsteczki zbudowane z powtarzających się fragmentów; wiele tworzyw sztucznych jest polimerami.", "Różne tworzywa mają różne właściwości i oznaczenia, dlatego segreguje się je zgodnie z lokalnymi zasadami.", "Polietylen stosuje się między innymi w opakowaniach, a nylon w włóknach.", "Ograniczanie jednorazowych produktów i poprawne sortowanie zmniejsza ilość odpadów.", "Z jakich powtarzających się elementów zbudowany jest polimer?", "fragmentów|jednostek", "7-8"],
   ["Substancje organiczne w życiu codziennym", "chemia organiczna w jedzeniu|cukry tłuszcze białka", "Wiele substancji zawierających węgiel spotykamy w żywności, paliwach, lekach i materiałach.", "Cukry, tłuszcze i białka są przykładami ważnych związków organicznych; nie każdy związek węgla zalicza się jednak do organicznych.", "Glukoza jest cukrem o wzorze C₆H₁₂O₆.", "Nazwa „organiczny” w chemii nie oznacza automatycznie, że produkt jest naturalny lub zdrowy.", "Podaj jeden przykład grupy związków organicznych w żywności.", "cukry|tłuszcze|białka", "7-8"]
+]);
+
+addKnowledgeCards("Matematyka", [
+  ["Największy wspólny dzielnik", "NWD|największy dzielnik wspólny", "Największy wspólny dzielnik dwóch liczb to największa liczba, która dzieli obie bez reszty.", "Można wypisać dzielniki albo rozłożyć liczby na czynniki pierwsze i wybrać wspólne czynniki.", "Dzielniki 18 i 24 mają wspólną największą wartość 6, więc NWD(18, 24) = 6.", "NWD pomaga skracać ułamki i rozwiązywać zadania o równym podziale.", "Jaki jest NWD liczb 12 i 20?", "4", "4-8"],
+  ["Najmniejsza wspólna wielokrotność", "NWW|najmniejsza wspólna wielokrotnosc liczb", "Najmniejsza wspólna wielokrotność dwóch liczb to najmniejsza dodatnia liczba będąca wielokrotnością obu.", "Można wypisać kolejne wielokrotności albo skorzystać z rozkładu na czynniki pierwsze.", "Wielokrotności 4 i 6 spotykają się po raz pierwszy przy 12, zatem NWW(4, 6) = 12.", "NWW wykorzystujemy między innymi przy sprowadzaniu ułamków do wspólnego mianownika.", "Jaka jest najmniejsza wspólna wielokrotność 3 i 5?", "15", "4-8"],
+  ["Cecha podzielności przez 6", "liczba podzielna przez 6|podzielnosc przez szesc", "Liczba dzieli się przez 6 wtedy i tylko wtedy, gdy dzieli się jednocześnie przez 2 i przez 3.", "Sprawdź ostatnią cyfrę, a potem sumę cyfr. Oba warunki muszą być spełnione.", "516 kończy się cyfrą parzystą, a 5 + 1 + 6 = 12; dlatego 516 dzieli się przez 6.", "Łączenie cech podzielności pozwala szybko sprawdzać większe liczby.", "Czy 234 dzieli się przez 6? Uzasadnij dwoma warunkami.", "tak&jest parzysta&dzieli się przez 3", "4-6"],
+  ["Wartość wyrażenia algebraicznego", "podstawianie do wyrażenia|oblicz wartosc wyrazenia", "Wartość wyrażenia algebraicznego otrzymujemy, podstawiając za litery podane liczby i wykonując działania we właściwej kolejności.", "Najpierw podstawiaj liczby z nawiasami, a potem obliczaj według kolejności działań.", "Dla a = 3 wyrażenie 2a + 5 ma wartość 2 · 3 + 5 = 11.", "Zapisuj podstawienie w nawiasach, szczególnie gdy liczba jest ujemna.", "Oblicz 3x − 2 dla x = 4.", "10", "5-8"],
+  ["Pole powierzchni prostopadłościanu", "pole powierzchni bryly|pole scian prostopadloscianu", "Pole powierzchni prostopadłościanu jest sumą pól wszystkich jego ścian.", "Dla krawędzi a, b i c wzór to P = 2ab + 2ac + 2bc. Wynik zapisujemy w jednostkach kwadratowych.", "Dla krawędzi 2 cm, 3 cm i 4 cm pole wynosi 2·6 + 2·8 + 2·12 = 52 cm².", "Nie myl pola powierzchni z objętością bryły.", "Ile par równych ścian ma prostopadłościan?", "trzy|3", "5-8"],
+  ["Objętość graniastosłupa prostego", "objetosc graniastoslupa|pole podstawy razy wysokosc", "Objętość graniastosłupa prostego obliczamy, mnożąc pole podstawy przez wysokość.", "Wzór V = Pp · H działa dla graniastosłupów o dowolnym wielokącie w podstawie. Jednostką jest jednostka sześcienna.", "Pole podstawy wynosi 12 cm², a wysokość 5 cm, więc objętość to 60 cm³.", "Wysokość graniastosłupa jest odległością między jego podstawami.", "Jak obliczysz objętość, jeśli pole podstawy to 8 cm², a wysokość 3 cm?", "24 cm3|24", "6-8"],
+  ["Odczytywanie diagramu kołowego", "wykres kolowy|diagram kolowy procenty", "Diagram kołowy pokazuje, jak części składają się na całość.", "Całe koło odpowiada 100% i 360°. Porównuj udziały, odczytując legendę oraz opis danych.", "Ćwiartka koła przedstawia jedną czwartą całości, czyli 25% i 90°.", "Zawsze sprawdź, czego dotyczy całość i jakie wartości opisuje legenda.", "Jaki procent całości przedstawia połowa diagramu kołowego?", "50%|polowe", "5-8"],
+  ["Proporcjonalność prosta", "wprost proporcjonalne wielkosci|cena za kilogram", "Dwie wielkości są wprost proporcjonalne, gdy ich iloraz jest stały.", "Jeśli jedną wielkość pomnożymy przez daną liczbę, druga zmieni się tyle samo razy.", "Przy stałej cenie kilogram jabłek kosztuje 4 zł, więc 3 kg kosztują 12 zł.", "Najpierw sprawdź, czy warunki zadania rzeczywiście utrzymują stały przelicznik.", "Jeśli 2 zeszyty kosztują 10 zł, ile kosztuje 6 takich zeszytów?", "30 zł|30", "5-8"],
+  ["Suma kątów wewnętrznych wielokąta", "ile wynosi suma katow wielokata|wzor na katy wielokata", "Sumę kątów wewnętrznych n-kąta można obliczyć ze wzoru (n − 2) · 180°.", "Wielokąt dzielimy przekątnymi z jednego wierzchołka na n − 2 trójkąty.", "Suma kątów pięciokąta wynosi (5 − 2) · 180° = 540°.", "Wzór dotyczy wypukłego wielokąta.", "Jaka jest suma kątów wewnętrznych sześciokąta?", "720 stopni|720", "7-8"],
+  ["Potęgi o tej samej podstawie", "mnozenie i dzielenie poteg o tej samej podstawie", "Przy mnożeniu potęg o tej samej podstawie dodajemy wykładniki, a przy dzieleniu odejmujemy wykładniki.", "aᵐ · aⁿ = aᵐ⁺ⁿ, a aᵐ : aⁿ = aᵐ⁻ⁿ dla a różnego od zera w dzieleniu.", "2³ · 2² = 2⁵ = 32.", "Nie dodawaj podstaw; łączymy wykładniki tylko wtedy, gdy podstawa jest taka sama.", "Uprość 5² · 5³.", "5 do potegi 5|5^5|3125", "7-8"]
+]);
+
+addKnowledgeCards("Język polski", [
+  ["Podmiot i orzeczenie", "podmiot orzeczenie czesci zdania|kto co robi w zdaniu", "Podmiot wskazuje, o kim lub o czym jest zdanie, a orzeczenie informuje, co podmiot robi lub w jakim jest stanie.", "Orzeczenie najczęściej jest osobową formą czasownika. Podmiot może być wyrażony rzeczownikiem, zaimkiem albo pominięty.", "W zdaniu „Uczniowie czytają” podmiotem są uczniowie, a orzeczeniem — czytają.", "Znalezienie orzeczenia często ułatwia rozpoznanie podmiotu.", "W zdaniu „Pies szczeka” wskaż podmiot i orzeczenie.", "pies&szczeka", "4-8"],
+  ["Zdanie pojedyncze i złożone", "ile orzeczen zdanie pojedyncze zlozone", "Zdanie pojedyncze ma jedno orzeczenie, a zdanie złożone zawiera co najmniej dwa orzeczenia.", "Policz osobowe formy czasowników; zdania składowe mogą być połączone spójnikiem lub znakiem interpunkcyjnym.", "„Pada deszcz” jest pojedyncze, a „Pada deszcz, więc zostaję w domu” jest złożone.", "Nie oceniaj wyłącznie po długości wypowiedzi — liczy się liczba orzeczeń.", "Ile orzeczeń ma zdanie złożone?", "co najmniej dwa|2", "4-8"],
+  ["Przydawka i dopełnienie", "czesci zdania przydawka dopelnienie", "Przydawka określa rzeczownik, a dopełnienie uzupełnia treść czasownika lub przymiotnika.", "Przydawka odpowiada między innymi na pytania jaki?, czyj?, który? Dopełnienie odpowiada na pytania przypadków poza mianownikiem.", "W „czytam ciekawą książkę”: ciekawą jest przydawką, a książkę — dopełnieniem.", "Pytanie zadawaj od wyrazu, który dana część zdania określa.", "Jaką funkcję pełni wyraz „ciekawą” w wyrażeniu „ciekawą książkę”?", "przydawka", "5-8"],
+  ["Epitet", "srodek stylistyczny epitet|okreslenie rzeczownika w poezji", "Epitet to określenie, które uwydatnia cechę osoby, rzeczy lub zjawiska.", "Najczęściej jest przymiotnikiem połączonym z rzeczownikiem, ale może mieć też inną formę.", "W wyrażeniu „złota jesień” słowo „złota” jest epitetem.", "Epitet może opisywać dosłowną cechę albo budować obraz poetycki.", "Wskaż epitet w wyrażeniu „cichy wieczór”.", "cichy", "4-8"],
+  ["Metafora i znaczenie przenośne", "metafora przenosnia|znaczenie niedoslowne", "Metafora łączy słowa w znaczeniu przenośnym, tworząc nowy obraz lub sens.", "Nie odczytuj jej dosłownie. Zastanów się, jakie skojarzenie i emocję buduje w kontekście.", "„Morze świateł” nie oznacza prawdziwego morza, lecz bardzo wiele świateł.", "Interpretację uzasadnij konkretnymi słowami z utworu.", "Czy wyrażenie „morze świateł” należy rozumieć dosłownie?", "nie", "5-8"],
+  ["Rozprawka", "jak napisac rozprawke teza argument przyklad", "Rozprawka przedstawia stanowisko wobec problemu i uzasadnia je argumentami.", "Wstęp wprowadza temat i tezę lub hipotezę, rozwinięcie podaje argumenty z przykładami, a zakończenie zbiera wnioski.", "Do tezy „Warto pomagać innym” można podać argument i przykład z lektury lub życia.", "Argument powinien wyjaśniać, dlaczego teza jest słuszna; sam przykład nie zastępuje uzasadnienia.", "Co powinno uzasadniać tezę w rozprawce?", "argumenty", "6-8"],
+  ["Plan wydarzeń i streszczenie", "jak zrobic plan wydarzen streszczenie lektury", "Plan wydarzeń zapisuje najważniejsze zdarzenia w kolejności, a streszczenie krótko opowiada ich przebieg.", "Wybieraj tylko kluczowe fakty, zachowuj kolejność i pomijaj własne oceny oraz mało ważne szczegóły.", "Punktem planu może być „Bohater odnajduje list”, a streszczenie łączy takie punkty w spójną wypowiedź.", "Nie dopisuj wydarzeń, których nie ma w utworze.", "Czy plan wydarzeń powinien zachowywać kolejność zdarzeń?", "tak", "4-8"],
+  ["Uzasadnianie interpretacji lektury", "jak uzasadnic interpretacje tekstu lektury dowod z tekstu", "Interpretację utworu trzeba uzasadniać wydarzeniami, wypowiedziami bohaterów lub innymi szczegółami tekstu.", "Najpierw postaw wniosek, potem wskaż dowód z utworu i wyjaśnij, jak go potwierdza.", "Wniosek, że bohater jest odważny, poprzyj konkretną decyzją podjętą w trudnej sytuacji.", "Oddzielaj fakt z lektury od własnej opinii o postaci.", "Czym poprzesz wniosek o bohaterze?", "dowodem z tekstu|wydarzeniem z utworu|wypowiedzia bohatera", "4-8"]
+]);
+
+addKnowledgeCards("Historia", [
+  ["Chrzest Polski i Mieszko I", "966 chrzest polski|mieszko pierwszy chrzest", "Chrzest Mieszka I w 966 roku włączył jego państwo do kręgu kultury chrześcijańskiej.", "Było to wydarzenie religijne i polityczne, które wzmacniało pozycję władcy oraz kontakty z sąsiadami.", "Rok 966 jest umowną datą początku państwa polskiego przyjmowaną w szkolnej chronologii.", "W średniowieczu przyjęcie chrześcijaństwa miało także znaczenie dla organizacji państwa.", "W którym roku tradycyjnie datuje się chrzest Mieszka I?", "966", "5-8"],
+  ["Zjazd gnieźnieński", "zjazd gnieznienski 1000 otton trzeci boleslaw chrobry", "W 1000 roku w Gnieźnie spotkali się cesarz Otton III i Bolesław Chrobry.", "Zjazd wiązał się z kultem świętego Wojciecha i powstaniem polskiej organizacji kościelnej z arcybiskupstwem w Gnieźnie.", "Utworzenie arcybiskupstwa wzmacniało niezależność kościelną państwa Bolesława.", "Rozróżniaj sam fakt spotkania od późniejszych interpretacji jego symboliki.", "W którym roku odbył się zjazd gnieźnieński?", "1000", "5-8"],
+  ["Kazimierz Wielki", "kazimierz wielki panowanie polska XIV wiek", "Kazimierz Wielki panował w Polsce w latach 1333–1370 i umocnił państwo po okresie rozbicia dzielnicowego.", "W jego czasach rozwijały się miasta, prawo i fortyfikacje. W 1364 roku założono w Krakowie uniwersytet.", "Akademia Krakowska, późniejszy Uniwersytet Jagielloński, powstała w 1364 roku.", "Przy wyjaśnianiu rozwoju państwa łącz wydarzenia z ich skutkami.", "W którym mieście i roku powstała Akademia Krakowska?", "Krakowie&1364", "5-8"],
+  ["Unia w Krewie", "unia w krewie 1385 jagiello polska litwa", "Unia w Krewie z 1385 roku rozpoczęła związek Polski i Litwy związany z małżeństwem Jadwigi i Jagiełły.", "Jagiełło przyjął chrzest i został królem Polski jako Władysław II Jagiełło. Związek obu państw zmieniał układ sił w regionie.", "Unia poprzedziła wspólne działania Polski i Litwy, między innymi w wojnie z zakonem krzyżackim.", "Nie utożsamiaj unii personalnej z późniejszą wspólną Rzecząpospolitą Obojga Narodów.", "W którym roku zawarto unię w Krewie?", "1385", "6-8"],
+  ["Wojna polsko-bolszewicka i Bitwa Warszawska", "1920 bitwa warszawska cud nad wisla", "Bitwa Warszawska w sierpniu 1920 roku była jednym z kluczowych starć wojny polsko-bolszewickiej.", "Zatrzymanie natarcia Armii Czerwonej miało znaczenie dla obrony niepodległości Polski i przebiegu wojny.", "Współczesne opracowania analizują zarówno decyzje wojskowe, jak i szerszy kontekst konfliktu.", "Porównuj mapy, wspomnienia i opracowania, bo źródła mogą opisywać wydarzenie z różnych perspektyw.", "W którym roku rozegrała się Bitwa Warszawska?", "1920", "8"],
+  ["II wojna światowa — początek i koniec", "daty drugiej wojny swiatowej 1939 1945", "II wojna światowa trwała w latach 1939–1945.", "W Europie rozpoczęła się niemieckim atakiem na Polskę 1 września 1939 roku; zakończyła się w 1945 roku po kapitulacji państw Osi.", "Kampania wrześniowa była początkiem wojny w Europie, ale konflikt szybko objął wiele kontynentów.", "Oddzielaj daty, przyczyny i skutki; nie sprowadzaj wojny do jednego wydarzenia.", "W którym roku zakończyła się II wojna światowa?", "1945", "8"],
+  ["Solidarność i przemiany 1989 roku", "solidarnosc 1980 okragly stol 1989", "Niezależny związek zawodowy „Solidarność” powstał w 1980 roku, a rozmowy Okrągłego Stołu odbyły się w 1989 roku.", "Wybory z 4 czerwca 1989 roku i późniejsze zmiany polityczne zapoczątkowały pokojową transformację ustroju w Polsce.", "Rok 1989 wiąże się też z przemianami w innych państwach Europy Środkowo-Wschodniej.", "W historii najnowszej korzystaj z wielu źródeł i odróżniaj relacje świadków od późniejszych opracowań.", "W którym roku odbyły się rozmowy Okrągłego Stołu?", "1989", "8"],
+  ["Stan wojenny w Polsce", "stan wojenny 13 grudnia 1981", "Stan wojenny w Polsce wprowadzono 13 grudnia 1981 roku.", "Władze ograniczyły swobody obywatelskie, internowały działaczy opozycji i użyły wojska oraz milicji do kontroli społeczeństwa.", "Kartki, godzina milicyjna i internowania były elementami codzienności tego okresu.", "Wspomnienia świadków zestawiaj z dokumentami i opracowaniami historycznymi.", "Kiedy wprowadzono stan wojenny w Polsce?", "13 grudnia 1981|1981", "8"]
+]);
+
+addKnowledgeCards("Fizyka", [
+  ["Jednostki układu SI", "podstawowe jednostki fizyczne SI|metr kilogram sekunda amper", "Układ SI to wspólny międzynarodowy system jednostek używany w pomiarach naukowych.", "W szkole często używamy metra dla długości, kilograma dla masy, sekundy dla czasu, ampera dla natężenia i kelwina dla temperatury.", "Prędkość 5 m/s oznacza pięć metrów w każdej sekundzie.", "Przed podstawieniem do wzoru sprowadź dane do zgodnych jednostek.", "Jaka jest podstawowa jednostka czasu w układzie SI?", "sekunda|s", "4-8"],
+  ["Schemat obwodu elektrycznego", "symbole na schemacie obwodu bateria zarowka", "Schemat obwodu przedstawia elementy układu za pomocą umownych symboli.", "Przewody rysuje się jako linie, a źródło, żarówkę, wyłącznik i mierniki — symbolami. Zamknięta droga pozwala na przepływ prądu.", "Otwarty wyłącznik przerywa obwód i żarówka nie świeci.", "Na schemacie sprawdź, czy elementy tworzą zamkniętą drogę.", "Czy przez przerwany obwód płynie prąd?", "nie", "6-8"],
+  ["Pomiar i niepewność wyniku", "dokladnosc pomiaru blad pomiarowy", "Każdy pomiar ma ograniczoną dokładność, zależną między innymi od przyrządu i sposobu odczytu.", "Wynik zapisuj z jednostką i taką dokładnością, na jaką pozwala skala przyrządu. Powtórzenie pomiaru pomaga wykryć przypadkowe różnice.", "Linijka z podziałką co 1 mm nie uzasadnia podania długości z dokładnością do 0,001 mm.", "Niepewność pomiaru nie oznacza, że pomiar był bezużyteczny.", "Co oprócz liczby należy dopisać do wyniku pomiaru?", "jednostke|jednostkę", "5-8"],
+  ["Energia mechaniczna", "energia kinetyczna i potencjalna suma", "Energia mechaniczna ciała jest sumą energii kinetycznej i potencjalnej.", "Podczas ruchu energia może przechodzić z jednej postaci w drugą; w idealnym układzie całkowita energia mechaniczna pozostaje stała.", "Spadająca piłka traci część energii potencjalnej, a zyskuje kinetyczną.", "Opory ruchu mogą przenosić energię do otoczenia, na przykład w postaci ciepła.", "Z jakich dwóch rodzajów energii składa się energia mechaniczna?", "kinetycznej&potencjalnej", "7-8"],
+  ["Ruch drgający", "drgania okresowe wahadlo sprężyna", "Ruch drgający powtarza się wokół położenia równowagi.", "Wychylenie zmienia się w czasie, a okres oznacza czas jednego pełnego drgania.", "Ciężarek na sprężynie porusza się raz w jedną, raz w drugą stronę wokół położenia równowagi.", "Amplituda to największe wychylenie, a okres i częstotliwość opisują tempo drgań.", "Jak nazywamy czas jednego pełnego drgania?", "okres", "6-8"],
+  ["Termometr i pomiar temperatury", "jak mierzyc temperature termometr skala celsjusza", "Termometr służy do pomiaru temperatury; wynik należy odczytać po ustabilizowaniu wskazania.", "W Polsce w życiu codziennym często używa się skali Celsjusza. W fizyce temperaturę bezwzględną podaje się w kelwinach.", "Temperatura 0°C odpowiada 273,15 K.", "Nie dotykaj gorących ani laboratoryjnych termometrów bez zgody nauczyciela.", "Jaka jednostka temperatury należy do układu SI?", "kelwin|K", "4-8"],
+  ["Siła a zmiana ruchu", "niezrownowazona sila zmienia ruch ciala", "Niezrównoważona siła może zmienić prędkość lub kierunek ruchu ciała.", "Gdy siły się równoważą, ciało zachowuje spoczynek albo porusza się ruchem jednostajnym prostoliniowym.", "Pchnięcie nieruchomego wózka wprawia go w ruch, bo działa niezrównoważona siła.", "Sama obecność siły nie oznacza, że ciało zawsze porusza się szybciej — liczy się wypadkowa i kierunek.", "Co dzieje się z ruchem, gdy siły działające na ciało się równoważą?", "nie zmienia sie|pozostaje bez zmian", "6-8"]
+]);
+
+addKnowledgeCards("Chemia", [
+  ["Budowa jądra atomowego", "protony neutrony jadro atomu", "Jądro atomu składa się z protonów i neutronów; wokół niego znajduje się chmura elektronowa.", "Proton ma ładunek dodatni, neutron jest elektrycznie obojętny, a elektron ma ładunek ujemny.", "Jądro atomu węgla-12 zawiera 6 protonów i 6 neutronów.", "Prawie cała masa atomu jest skupiona w jądrze.", "Które cząstki budują jądro atomowe?", "protony&neutrony", "5-8"],
+  ["Liczba masowa i izotopy", "liczba masowa suma protonow neutronow izotopy", "Liczba masowa określa łączną liczbę protonów i neutronów w jądrze atomu.", "Izotopy tego samego pierwiastka mają tyle samo protonów, ale różną liczbę neutronów.", "Węgiel-12 i węgiel-14 są izotopami węgla; oba mają 6 protonów.", "Nie myl liczby masowej z liczbą atomową.", "Czym różnią się izotopy jednego pierwiastka?", "liczba neutronow|liczbą neutronów", "7-8"],
+  ["Wiązanie jonowe i kowalencyjne", "roznica wiazanie jonowe kowalencyjne", "W wiązaniu jonowym atomy tworzą jony o przeciwnych ładunkach, a w kowalencyjnym uwspólniają pary elektronów.", "Sód i chlor w chlorku sodu tworzą jony, natomiast atomy wodoru w cząsteczce H₂ współdzielą elektrony.", "NaCl jest przykładem związku jonowego, a H₂O — cząsteczki z wiązaniami kowalencyjnymi.", "To szkolny model wiązań; rzeczywiste wiązania mogą mieć różny stopień polarności.", "Czy w wiązaniu kowalencyjnym atomy uwspólniają czy przekazują elektrony?", "uwspolniaja|uwspólniają", "7-8"],
+  ["Wartościowość w zapisie wzoru", "wartosciowosc pierwiastka indeksy we wzorze", "Wartościowość pomaga ustalić, w jakich proporcjach atomy łączą się w prostych wzorach związków.", "Indeksy we wzorze zapisują liczbę atomów; nie zmieniamy ich podczas uzgadniania równania reakcji.", "W cząsteczce H₂O dwa atomy wodoru łączą się z jednym atomem tlenu.", "Współczesny opis wiązań opiera się na elektronach; wartościowość jest użytecznym szkolnym modelem.", "Co oznacza mała liczba zapisana we wzorze chemicznym?", "liczbe atomow|liczbę atomów", "7-8"],
+  ["Tlenki metali i niemetali", "jak powstaja tlenki|tlenek metalu reakcja z tlenem", "Tlenki to związki tlenu z innym pierwiastkiem.", "Wiele tlenków powstaje podczas łączenia pierwiastka z tlenem; ich właściwości zależą od składu i budowy.", "Spalanie magnezu w tlenie może prowadzić do powstania tlenku magnezu.", "Doświadczenia ze spalaniem prowadzi wyłącznie nauczyciel zgodnie z zasadami bezpieczeństwa.", "Jakie dwa rodzaje pierwiastków mogą tworzyć tlenki?", "metale&niemetale", "7-8"],
+  ["Wzór sumaryczny a strukturalny", "roznica wzor sumaryczny strukturalny", "Wzór sumaryczny podaje rodzaj i liczbę atomów, a strukturalny pokazuje sposób ich połączenia w uproszczonym modelu.", "Wzory należy czytać zgodnie z symbolami pierwiastków i indeksami dolnymi.", "H₂O informuje o dwóch atomach wodoru i jednym tlenu; wzór strukturalny może dodatkowo pokazać wiązania.", "Wzór nie zawsze pokazuje przestrzenny kształt cząsteczki.", "Który wzór podaje liczbę atomów, ale nie pokazuje wiązań?", "sumaryczny", "6-8"],
+  ["Rozcieńczanie roztworu", "jak rozcienczyc roztwor dodac wody", "Rozcieńczanie zwiększa ilość rozpuszczalnika, przez co stężenie roztworu maleje.", "Jeśli nie dodajemy ani nie usuwamy substancji rozpuszczonej, jej masa pozostaje taka sama, a rośnie masa całego roztworu.", "Dodanie wody do słonej wody zmniejsza stężenie soli, ale nie usuwa jej z roztworu.", "W pracowni chemicznej roztwory przygotowuje się zgodnie z instrukcją nauczyciela.", "Czy po dolaniu wody stężenie roztworu zwykle rośnie czy maleje?", "maleje", "7-8"]
 ]);
 
 const PERIODIC_ELEMENTS_PL = [
@@ -2313,14 +2387,14 @@ function looksLikeFactualQuestion(question) {
 function getBroadSubjectOnlyQuestion(question) {
   const normalized = normalize(question);
   const subjects = [
-    ["matematyka", /\b(matma|matmy|matematyk\w*|maths?|mathematics?)\b/],
+    ["matematyka", /\b(matm\w*|matematyk\w*|maths?|mathematics?)\b/],
     ["język polski", /\b(jezyk polski|polski|polskiego|polszczyzna)\b/],
     ["język angielski", /\b(jezyk angielski|angielski|angielskiego|english)\b/],
-    ["biologia i przyroda", /\b(biologia|biologii|przyroda|przyrody)\b/],
-    ["fizyka", /\b(fizyka|fizyki|fizyce|physics)\b/],
-    ["chemia", /\b(chemia|chemii|chemie|chemistry)\b/],
-    ["historia", /\b(historia|historii|historie|history)\b/],
-    ["geografia", /\b(geografia|geografii|geografie|geography)\b/],
+    ["biologia i przyroda", /\b(biologi\w*|przyrod\w*)\b/],
+    ["fizyka", /\b(fizyk\w*|physics)\b/],
+    ["chemia", /\b(chem\w*|chemistry)\b/],
+    ["historia", /\b(histori\w*|history)\b/],
+    ["geografia", /\b(geografi\w*|geography)\b/],
     ["informatyka", /\b(informatyka|informatyki|informatyce|computer science)\b/]
   ];
   const matched = subjects.find(([, pattern]) => pattern.test(normalized));
@@ -2334,6 +2408,7 @@ function getBroadSubjectOnlyQuestion(question) {
     .replace(/\b(?:iv|viii|vii|vi|v|[4-8])\s+klas(?:a|y|ie|e|ach)\b/g, " ")
     .replace(/\b(?:dla|z|mi|pomoz|pomocy|prosze|temat|tematu|przedmiot|przedmiotu|nauka|nauki|zakres|zakresu|podstawowe|tematy|dzial|dzialy|lekcja|lekcji|material|materialy|chce|chcialbym|chcialabym|ucze|sie|poznac|powtorka|powtorki|moj|moja|to)\b/g, " ")
     .replace(/\b[4-8]\b/g, " ")
+    .replace(/[.,!?;:]/g, " ")
     .replace(/\s+/g, " ").trim();
   return remainder ? null : { subject: matched[0], grade };
 }
@@ -2625,11 +2700,43 @@ function explainCalculation(question) {
   return `## 🐨 ${name} krok po kroku\n\n${explanation}\n\n**Zapis działania**\n\n\`\`\`text\n${formatColumnWork(a, b, operator, result)}\n\`\`\`\n\n**Zapamiętaj:** ważne jest nie tylko poznanie wyniku, ale też zrozumienie sposobu obliczania.\n\n**Spróbuj samodzielnie:** ${a} ${operator} ${b + 1n}`;
 }
 
-function formatKnowledgeComparison(items) {
+function formatKnowledgeComparison(items, question = "") {
   const uniqueItems = [...new Map(items.map(item => [item.title, item])).values()].slice(0, 3);
   if (uniqueItems.length < 2) return null;
   const sections = uniqueItems.map(item => `### ${item.title}\n${item.short}\n\n**Przykład:** ${item.example}`);
-  return `## 🐨 Porównajmy pojęcia\n\n${sections.join("\n\n---\n\n")}\n\n**Najważniejsza wskazówka:** zwróć uwagę na to, co każde pojęcie opisuje i do czego służy.`;
+  return `## 🐨 Porównajmy pojęcia\n\n${sections.join("\n\n---\n\n")}\n\n**Najważniejsza wskazówka:** zwróć uwagę na to, co każde pojęcie opisuje i do czego służy.${createCurriculumNote(question)}`;
+}
+
+function findExplicitKnowledgeTopics(question) {
+  const normalized = normalize(question);
+  if (!/\b(i|oraz|a takze|and)\b|[,;]/.test(normalized)) return [];
+  const clauses = normalized.split(/\b(?:i|oraz|a takze|and)\b|[,;]/)
+    .map(part => part.trim())
+    .filter(part => lexicalTokens(part).filter(token => !KNOWLEDGE_QUERY_FILLERS.has(token)).length >= 1);
+  const items = [];
+  for (const clause of clauses) {
+    const item = findKnowledge(clause);
+    const clauseTokens = lexicalTokens(clause).filter(token => !KNOWLEDGE_QUERY_FILLERS.has(token));
+    const itemTokens = lexicalTokens([item?.title, ...(item?.keywords || []), ...(item?.aliases || [])].filter(Boolean).join(" "));
+    const hasDirectTopicMatch = clauseTokens.some(token => itemTokens.some(candidate => tokenStemMatch(token, candidate)));
+    if (item && hasDirectTopicMatch && !items.some(existing => existing.title === item.title)) items.push(item);
+    if (items.length >= 3) break;
+  }
+  return items.length >= 2 ? items : [];
+}
+
+function formatKnowledgeBundle(items, intent = "normal", question = "") {
+  const uniqueItems = [...new Map(items.map(item => [item.title, item])).values()].slice(0, 3);
+  if (uniqueItems.length < 2) return null;
+  const sections = uniqueItems.map(item => {
+    if (intent === "example") return `**${item.title}**\n${item.example}\n\nSprawdź: ${item.check}`;
+    if (intent === "simple") return `**${item.title}**\n${item.short}\n\nPrzykład: ${item.example}`;
+    if (intent === "summary") return `**${item.title}**\n${item.short}\n\nZapamiętaj: ${item.related}`;
+    if (intent === "why") return `**${item.title}**\n${item.related}\n\nDokładniej: ${item.explanation}`;
+    if (intent === "expand") return `**${item.title}**\n${item.short}\n\n${item.explanation}\n\nPrzykład: ${item.example}\n\nZapamiętaj: ${item.related}`;
+    return `**${item.title}**\n${item.short}\n\n${item.explanation}\n\nPrzykład: ${item.example}`;
+  });
+  return `🐨 Rozbijmy pytanie na części\n\n${sections.join("\n\n---\n\n")}\n\nJeśli chcesz, mogę teraz porównać te pojęcia albo przygotować do nich krótkie ćwiczenie.${createCurriculumNote(question)}`;
 }
 
 function getContextAnchorQuestion(history) {
@@ -3502,14 +3609,14 @@ function getCurriculumContext(question) {
 function getRequestedSubject(question) {
   const text = normalize(question);
   const subjects = [
-    ["matematyka", /\b(matma|matmy|matematy\w*|maths?|mathematics?)\b/],
+    ["matematyka", /\b(matm\w*|matematy\w*|maths?|mathematics?)\b/],
     ["język polski", /\b(polski|polskiego|jezyk polski|gramatyka|ortografia|lektura|literatura)\b/],
     ["język angielski", /\b(angielski|angielskiego|english)\b/],
-    ["biologia i przyroda", /\b(biologia|przyroda|organizm|ekosystem|rosliny|zwierzeta)\b/],
-    ["fizyka", /\b(fizyka|fizyczny|ruch|sila|energia|prad)\b/],
-    ["chemia", /\b(chemia|chemiczny|atom|pierwiastek|reakcja)\b/],
-    ["historia", /\b(historia|historyczny|wiek|dynastia|wojna|krol)\b/],
-    ["geografia", /\b(geografia|geograficzny|mapa|kontynent|klimat|ludnosc)\b/],
+    ["biologia i przyroda", /\b(biologi\w*|przyrod\w*|organizm|ekosystem|rosliny|zwierzeta)\b/],
+    ["fizyka", /\b(fizyk\w*|ruch|sila|energia|prad)\b/],
+    ["chemia", /\b(chem\w*|atom|pierwiastek|reakcja)\b/],
+    ["historia", /\b(histori\w*|wiek|dynastia|wojna|krol)\b/],
+    ["geografia", /\b(geografi\w*|mapa|kontynent|klimat|ludnosc)\b/],
     ["informatyka", /\b(informatyka|programowanie|algorytm|komputer|arkusz)\b/],
     ["wiedza o społeczeństwie", /\b(wos|obywatel|konstytucja|wybory|samorzad|prawa czlowieka)\b/]
   ];
@@ -3538,14 +3645,14 @@ function createGeneralStudyPlan(question) {
     .replace(/\s+/g, " ")
     .trim();
   const topicOnlyLabels = {
-    matematyka: /^(?:matma|matmy|matematyka|matematyki|matematyk[eę])$/,
+    matematyka: /^(?:matm\w*|matematy\w*)$/,
     "język polski": /^(?:polski|polskiego|jezyk polski|jezyka polskiego)$/,
     "język angielski": /^(?:angielski|angielskiego|jezyk angielski|jezyka angielskiego|english)$/,
-    "biologia i przyroda": /^(?:biologia|przyroda)$/,
-    fizyka: /^fizyka$/,
-    chemia: /^chemia$/,
-    historia: /^historia$/,
-    geografia: /^geografia$/,
+    "biologia i przyroda": /^(?:biologi\w*|przyrod\w*)$/,
+    fizyka: /^fizyk\w*$/,
+    chemia: /^chem\w*$/,
+    historia: /^histori\w*$/,
+    geografia: /^geografi\w*$/,
     informatyka: /^informatyka$/
   };
   const subjectOnly = subject && topicOnlyLabels[subject]?.test(normalize(cleanedTopic));
@@ -3745,9 +3852,17 @@ export function answerQuestion(question, history = []) {
 
     // Porównywanie dwóch lub więcej tematów z lokalnej bazy.
     if (intent === "compare") {
-      const matches = findKnowledgeMatches(text).map(match => match.item);
-      const comparison = formatKnowledgeComparison(matches);
+      const explicitTopics = findExplicitKnowledgeTopics(text);
+      const matches = explicitTopics.length
+        ? explicitTopics
+        : findKnowledgeMatches(text).map(match => match.item);
+      const comparison = formatKnowledgeComparison(matches, text);
       if (comparison) return comparison;
+    }
+
+    if (!asksToSearchOnline(text) && !["compare", "study-plan", "quiz"].includes(intent)) {
+      const bundledAnswer = formatKnowledgeBundle(findExplicitKnowledgeTopics(text), intent, text);
+      if (bundledAnswer) return bundledAnswer;
     }
 
     const equationAnswer = solveLinearEquation(text);

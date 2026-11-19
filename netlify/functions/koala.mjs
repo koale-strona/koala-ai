@@ -173,6 +173,24 @@ const CRAWLER_SOURCES = [
     hints: ["español", "hiszpański", "język hiszpański", "spanish", "traducción", "significado"]
   },
   {
+    name: "Wikizionario — italiano",
+    url: "https://it.wiktionary.org/wiki/Wikizionario:Pagina_principale",
+    category: "language",
+    trust: 8,
+    aliases: ["wiktionary italiano", "włoski wiktionary"],
+    searchApi: true,
+    hints: ["italiano", "włoski", "język włoski", "italian", "traduzione", "significato"]
+  },
+  {
+    name: "Wikcionário — português",
+    url: "https://pt.wiktionary.org/wiki/Wikcionário:Página_principal",
+    category: "language",
+    trust: 8,
+    aliases: ["wiktionary português", "portugalski wiktionary"],
+    searchApi: true,
+    hints: ["português", "portugalski", "język portugalski", "portuguese", "tradução", "significado"]
+  },
+  {
     name: "Duden — słownik języka niemieckiego",
     url: "https://www.duden.de/",
     category: "language",
@@ -211,6 +229,22 @@ const CRAWLER_SOURCES = [
     trust: 9,
     aliases: ["cnrtl"],
     hints: ["français", "francuski", "język francuski", "cnrtl", "définition", "étymologie"]
+  },
+  {
+    name: "Treccani — słownik języka włoskiego",
+    url: "https://www.treccani.it/vocabolario/",
+    category: "language",
+    trust: 9,
+    aliases: ["treccani", "włoski słownik"],
+    hints: ["italiano", "włoski", "język włoski", "vocabolario", "definizione", "ortografia"]
+  },
+  {
+    name: "Dicionário Priberam — język portugalski",
+    url: "https://dicionario.priberam.org/",
+    category: "language",
+    trust: 9,
+    aliases: ["priberam", "słownik portugalski"],
+    hints: ["português", "portugalski", "język portugalski", "dicionário", "definição", "ortografia"]
   },
   {
     name: "Zintegrowana Platforma Edukacyjna",
@@ -274,6 +308,29 @@ const CRAWLER_SOURCES = [
     hints: ["matematyka", "biologia", "chemia", "fizyka", "kurs"]
   },
   {
+    name: "GeoGebra — matematyka i geometria",
+    url: "https://www.geogebra.org/",
+    category: "education",
+    trust: 8,
+    hints: ["matematyka", "geometria", "wykres", "funkcja", "konstrukcja", "interaktywne ćwiczenie"]
+  },
+  {
+    name: "Muzeum Historii Polski — materiały edukacyjne",
+    url: "https://muzhp.pl/edukacja",
+    category: "history",
+    trust: 10,
+    aliases: ["MHP", "Muzeum Historii Polski"],
+    hints: ["historia Polski", "źródło historyczne", "średniowiecze", "historia nowożytna", "niepodległość", "materiały edukacyjne"]
+  },
+  {
+    name: "IPN — edukacja historyczna",
+    url: "https://edukacja.ipn.gov.pl/edu/materialy-edukacyjne",
+    category: "history",
+    trust: 8,
+    aliases: ["Instytut Pamięci Narodowej edukacja", "IPN edukacja"],
+    hints: ["historia Polski", "II wojna światowa", "PRL", "źródła historyczne", "materiały dla uczniów"]
+  },
+  {
     name: "PubChem — Periodic Table",
     url: "https://pubchem.ncbi.nlm.nih.gov/periodic-table/",
     category: "science",
@@ -288,6 +345,14 @@ const CRAWLER_SOURCES = [
     trust: 9,
     aliases: ["phet", "symulacje fizyka chemia"],
     hints: ["fizyka", "chemia", "doświadczenie", "symulacja", "obwód elektryczny", "cząsteczki", "siły"]
+  },
+  {
+    name: "Royal Society of Chemistry — materiały z chemii",
+    url: "https://edu.rsc.org/resources/periodic-table",
+    category: "science",
+    trust: 9,
+    aliases: ["RSC periodic table", "Royal Society of Chemistry"],
+    hints: ["chemia", "układ okresowy", "pierwiastki", "reakcje chemiczne", "doświadczenia edukacyjne"]
   },
   {
     name: "Ośrodek Rozwoju Edukacji",
@@ -461,7 +526,9 @@ const QUERY_EXPANSIONS = [
   { match: /\b(angielsk\w*|jezyk angielski|english)\b/, terms: ["english", "dictionary", "definition", "translation"] },
   { match: /\b(niemieck\w*|jezyk niemiecki|deutsch|german)\b/, terms: ["deutsch", "german", "wort", "ubersetzung", "bedeutung"] },
   { match: /\b(francusk\w*|jezyk francuski|francais|french)\b/, terms: ["francais", "french", "mot", "traduction", "definition"] },
-  { match: /\b(hiszpansk\w*|jezyk hiszpanski|espanol|spanish)\b/, terms: ["espanol", "spanish", "palabra", "traduccion", "significado"] }
+  { match: /\b(hiszpansk\w*|jezyk hiszpanski|espanol|spanish)\b/, terms: ["espanol", "spanish", "palabra", "traduccion", "significado"] },
+  { match: /\b(wlosk\w*|jezyk wloski|italiano|italian)\b/, terms: ["italiano", "italian", "parola", "traduzione", "significato"] },
+  { match: /\b(portugalsk\w*|jezyk portugalski|portugues|portuguese)\b/, terms: ["portugues", "portuguese", "palavra", "traducao", "significado"] }
 ];
 
 function buildIndexedSearchQuery(question) {
@@ -1157,9 +1224,10 @@ function selectCrawlerSources(question) {
 
   const sports = has(/\b(mecz|mecze|spotkanie|terminarz|fcbarcelona|fcbarcelony|barcelona|barcelony|barca|liga|pilka|pilkarski|uefa|najblizszy mecz)\b/);
   const news = has(/\b(co sie dzieje|co sie wydarzylo|wiadomosci|wiadomosciami|aktualnosci|newsy|wydarzenia|na swiecie|ze swiata|swiata|dzisiejsze informacje|ostatnie wydarzenia|co nowego)\b/);
-  const language = has(/\b(jezyk|jezyka|polszczyzna|slownik|slowniki|slownikowy|znaczenie|znaczy|synonim|synonimy|antonim|antonimy|odmiana|odmienic|fleksja|gramatyka|ortografia|pisownia|interpunkcja|przecinek|wymowa|fonetyka|etymologia|frazeologizm|frazeologia|poprawnie|poprawnosc|tlumaczenie|przetlumacz|rzeczownik|czasownik|przymiotnik|angielski|angielsku|niemiecki|niemiecku|francuski|francusku|hiszpanski|hiszpansku|english|german|french|spanish|deutsch|francais|espanol|meaning|definition|dictionary|translation|translate|grammar|vocabulary|pronunciation|etymology|synonym|antonym)\b/);
+  const language = has(/\b(jezyk|jezyka|polszczyzna|slownik|slowniki|slownikowy|znaczenie|znaczy|synonim|synonimy|antonim|antonimy|odmiana|odmienic|fleksja|gramatyka|ortografia|pisownia|interpunkcja|przecinek|wymowa|fonetyka|etymologia|frazeologizm|frazeologia|poprawnie|poprawnosc|tlumaczenie|przetlumacz|rzeczownik|czasownik|przymiotnik|angielski|angielsku|niemiecki|niemiecku|francuski|francusku|hiszpanski|hiszpansku|wloski|wlosku|portugalski|portugalsku|english|german|french|spanish|italian|italiano|portuguese|portugues|deutsch|francais|espanol|meaning|definition|dictionary|translation|translate|grammar|vocabulary|pronunciation|etymology|synonym|antonym)\b/);
+  const history = has(/\b(histori\w*|starozytn\w*|sredniowie\w*|jagiellon\w*|grunwald|powstan\w*\s+(warszawsk\w*|listopadow\w*|styczniow\w*)|bitw\w*|wojn\w*|krol\w*|dynasti\w*|zrodlo historyczne)\b/);
   const astronomy = has(/\b(kosmos|kosmosu|astronomia|planeta|planety|nasa|eksploracji kosmosu|misja kosmiczna)\b/);
-  const science = has(/\b(nauka|naukowy|badania|biologia|fizyka|chemia|fotosynteza|chlorofil)\b/);
+  const science = has(/\b(nauka|naukow\w*|badania|biologi\w*|fizyk\w*|chem\w*|fotosynteza|chlorofil)\b/);
   const literature = has(/\b(lektur\w*|ksiazk\w*|powiesc\w*|bohater\w*|autor\w*|wiersz\w*|motyw literacki|utwor literacki|literatur\w*|mit\w*)\b/);
   const education = has(/\b(szkola|szkolny|lekcja|edukacja|zadanie|egzamin|matura|podstawa programowa|lektura|literatura)\b/);
   const curriculum = has(/\b(podstawa programowa|wymagania programowe|reforma26|kompas jutra|program nauczania|podstawa men|nowa podstawa)\b/);
@@ -1176,6 +1244,7 @@ function selectCrawlerSources(question) {
   else if (language) categories = ["language", "education", "general"];
   else if (news && PolandFocus && officialPoland) categories = ["news", "poland"];
   else if (news) categories = ["news"];
+  else if (history) categories = ["history", "education", "general"];
   else if (astronomy) categories = ["science", "general"];
   else if (science) categories = ["education", "science", "general"];
   else if (education) categories = ["education", "general"];
@@ -1189,10 +1258,12 @@ function selectCrawlerSources(question) {
       const relevance = source => scoreCrawlerText(`${source.name} ${(source.hints || []).join(" ")}`, getCrawlerTerms(question));
       const curriculumBoost = source => curriculum && /ministerstwo|dziennik ustaw|reforma26|zintegrowana platforma/i.test(source.name) ? 100 : 0;
       const literatureBoost = source => literature && source.category === "literature" ? 100 : 0;
+      const historyBoost = source => history && source.category === "history" ? 100 : 0;
       const schoolBoost = source => arkona && source.category === "school" ? 100 : 0;
       return schoolBoost(b) - schoolBoost(a)
         || curriculumBoost(b) - curriculumBoost(a)
         || literatureBoost(b) - literatureBoost(a)
+        || historyBoost(b) - historyBoost(a)
         || categories.indexOf(a.category) - categories.indexOf(b.category)
         || relevance(b) - relevance(a)
         || (b.trust || 0) - (a.trust || 0);
