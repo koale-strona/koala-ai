@@ -546,6 +546,23 @@ footer {
   border: 1px solid #334155;
 }
 
+.koala-generated-media {
+  display: block;
+  width: min(100%, 680px);
+  max-height: 440px;
+  margin-top: 12px;
+  border: 1px solid rgba(148,163,184,.3);
+  border-radius: 14px;
+  background: #0b1220;
+}
+
+.koala-media-download {
+  display: inline-block;
+  margin-top: 8px;
+  color: #99f6e4;
+  font-size: .9rem;
+}
+
 .ai-input-area {
   display: flex;
   gap: 10px;
@@ -4753,8 +4770,40 @@ function addAIMessage(
     "ai-message " +
     type;
 
-  message.textContent =
-    text;
+  const mediaMatch = type === "bot"
+    ? String(text).match(/\[KOALA_MEDIA:(image|animation):([A-Za-z0-9+/=]{40,30000})\]/)
+    : null;
+  let safeMedia = null;
+  if (mediaMatch) {
+    try {
+      const decoded = new TextDecoder().decode(Uint8Array.from(atob(mediaMatch[2]), character => character.charCodeAt(0)));
+      const hasSvgRoot = /^\s*<svg\b/i.test(decoded);
+      const hasUnsafeSvgContent = /<\s*(script|foreignObject)\b|\bon\w+\s*=|javascript:|(?:href|src)\s*=/i.test(decoded);
+      if (hasSvgRoot && !hasUnsafeSvgContent) safeMedia = mediaMatch;
+    } catch (error) {
+      console.warn("Nie udało się odczytać lokalnej ilustracji Koali.", error);
+    }
+  }
+
+  if (safeMedia) {
+    message.textContent = String(text).slice(0, safeMedia.index).trim();
+    const dataUrl = "data:image/svg+xml;base64," + safeMedia[2];
+    const preview = document.createElement("img");
+    preview.className = "koala-generated-media";
+    preview.src = dataUrl;
+    preview.alt = safeMedia[1] === "animation" ? "Lokalna animacja edukacyjna Koali" : "Lokalna ilustracja edukacyjna Koali";
+    preview.loading = "lazy";
+    message.appendChild(preview);
+
+    const download = document.createElement("a");
+    download.className = "koala-media-download";
+    download.href = dataUrl;
+    download.download = safeMedia[1] === "animation" ? "koala-animacja-edukacyjna.svg" : "koala-ilustracja-edukacyjna.svg";
+    download.textContent = "Pobierz plik SVG";
+    message.appendChild(download);
+  } else {
+    message.textContent = text;
+  }
 
 
   messages.appendChild(
