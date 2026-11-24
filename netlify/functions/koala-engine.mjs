@@ -5,10 +5,13 @@
  * To nie jest ogólny model językowy — odpowiedzi wynikają z reguł i wiedzy w pliku.
  */
 
+import { generateEducationalMedia } from "./brain/media-generator.mjs";
+
 const MAX_QUESTION_LENGTH = 2000;
 const MAX_HISTORY_ITEMS = 24;
 const MAX_MATH_LENGTH = 180;
 const MAX_MATH_TOKENS = 80;
+
 
 const knowledge = [
   {
@@ -2366,6 +2369,21 @@ function isSocialMessage(question) {
   return /^(jak sie masz|co tam|co u ciebie|jestes fajna|jestes super|kim jestes|co potrafisz|pomoz mi|potrzebuje pomocy)( koala)?\??$/.test(text);
 }
 
+function isMediaReadingRequest(question) {
+  const text = normalize(question);
+  const mentionsMedia = /\b(zdjec\w*|obraz\w*|obrazk\w*|fot\w*|film\w*|wideo|video|image|picture|photo)\b/.test(text);
+  const asksToRead = /\b(odczytaj|przeczytaj|rozwiaz|odpowiedz|opisz|wyjasnij|co jest|co widac|jakie slowa|jakie zadanie|jakie pytanie|jakie polecenie|tresc|polecenie|what does|read|solve|answer|describe|explain|instruction|written)\b/.test(text);
+  return mentionsMedia && asksToRead;
+}
+
+function isMediaGenerationRequest(question) {
+  const text = normalize(question);
+  const asksToGenerate = /\b(wygeneruj|stworz|narysuj|zrob|create|generate|draw|make|animuj)\b/.test(text);
+  const mentionsMedia = /\b(obraz\w*|zdjec\w*|fot\w*|film\w*|wideo|video|image|picture|photo|animacj\w*)\b/.test(text);
+  const supportedDiagramTopic = /\b(atom|komork\w*|trojkat\w*|geometr\w*|planet\w*|uklad sloneczny|obieg wody|obiegu wody|cykl wodny|cell)\b/.test(text);
+  return asksToGenerate && (mentionsMedia || supportedDiagramTopic);
+}
+
 function isCurrentInformationQuestion(question) {
   const text = normalize(question);
   return /\b(aktualnie|obecnie|dzisiaj|dzis|jutro|wczoraj|najnowsz\w*|na zywo|teraz|aktualn\w*|ostatnie wiadomosci|co nowego|co wiadomo|co sie dzieje|co sie wydarzylo|ostatnie informacje|ostatnie wydarzenia|na swiecie)\b/.test(text)
@@ -3774,6 +3792,15 @@ export function answerQuestion(question, history = []) {
     const safeHistory = getSafeHistory(history);
     const normalized = normalize(text);
     const intent = getIntent(text);
+
+    if (isMediaReadingRequest(text)) {
+      return "🐨 Nie mogę odczytywać zdjęć ani filmów, w tym ukrytych poleceń. Wklej treść pytania jako tekst, a pomogę na jej podstawie.";
+    }
+    if (isMediaGenerationRequest(text)) {
+      const generatedMedia = generateEducationalMedia(text);
+      if (generatedMedia) return generatedMedia;
+      return "🐨 Mogę lokalnie wygenerować proste schematy SVG: Układ Słoneczny, atom, obieg wody, trójkąt lub komórkę. Animacje są zapętlonym SVG, nie plikiem MP4; nie tworzę dowolnych fotorealistycznych obrazów.";
+    }
 
     // Krótkie rozmowy nigdy nie uruchamiają wyszukiwarki.
     if (isGreetingMessage(text)) {
