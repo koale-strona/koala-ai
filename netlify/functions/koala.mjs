@@ -1,5 +1,6 @@
 import { answerQuestion, classifyQuestion, createTeacherMaterials } from "./koala-engine.mjs";
 import { detectQuestionLanguage, getLanguageStopWords, getResearchLabels, LANGUAGE_PROFILES } from "./brain/languages.mjs";
+import { getBlockedContentReason, getContentBlockMessage } from "./brain/content-safety.mjs";
 
 /*
  * Koala.ai v8 — wyszukiwanie szkolne i wielojęzyczne oraz narzędzia nauczyciela.
@@ -2290,6 +2291,13 @@ export default async function handler(request) {
       413,
       origin
     );
+  }
+
+  const blockedReason = getBlockedContentReason(message);
+  if (blockedReason) {
+    return jsonResponse({
+      answer: getContentBlockMessage(blockedReason, detectQuestionLanguage(message))
+    }, 200, origin);
   }
 
   const history = getSafeHistory(body.history);
