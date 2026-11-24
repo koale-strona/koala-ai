@@ -6,6 +6,10 @@
  */
 
 import { generateEducationalMedia } from "./brain/media-generator.mjs";
+import { getBlockedContentReason, getContentBlockMessage } from "./brain/content-safety.mjs";
+import { detectQuestionLanguage } from "./brain/languages.mjs";
+import { expandMultilingualQuestion, getLocalizedGlossaryAnswer } from "./brain/multilingual-glossary.mjs";
+import { EXTRA_KNOWLEDGE, EXTRA_KNOWLEDGE_ROUND_TWO } from "./brain/knowledge-expansion.mjs";
 
 const MAX_QUESTION_LENGTH = 2000;
 const MAX_HISTORY_ITEMS = 24;
@@ -2314,7 +2318,8 @@ function phraseMatchScore(questionTokens, phrase) {
 }
 
 function findKnowledgeMatches(question) {
-  const query = expandKnowledgeQuery(question);
+  const canonicalTerms = expandMultilingualQuestion(question);
+  const query = expandKnowledgeQuery(canonicalTerms ? `${question} ${canonicalTerms}` : question);
   const questionTokens = query.tokens;
   if (!questionTokens.length) return [];
   const requestedSubject = getRequestedSubject(question);
@@ -2380,7 +2385,7 @@ function isMediaGenerationRequest(question) {
   const text = normalize(question);
   const asksToGenerate = /\b(wygeneruj|stworz|narysuj|zrob|create|generate|draw|make|animuj)\b/.test(text);
   const mentionsMedia = /\b(obraz\w*|zdjec\w*|fot\w*|film\w*|wideo|video|image|picture|photo|animacj\w*)\b/.test(text);
-  const supportedDiagramTopic = /\b(atom|komork\w*|trojkat\w*|geometr\w*|planet\w*|uklad sloneczny|obieg wody|obiegu wody|cykl wodny|cell)\b/.test(text);
+  const supportedDiagramTopic = /\b(atom|komork\w*|trojkat\w*|geometr\w*|planet\w*|uklad sloneczny|obieg wody|obiegu wody|cykl wodny|lancuch pokarm\w*|food chain|kol\w*|okrag\w*|circle|cell)\b/.test(text);
   return asksToGenerate && (mentionsMedia || supportedDiagramTopic);
 }
 
@@ -3793,6 +3798,9 @@ export function answerQuestion(question, history = []) {
     const normalized = normalize(text);
     const intent = getIntent(text);
 
+    const blockedReason = getBlockedContentReason(text);
+    if (blockedReason) return getContentBlockMessage(blockedReason, detectQuestionLanguage(text));
+
     if (isMediaReadingRequest(text)) {
       return "🐨 Nie mogę odczytywać zdjęć ani filmów, w tym ukrytych poleceń. Wklej treść pytania jako tekst, a pomogę na jej podstawie.";
     }
@@ -3926,12 +3934,17 @@ export function answerQuestion(question, history = []) {
     const knowledgeItem = findKnowledge(text);
     if (knowledgeItem) {
       if (intent === "study-plan") return createStudyPlan(knowledgeItem, text);
+      const localizedAnswer = getLocalizedGlossaryAnswer(text, detectQuestionLanguage(text));
+      if (localizedAnswer && !["quiz", "flashcards", "compare", "study-plan"].includes(intent)) return localizedAnswer;
       const wantsTeacher = /\b(naucz mnie|nauczysz mnie|tryb nauczyciela|lekcja|lekcje|przygotuj mnie|przepytaj mnie|sprawdz mnie|zrob quiz|quiz|powtorka|powtorzmy)\b/.test(normalized);
       if (wantsTeacher || intent === "quiz") return `${startTeacherLesson(knowledgeItem)}${createCurriculumNote(text)}`;
       return `${formatKnowledge(knowledgeItem, intent)}${createCurriculumNote(text)}`;
     }
 
     if (intent === "study-plan") return createGeneralStudyPlan(text);
+
+    const localizedAnswer = getLocalizedGlossaryAnswer(text, detectQuestionLanguage(text));
+    if (localizedAnswer && !["quiz", "flashcards", "compare", "study-plan"].includes(intent)) return localizedAnswer;
 
     // Matematyka — usuń polecenie, aby parser dostał samo działanie.
     const mathInput = text
@@ -3960,5 +3973,7 @@ export function answerQuestion(question, history = []) {
     return "🐨 Coś poszło nie tak podczas przygotowywania odpowiedzi. Spróbuj napisać pytanie inaczej.";
   }
 }
+
+knowledge.push(...EXTRA_KNOWLEDGE, ...EXTRA_KNOWLEDGE_ROUND_TWO);
 
 export { knowledge };
