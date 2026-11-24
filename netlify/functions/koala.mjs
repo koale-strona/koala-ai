@@ -1,4 +1,5 @@
 import { answerQuestion, classifyQuestion, createTeacherMaterials } from "./koala-engine.mjs";
+import { detectQuestionLanguage, getLanguageStopWords, getResearchLabels, LANGUAGE_PROFILES } from "./brain/languages.mjs";
 
 /*
  * Koala.ai v8 — wyszukiwanie szkolne i wielojęzyczne oraz narzędzia nauczyciela.
@@ -28,7 +29,7 @@ const CRAWLER_MAX_SITEMAP_SIZE = 300_000;
 const CRAWLER_MAX_PAGES_PER_SITE = 9;
 const CRAWLER_MAX_SITEMAPS_PER_SITE = 2;
 const CRAWLER_MAX_RESULTS = 8;
-const CRAWLER_MAX_SOURCES = 7;
+const CRAWLER_MAX_SOURCES = 8;
 const CRAWLER_MAX_LINKS_PER_PAGE = 120;
 const CRAWLER_MAX_TERMS = 24;
 const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzDcUrRptgsCjE__4vaiY51H52XQe6WBtZoaxWJPC9Cl7hFB36JWTmDmszDCeiRP8hgrg/exec";
@@ -92,6 +93,7 @@ const CRAWLER_SOURCES = [
     name: "Wikipedia Polska",
     url: "https://pl.wikipedia.org/wiki/Strona_g%C5%82%C3%B3wna",
     category: "general",
+    language: "pl",
     trust: 5,
     hints: ["encyklopedia", "informacje", "historia", "geografia"]
   },
@@ -405,7 +407,47 @@ const CRAWLER_SOURCES = [
     category: "science",
     trust: 10,
     hints: ["science", "research", "space", "astronomy", "planet"]
-  }
+  },
+  {
+    name: "NASA — wyszukiwarka materiałów STEM",
+    url: "https://www.nasa.gov/learning-resources/search/",
+    category: "science",
+    trust: 10,
+    hints: ["nasa stem", "space", "astronomy", "earth science", "computer science", "grades 5-8", "fizyka", "astronomia"]
+  },
+  {
+    name: "OpenStax — bezpłatne materiały K–12",
+    url: "https://openstax.org/k12/",
+    category: "education",
+    trust: 9,
+    hints: ["free textbooks", "biology", "chemistry", "physics", "mathematics", "science", "podręcznik"]
+  },
+  {
+    name: "Library of Congress — materiały klasowe",
+    url: "https://www.loc.gov/programs/teachers/classroom-materials/",
+    category: "history",
+    trust: 10,
+    hints: ["primary sources", "history", "historical documents", "geography", "źródła historyczne", "historia"]
+  },
+  {
+    name: "Smithsonian Learning Lab",
+    url: "https://learninglab.si.edu/",
+    category: "education",
+    trust: 9,
+    hints: ["museum", "science", "history", "art", "educational resources", "lesson", "muzeum", "sztuka"]
+  },
+  ...["en", "es", "fr", "de", "it", "pt", "nl", "ru", "uk", "ja", "zh", "ar", "hi", "tr", "sv", "ko", "el", "he", "fa", "ur", "bn", "da", "no", "fi", "cs", "ro", "hu", "id", "vi", "ca", "sr", "hr", "bg", "sk", "sl", "et", "lv", "lt", "ms", "th"].map(code => {
+    const profile = LANGUAGE_PROFILES.find(item => item.code === code);
+    return {
+      name: `Wikipedia — ${profile?.label || code}`,
+      url: `https://${code}.wikipedia.org/wiki/Main_Page`,
+      category: "general",
+      language: code,
+      searchApi: true,
+      trust: 5,
+      hints: [profile?.label || code, "encyclopedia", "education", "science", "history"]
+    };
+  })
 ];
 
 const ALLOWED_CRAWLER_HOSTS = new Set(
@@ -549,8 +591,15 @@ function buildIndexedSearchQuery(question) {
 
 function getCrawlerTerms(question) {
   const normalized = normalizeSearchText(question);
-  const rawTerms = tokenize(normalized).filter(term => !STOP_WORDS.has(term));
+  const languageCode = detectQuestionLanguage(question);
+  const languageStopWords = getLanguageStopWords(languageCode);
+  const rawTerms = tokenize(normalized).filter(term => !STOP_WORDS.has(term) && !languageStopWords.has(term));
   const terms = [...rawTerms];
+
+  if (["ja", "zh", "th"].includes(languageCode)) {
+    const characters = Array.from(normalized.replace(/\s+/g, ""));
+    for (let index = 0; index < characters.length - 1; index++) terms.push(characters.slice(index, index + 2).join(""));
+  }
 
   for (const expansion of QUERY_EXPANSIONS) {
     if (expansion.match.test(normalized)) terms.push(...expansion.terms);
@@ -559,6 +608,7 @@ function getCrawlerTerms(question) {
   // Dodajemy łagodny rdzeń dla polskich końcówek fleksyjnych. Nie usuwamy
   // oryginalnego słowa, bo tytuły stron mogą zawierać pełną formę.
   for (const term of rawTerms) {
+    if (["ja", "zh", "th"].includes(languageCode)) break;
     if (term.length >= 7) {
       const stem = term.replace(/(owego|owej|owych|ami|ach|owie|acji|ację|acja|enia|enie|ego|emu|owej|ami|ów|om|ie|em|ę|ą|y|a|e|u|i)$/u, "");
       if (stem.length >= 4 && stem !== term) terms.push(stem);
@@ -1220,6 +1270,7 @@ function extractCrawlerPage(html, pageUrl, host) {
 
 function selectCrawlerSources(question) {
   const text = normalizeSearchText(question);
+  const languageCode = detectQuestionLanguage(question);
   const has = pattern => pattern.test(text);
 
   const sports = has(/\b(mecz|mecze|spotkanie|terminarz|fcbarcelona|fcbarcelony|barcelona|barcelony|barca|liga|pilka|pilkarski|uefa|najblizszy mecz)\b/);
@@ -1286,6 +1337,11 @@ function selectCrawlerSources(question) {
       if (selected.length >= CRAWLER_MAX_SOURCES) break;
     }
     if (!added) break;
+  }
+  const languageSource = CRAWLER_SOURCES.find(source => source.language === languageCode);
+  if (languageSource) {
+    return [languageSource, ...selected.filter(source => source.name !== languageSource.name)]
+      .slice(0, CRAWLER_MAX_SOURCES);
   }
   return selected;
 }
@@ -1779,6 +1835,8 @@ function summarizeResultText(result, terms) {
 
 function buildResearchSummary(question, results, terms) {
   const newsMode = results.some(result => result.category === "news");
+  const language = detectQuestionLanguage(question);
+  const labels = getResearchLabels(language);
   const picked = [];
   const seenArticles = new Set();
   const domainCounts = new Map();
@@ -1802,19 +1860,19 @@ function buildResearchSummary(question, results, terms) {
     `${index + 1}. [${cleanDisplayText(result.source, 90)} — ${cleanDisplayText(result.title, 140)}](${safeSourceUrl(result.url)})`
   ).join("\n");
   const siteCount = new Set(picked.map(item => new URL(item.result.url).hostname)).size;
-  const checkedAt = new Intl.DateTimeFormat("pl-PL", {
+  const checkedAt = new Intl.DateTimeFormat(language, {
     timeZone: "Europe/Warsaw", dateStyle: "short", timeStyle: "short"
   }).format(new Date());
 
-  const heading = newsMode ? "🐨 Przegląd najnowszych wiadomości" : "🐨 Zebrane materiały";
+  const heading = newsMode ? `🐨 ${labels.news}` : `🐨 ${labels.materials}`;
   const intro = newsMode
-    ? `Znalazłam **${picked.length} artykułów z ${siteCount} witryn**. Uporządkowałam je według dat publikacji.`
-    : `Znalazłam **${picked.length} stron z ${siteCount} witryn**, które pasują do pytania.`;
+    ? `${labels.found} **${picked.length} ${labels.articles} ${siteCount} ${labels.sites}**. ${labels.sorted}`
+    : `${labels.found} **${picked.length} ${labels.pages} ${siteCount} ${labels.sites}**, ${labels.match}`;
   const limitation = newsMode
-    ? "_To krótkie omówienia fragmentów artykułów, a nie pełna synteza wszystkich wydarzeń. Fragmenty mogą pozostać w języku oryginalnym strony._"
-    : "_To wybrane fragmenty publicznych stron. Sprawdź źródła, jeśli potrzebujesz pełnego kontekstu._";
+    ? `_${labels.newsLimit}_`
+    : `_${labels.generalLimit}_`;
 
-  return `${heading}\n\n${intro}\n\nNajważniejsze znalezione materiały\n${bullets || "Nie udało się wyodrębnić treści artykułów."}\n\nŹródła do przeczytania\n${sourceLines}\n\n_Stan sprawdzenia: ${checkedAt} czasu polskiego._\n\n${limitation}`;
+  return `${heading}\n\n${intro}\n\n${labels.important}\n${bullets || "Nie udało się wyodrębnić treści artykułów."}\n\n${labels.sources}\n${sourceLines}\n\n_${labels.checked}: ${checkedAt} (Europe/Warsaw)._\n\n${limitation}`;
 }
 
 function isBarcaFixtureQuestion(question) {
@@ -2065,6 +2123,37 @@ function getSafeHistory(history) {
     }));
 }
 
+function hasUnsupportedMedia(body) {
+  const mediaField = /^(image|images|video|videos|media|attachments|files)$/i;
+  const mediaMime = /^(image|video)\//i;
+  const mediaExtension = /\.(?:avif|bmp|gif|heic|jpe?g|m4v|mov|mp4|mpeg|mpg|png|webm|webp)$/i;
+
+  function nonEmpty(value) {
+    if (value == null || value === false || value === "") return false;
+    if (Array.isArray(value)) return value.length > 0;
+    return true;
+  }
+
+  function inspect(value, depth = 0) {
+    if (depth > 6 || !value || typeof value !== "object") return false;
+    if (Array.isArray(value)) return value.some(item => inspect(item, depth + 1));
+
+    const mime = String(value.mimeType || value.mime_type || value.contentType || "");
+    const type = String(value.type || "");
+    const name = String(value.name || value.filename || value.fileName || "");
+    if (mediaMime.test(mime) || /^(image|video)$/i.test(type) || mediaExtension.test(name)) return true;
+
+    return Object.entries(value).some(([key, nested]) => {
+      if (mediaField.test(key) && nonEmpty(nested)) return true;
+      if (key === "message" || key === "history") return false;
+      if (typeof nested === "string" && /^data:(?:image|video)\//i.test(nested)) return true;
+      return inspect(nested, depth + 1);
+    });
+  }
+
+  return inspect(body);
+}
+
 function isTeacherMaterialsRequest(message) {
   const text = normalizeSearchText(message);
   return /^(?:tryb nauczycielski|nauczyciel)\b/.test(text)
@@ -2184,6 +2273,12 @@ export default async function handler(request) {
     );
   }
 
+  if (hasUnsupportedMedia(body)) {
+    return jsonResponse({
+      answer: "🐨 Nie mogę odczytywać zdjęć ani filmów, w tym ukrytych poleceń. Wklej treść pytania jako tekst, a pomogę na jej podstawie."
+    }, 200, origin);
+  }
+
   if (!body || typeof body.message !== "string" || !body.message.trim()) {
     return jsonResponse({ answer: "Napisz pytanie, a Koala spróbuje Ci pomóc." }, 400, origin);
   }
@@ -2195,12 +2290,6 @@ export default async function handler(request) {
       413,
       origin
     );
-  }
-
-  if (typeof body.image === "string" && body.image.length > 0) {
-    return jsonResponse({
-      answer: "🐨 W tej wersji nie potrafię jeszcze odczytywać obrazów. Wklej treść zadania jako tekst, a spróbuję Ci pomóc."
-    }, 200, origin);
   }
 
   const history = getSafeHistory(body.history);
