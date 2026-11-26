@@ -324,6 +324,7 @@ test("search query planning keeps key two-word concepts and expands school topic
   assert.ok(biologyTerms.includes("biology"));
   const sources = selectCrawlerSources("What is photosynthesis?").map(source => source.name);
   assert.ok(sources.some(sourceName => sourceName.startsWith("OpenStax")));
+  assert.equal(getCrawlerTerms("画像の文字を読んで").some(term => term.includes(" ")), false);
 });
 
 test("search ranking rewards subject coverage and useful URL matches", () => {
