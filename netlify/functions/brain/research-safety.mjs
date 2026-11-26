@@ -44,8 +44,16 @@ const INSTRUCTION_PATTERNS = [
   {
     reason: "cyber-abuse",
     patterns: [
-      /\b(steal (a )?passwords?|steal (an )?account|hack (someone|a person's|my friend's) account|make ransomware|deploy malware)\b/,
+      /\b(steal (a )?passwords?|steal (an )?account|hack (someone|a person s|my friend s) account|make ransomware|deploy malware)\b/,
       /\b(ukrasc haslo|ukrasc konto|zhakowac cudze konto|zrobic ransomware|stworzyc malware)\b/
+    ]
+  },
+  {
+    reason: "explicit-sexual-content",
+    patterns: [
+      /\b(sex positions|how to have sex|sexual techniques|erotic stories|nudes?|naked photos|sex videos)\b/,
+      /\b(jak uprawiac seks|pozycje seksualne|filmy erotyczne|nagie zdjecia|zdjecia nagich (osob|dziewczyn|chlopakow)|wyslij nude)\b/,
+      /\b(posiciones sexuales|fotos desnudas|erotische geschichten|nacktbilder)\b/
     ]
   }
 ];
@@ -66,6 +74,10 @@ const BLOCK_MESSAGES = {
   "cyber-abuse": {
     pl: "Nie pomogę wyszukiwać sposobów kradzieży kont, haseł ani tworzenia złośliwego oprogramowania. Mogę pomóc w nauce cyberbezpieczeństwa i ochronie kont.",
     en: "I can’t help find ways to steal accounts or passwords or create malware. I can help with cybersecurity and protecting accounts."
+  },
+  "explicit-sexual-content": {
+    pl: "Nie pomogę wyszukiwać jawnych treści seksualnych. Mogę za to odpowiedzieć bezpiecznie na pytania o dojrzewanie, zdrowie i biologię.",
+    en: "I can’t help find explicit sexual material. I can answer safe questions about puberty, health, and biology."
   }
 };
 
