@@ -1,7 +1,7 @@
 import { answerQuestion, classifyQuestion } from "./koala-engine.mjs";
-import { detectQuestionLanguage, getLanguageStopWords, getMediaMessage, getResearchLabels, LANGUAGE_PROFILES } from "./brain/languages.mjs";
-import { getBlockedContentReason, getContentBlockMessage } from "./brain/content-safety.mjs";
-import { getExpandedSearchText } from "./brain/question-understanding.mjs";
+import { detectQuestionLanguage, getLanguageStopWords, getMediaMessage, getResearchLabels, LANGUAGE_PROFILES } from "./languages.mjs";
+import { getBlockedContentReason, getContentBlockMessage } from "./content-safety.mjs";
+import { getExpandedSearchText } from "./question-understanding.mjs";
 
 /*
  * Koala.ai v5 — backend + selektywny crawler artykułów i terminarzy.
@@ -1705,29 +1705,39 @@ function getSafeHistory(history) {
 }
 
 function hasUnsupportedMedia(body) {
-  const hasMedia = value => {
-    if (Array.isArray(value)) return value.some(hasMedia);
-    if (typeof value === "string") return /^(?:image|video)\/|^(?:data:image\/|data:video\/)|\.(?:avif|bmp|gif|heic|jpe?g|png|svg|webp|mp4|m4v|mov|webm|avi|mkv)(?:[?#].*)?$/i.test(value.trim());
-    if (!value || typeof value !== "object") return false;
-    const type = String(value.type || value.mimeType || value.mime_type || value.mediaType || value.contentType || "").toLowerCase();
-    if (/^(image|video)\//.test(type) || /^(image|video)$/.test(type)) return true;
-    const filename = String(value.name || value.filename || value.url || "");
-    if (/\.(?:avif|bmp|gif|heic|jpe?g|png|svg|webp|mp4|m4v|mov|webm|avi|mkv)$/i.test(filename)) return true;
-    return [value.image, value.images, value.video, value.videos, value.media, value.attachments, value.files].some(hasMedia);
-  };
-
+  const extensionPattern = /\.(?:avif|bmp|gif|heic|jpe?g|png|svg|webp|mp4|m4v|mov|webm|avi|mkv)(?:[?#][^\s"'<>]*)?/i;
   const directFieldPresent = value => {
     if (typeof value === "string") return value.trim().length > 0;
     if (Array.isArray(value)) return value.length > 0;
     if (value && typeof value === "object") return Object.keys(value).length > 0;
     return value != null;
   };
-  return [body.image, body.images, body.video, body.videos].some(directFieldPresent)
-    || [body.media, body.attachments, body.files].some(hasMedia);
+
+  const hasMedia = value => {
+    if (Array.isArray(value)) return value.some(hasMedia);
+    if (typeof value === "string") {
+      return /data:(?:image|video)\//i.test(value)
+        || extensionPattern.test(value);
+    }
+    if (!value || typeof value !== "object") return false;
+
+    const type = String(value.type || value.mimeType || value.mime_type || value.mediaType || value.contentType || "").toLowerCase();
+    if (/^(?:image|video)(?:\/|$)/.test(type)) return true;
+
+    const filename = String(value.name || value.filename || value.url || "");
+    if (extensionPattern.test(filename)) return true;
+
+    return Object.entries(value).some(([key, child]) => {
+      if (/^(?:image|images|photo|photos|video|videos)$/i.test(key) && directFieldPresent(child)) return true;
+      return hasMedia(child);
+    });
+  };
+
+  // Sprawdzamy całe żądanie, bo przeglądarki i formularze mogą umieszczać
+  // załącznik w różnych polach. Żaden tekst z obrazu ani filmu nie trafia do silnika.
+  return hasMedia(body);
 }
 
-// ---------------------------------------------------------------------------
-// CORS I ODPOWIEDZI JSON
 // ---------------------------------------------------------------------------
 
 function corsHeaders(origin) {
