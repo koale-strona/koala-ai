@@ -494,9 +494,9 @@ function getQuestionRoute(question, localAnswer = "", history = []) {
     && (!isFollowUp(text) || !hasConversationContext)) {
     const matches = findKnowledgeMatches(text);
     if (getIntent(text) === "compare" && matches.length >= 2) {
-      return { kind: "knowledge-comparison", shouldSearchWeb: false, topic: matches.slice(0, 3).map(item => item.item.title) };
+      return { kind: "knowledge-comparison", shouldSearchWeb: true, searchQuery: text, topic: matches.slice(0, 3).map(item => item.item.title) };
     }
-    return { kind: "knowledge", shouldSearchWeb: false, topic: topic.title };
+    return { kind: "knowledge", shouldSearchWeb: true, searchQuery: text, topic: topic.title };
   }
 
   const explicit = asksToSearchOnline(text) || isCurrentInformationQuestion(text);

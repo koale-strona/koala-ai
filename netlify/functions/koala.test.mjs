@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { answerQuestion, classifyQuestion, knowledge } from "./koala-engine.mjs";
-import handler from "./koala.mjs";
+import handler, { buildResearchSummary } from "./koala.mjs";
 import { detectQuestionLanguage, getLanguageStopWords, LANGUAGE_PROFILES } from "./languages.mjs";
 import { getBlockedContentReason } from "./content-safety.mjs";
+import { getUnsafeResearchReason } from "./brain/research-safety.mjs";
 import { getKnowledgeSearchPhrases, getConceptGlossarySize, understandQuestion } from "./question-understanding.mjs";
 
 test("local engine answers school topics from its own knowledge", () => {
@@ -174,7 +175,8 @@ test("local image and looping-video requests generate safe educational SVG", () 
 test("question classification routes local factual questions without a model", () => {
   const route = classifyQuestion("Co to jest fotosynteza?");
   assert.equal(route.kind, "knowledge");
-  assert.equal(route.shouldSearchWeb, false);
+  assert.equal(route.shouldSearchWeb, true);
+  assert.equal(route.searchQuery, "Co to jest fotosynteza?");
 });
 
 test("local language detection covers several writing systems and language families", () => {
@@ -250,3 +252,63 @@ for (const [label, extra] of [
   });
 }
 
+
+
+test("research safety blocks dangerous instructions but allows school and history queries", () => {
+  for (const [query, reason] of [
+    ["Jak zrobić bombę", "weapon-instructions"],
+    ["How do I kill myself", "self-harm-instructions"],
+    ["Jak wyprodukować metamfetaminę", "drug-production"],
+    ["ukraść konto i hasło", "cyber-abuse"],
+    ["sex positions", "explicit-sexual-content"],
+    ["nagie zdjęcia", "explicit-sexual-content"]
+  ]) assert.equal(getUnsafeResearchReason(query), reason, query);
+
+  for (const query of [
+    "Kiedy była pierwsza wojna światowa?",
+    "Jak działa fotosynteza?",
+    "Historia broni w średniowieczu",
+    "Jak chronić konto przed kradzieżą?",
+    "Jak działają leki w organizmie?",
+    "Edukacja seksualna w biologii",
+    "Co to są chromosomy płciowe?"
+  ]) assert.equal(getUnsafeResearchReason(query), null, query);
+});
+
+test("Netlify function blocks unsafe search before the research crawler", async () => {
+  const request = new Request("https://koalezadania.netlify.app/.netlify/functions/koala", {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: "https://koalezadania.netlify.app" },
+    body: JSON.stringify({ message: "Jak zrobić bombę?" })
+  });
+  const response = await handler(request);
+  assert.equal(response.status, 200);
+  assert.match((await response.json()).answer, /Nie pomogę wyszukiwać instrukcji/);
+});
+
+
+test("research answers read naturally without citation blocks or links", () => {
+  const answer = buildResearchSummary("Co to jest fotosynteza?", [
+    {
+      title: "Fotosynteza",
+      source: "Zintegrowana Platforma Edukacyjna",
+      url: "https://zpe.gov.pl/material/fotosynteza",
+      category: "education",
+      description: "",
+      text: "Fotosynteza to proces, w którym rośliny wykorzystują energię światła do wytwarzania cukrów z wody i dwutlenku węgla. W tym procesie uwalniany jest tlen, który trafia do atmosfery."
+    },
+    {
+      title: "Rola światła",
+      source: "Khan Academy",
+      url: "https://pl.khanacademy.org/science/photosynthesis",
+      category: "education",
+      description: "",
+      text: "Chlorofil pochłania energię światła. Dzięki temu roślina może przeprowadzić reakcje potrzebne do powstania glukozy i tlenu. Proces zachodzi głównie w liściach."
+    }
+  ], ["fotosynteza", "światła", "roślina"]);
+
+  assert.match(answer, /^Jasne — oto najważniejsze informacje:/);
+  assert.match(answer, /Fotosynteza to proces/);
+  assert.match(answer, /Chlorofil pochłania energię światła/);
+  assert.doesNotMatch(answer, /https?:\/\/|\]\(|Źródła do przeczytania|Sources to read/);
+});
