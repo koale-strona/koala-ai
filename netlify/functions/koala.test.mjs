@@ -323,7 +323,7 @@ test("search query planning keeps key two-word concepts and expands school topic
   const biologyTerms = getCrawlerTerms("What is photosynthesis?");
   assert.ok(biologyTerms.includes("biology"));
   const sources = selectCrawlerSources("What is photosynthesis?").map(source => source.name);
-  assert.ok(sources.includes("OpenStax"));
+  assert.ok(sources.some(sourceName => sourceName.startsWith("OpenStax")));
 });
 
 test("search ranking rewards subject coverage and useful URL matches", () => {
