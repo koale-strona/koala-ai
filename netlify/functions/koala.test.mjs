@@ -259,7 +259,9 @@ test("research safety blocks dangerous instructions but allows school and histor
     ["Jak zrobić bombę", "weapon-instructions"],
     ["How do I kill myself", "self-harm-instructions"],
     ["Jak wyprodukować metamfetaminę", "drug-production"],
-    ["ukraść konto i hasło", "cyber-abuse"]
+    ["ukraść konto i hasło", "cyber-abuse"],
+    ["sex positions", "explicit-sexual-content"],
+    ["nagie zdjęcia", "explicit-sexual-content"]
   ]) assert.equal(getUnsafeResearchReason(query), reason, query);
 
   for (const query of [
@@ -267,7 +269,9 @@ test("research safety blocks dangerous instructions but allows school and histor
     "Jak działa fotosynteza?",
     "Historia broni w średniowieczu",
     "Jak chronić konto przed kradzieżą?",
-    "Jak działają leki w organizmie?"
+    "Jak działają leki w organizmie?",
+    "Edukacja seksualna w biologii",
+    "Co to są chromosomy płciowe?"
   ]) assert.equal(getUnsafeResearchReason(query), null, query);
 });
 
