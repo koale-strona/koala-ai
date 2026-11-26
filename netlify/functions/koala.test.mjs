@@ -174,7 +174,7 @@ test("local image and looping-video requests generate safe educational SVG", () 
 test("question classification routes local factual questions without a model", () => {
   const route = classifyQuestion("Co to jest fotosynteza?");
   assert.equal(route.kind, "knowledge");
-  assert.equal(route.shouldSearchWeb, false);
+  assert.equal(route.shouldSearchWeb, true);\n  assert.equal(route.searchQuery, "Co to jest fotosynteza?");
 });
 
 test("local language detection covers several writing systems and language families", () => {
