@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { answerQuestion, classifyQuestion, knowledge } from "./koala-engine.mjs";
-import handler, { buildResearchSummary, getCrawlerTerms, scoreCrawlerText, getDocumentRelevance, selectCrawlerSources } from "./koala.mjs";
+import handler, { buildResearchSummary, buildInternalSearchSeed, getCrawlerTerms, scoreCrawlerText, getDocumentRelevance, selectCrawlerSources } from "./koala.mjs";
 import { detectQuestionLanguage, getLanguageStopWords, LANGUAGE_PROFILES } from "./languages.mjs";
 import { getBlockedContentReason } from "./content-safety.mjs";
 import { getUnsafeResearchReason } from "./brain/research-safety.mjs";
@@ -342,4 +342,15 @@ test("search ranking rewards subject coverage and useful URL matches", () => {
   assert.ok(focused.strongMatch);
   assert.ok(focused.coverage > broad.coverage);
   assert.ok(focused.score > broad.score);
+});
+
+test("internal research search stays on trusted Wikipedia domains", () => {
+  const source = selectCrawlerSources("What is photosynthesis?")
+    .find(item => item.name === "Wikipedia — English");
+  assert.ok(source);
+  const seed = new URL(buildInternalSearchSeed(source, "photosynthesis in plant cells"));
+  assert.equal(seed.hostname, "en.wikipedia.org");
+  assert.equal(seed.pathname, "/w/index.php");
+  assert.equal(seed.searchParams.get("search"), "photosynthesis in plant cells");
+  assert.equal(buildInternalSearchSeed({ url: "https://example.org/" }, "photosynthesis"), null);
 });
