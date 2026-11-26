@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { answerQuestion, classifyQuestion, knowledge } from "./koala-engine.mjs";
-import handler from "./koala.mjs";
+import handler, { buildResearchSummary } from "./koala.mjs";
 import { detectQuestionLanguage, getLanguageStopWords, LANGUAGE_PROFILES } from "./languages.mjs";
 import { getBlockedContentReason } from "./content-safety.mjs";
 import { getUnsafeResearchReason } from "./brain/research-safety.mjs";
@@ -280,4 +280,31 @@ test("Netlify function blocks unsafe search before the research crawler", async 
   const response = await handler(request);
   assert.equal(response.status, 200);
   assert.match((await response.json()).answer, /Nie pomogę wyszukiwać instrukcji/);
+});
+
+
+test("research answers read naturally without citation blocks or links", () => {
+  const answer = buildResearchSummary("Co to jest fotosynteza?", [
+    {
+      title: "Fotosynteza",
+      source: "Zintegrowana Platforma Edukacyjna",
+      url: "https://zpe.gov.pl/material/fotosynteza",
+      category: "education",
+      description: "",
+      text: "Fotosynteza to proces, w którym rośliny wykorzystują energię światła do wytwarzania cukrów z wody i dwutlenku węgla. W tym procesie uwalniany jest tlen, który trafia do atmosfery."
+    },
+    {
+      title: "Rola światła",
+      source: "Khan Academy",
+      url: "https://pl.khanacademy.org/science/photosynthesis",
+      category: "education",
+      description: "",
+      text: "Chlorofil pochłania energię światła. Dzięki temu roślina może przeprowadzić reakcje potrzebne do powstania glukozy i tlenu. Proces zachodzi głównie w liściach."
+    }
+  ], ["fotosynteza", "światła", "roślina"]);
+
+  assert.match(answer, /^Jasne — oto najważniejsze informacje:/);
+  assert.match(answer, /Fotosynteza to proces/);
+  assert.match(answer, /Chlorofil pochłania energię światła/);
+  assert.doesNotMatch(answer, /https?:\/\/|\]\(|Źródła do przeczytania|Sources to read/);
 });
