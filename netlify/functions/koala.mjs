@@ -2,6 +2,7 @@ import { answerQuestion, classifyQuestion } from "./koala-engine.mjs";
 import { detectQuestionLanguage, getLanguageStopWords, getMediaMessage, getResearchLabels, LANGUAGE_PROFILES } from "./languages.mjs";
 import { getBlockedContentReason, getContentBlockMessage } from "./content-safety.mjs";
 import { getExpandedSearchText } from "./question-understanding.mjs";
+import { getUnsafeResearchReason, getResearchSafetyMessage } from "./brain/research-safety.mjs";
 
 /*
  * Koala.ai v5 — backend + selektywny crawler artykułów i terminarzy.
@@ -1822,6 +1823,13 @@ export default async function handler(request) {
   if (blockedReason) {
     return jsonResponse({
       answer: getContentBlockMessage(blockedReason, detectQuestionLanguage(message))
+    }, 200, origin);
+  }
+
+  const unsafeResearchReason = getUnsafeResearchReason(message);
+  if (unsafeResearchReason) {
+    return jsonResponse({
+      answer: getResearchSafetyMessage(unsafeResearchReason, detectQuestionLanguage(message))
     }, 200, origin);
   }
 
