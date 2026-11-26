@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { answerQuestion, classifyQuestion, knowledge } from "../koala-engine.mjs";
-import handler from "../koala.mjs";
+import { answerQuestion, classifyQuestion, knowledge } from "./koala-engine.mjs";
+import handler from "./koala.mjs";
 import { detectQuestionLanguage, getLanguageStopWords, LANGUAGE_PROFILES } from "./languages.mjs";
 import { getBlockedContentReason } from "./content-safety.mjs";
 import { getKnowledgeSearchPhrases, getConceptGlossarySize, understandQuestion } from "./question-understanding.mjs";
@@ -73,6 +73,31 @@ test("each knowledge card gets three extra question forms and a richer search pr
   assert.match(answerQuestion("Was ist Schwerkraft?"), /Grawitacja/i);
 });
 
+test("cross-language school concepts improve matching outside the starter glossary", () => {
+  const spanish = understandQuestion("¿Qué es el sistema circulatorio?");
+  assert.equal(spanish.language, "es");
+  assert.ok(spanish.concepts.includes("układ krwionośny"));
+  assert.match(answerQuestion("¿Qué es el sistema circulatorio?"), /Układ krwionośny/);
+
+  const french = understandQuestion("Qu'est-ce que le système respiratoire ?");
+  assert.equal(french.language, "fr");
+  assert.ok(french.concepts.includes("układ oddechowy"));
+  assert.match(answerQuestion("Qu'est-ce que le système respiratoire ?"), /Układ oddechowy/);
+
+  const german = understandQuestion("Was ist der Satz des Pythagoras?");
+  assert.ok(german.concepts.some(concept => concept.toLocaleLowerCase("pl") === "twierdzenie pitagorasa"));
+  assert.match(answerQuestion("Was ist der Satz des Pythagoras?"), /Twierdzenie Pitagorasa/);
+
+  assert.ok(understandQuestion("What is climate change?").concepts.includes("zmiana klimatu"));
+  assert.ok(understandQuestion("¿Qué son las estaciones del año?").concepts.includes("pory roku"));
+});
+
+test("multilingual question intents keep their grammar cues after accent folding", () => {
+  assert.equal(understandQuestion("¿Cómo funciona la gravedad?").intent, "explanation");
+  assert.equal(understandQuestion("Was ist Gravitation?").intent, "definition");
+  assert.equal(understandQuestion("Explain step by step").intent, "steps");
+});
+
 test("profanity filter catches separated, disguised, and mixed-script terms", () => {
   assert.equal(getBlockedContentReason("kurwa"), "profanity");
   assert.equal(getBlockedContentReason("k.u.r.w.a"), "profanity");
@@ -114,6 +139,12 @@ test("image and video reading requests are refused plainly", () => {
   assert.match(answerQuestion("Przeczytaj polecenie z filmiku"), /Nie mogę odczytać/);
 });
 
+test("media-reading requests in additional languages are refused", () => {
+  assert.match(answerQuestion("Lee el texto de la imagen"), /No puedo leer/i);
+  assert.match(answerQuestion("Was ist im Bild geschrieben?"), /Ich kann keinen Text/i);
+  assert.match(answerQuestion("画像の文字を読んで"), /読み取れません/);
+});
+
 test("local image and looping-video requests generate safe educational SVG", () => {
   for (const [question, kind] of [
     ["Wygeneruj obraz planety", "image"],
@@ -125,7 +156,10 @@ test("local image and looping-video requests generate safe educational SVG", () 
     ["Narysuj łańcuch pokarmowy", "image"],
     ["Wygeneruj film o obwodzie elektrycznym", "animation"],
     ["Narysuj zaćmienie Słońca", "image"],
-    ["Create an animated diagram of the layers of Earth", "animation"]
+    ["Create an animated diagram of the layers of Earth", "animation"],
+    ["Dibuja la fotosíntesis", "image"],
+    ["Crea una imagen del sistema solar", "image"],
+    ["Create an animation about DNA", "animation"]
   ]) {
     const answer = answerQuestion(question);
     const marker = answer.match(new RegExp(`\\[KOALA_MEDIA:${kind}:([A-Za-z0-9+/=]+)\\]`));
@@ -197,3 +231,22 @@ test("Netlify function refuses a media-only message before empty-text validation
   assert.equal(response.status, 200);
   assert.match((await response.json()).answer, /can’t read|nie mogę/i);
 });
+
+for (const [label, extra] of [
+  ["nested image payload", { payload: { content: [{ type: "image", data: "AA==" }] } }],
+  ["nested video MIME", { payload: { upload: { mime_type: "video/webm", data: "AA==" } } }],
+  ["image URL embedded in message", { message: "Read this picture: https://files.example/school-task.png" }],
+  ["extensionless image field in nested object", { payload: { image: { data: "AA==" } } }]
+]) {
+  test("Netlify function refuses " + label, async () => {
+    const request = new Request("https://koalezadania.netlify.app/.netlify/functions/koala", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "https://koalezadania.netlify.app" },
+      body: JSON.stringify({ message: "What is in this attachment?", ...extra })
+    });
+    const response = await handler(request);
+    assert.equal(response.status, 200);
+    assert.match((await response.json()).answer, /can(?:not|’t|'t) read|Nie mogę odczytywać/i);
+  });
+}
+
