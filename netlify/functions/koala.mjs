@@ -1108,6 +1108,20 @@ function isNewsArticlePage(source, pageUrl, page) {
     !/\/(news|world|world-news|aktualnosci|wiadomosci)\/?$/i.test(new URL(pageUrl).pathname);
 }
 
+export function buildInternalSearchSeed(source, question) {
+  try {
+    const host = new URL(source?.url).hostname;
+    if (!ALLOWED_CRAWLER_HOSTS.has(host) || !host.endsWith(".wikipedia.org")) return null;
+    const query = String(question || "").trim().slice(0, 160);
+    if (!query) return null;
+    const searchUrl = new URL("https://" + host + "/w/index.php");
+    searchUrl.searchParams.set("search", query);
+    return searchUrl.href;
+  } catch {
+    return null;
+  }
+}
+
 async function crawlPublicSite(source, question, terms, deadline) {
   const results = [];
   const visited = new Set();
@@ -1131,7 +1145,10 @@ async function crawlPublicSite(source, question, terms, deadline) {
 
     // Najpierw strona startowa, bo z niej zwykle da się znaleźć bezpośrednie
     // linki do artykułów lub terminarza. Dopiero potem korzystamy z sitemap.
-    const queue = unique([seed.href, ...orderedSitemap]).slice(0, 120);
+    const internalSearchSeed = buildInternalSearchSeed(source, question);
+    // Wikipedia ma własne wyszukiwanie. Używamy go tylko na jawnie dozwolonej
+    // domenie i respektujemy robots.txt tak samo jak dla każdej innej strony.
+    const queue = unique([...(internalSearchSeed ? [internalSearchSeed] : []), seed.href, ...orderedSitemap]).slice(0, 120);
 
     while (queue.length && visited.size < CRAWLER_MAX_PAGES_PER_SITE && Date.now() < deadline) {
       const url = queue.shift();
