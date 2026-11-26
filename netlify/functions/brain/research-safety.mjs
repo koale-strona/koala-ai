@@ -6,13 +6,13 @@
 
 function normalize(value) {
   return String(value ?? "")
-    .replace(/[\\u200B-\\u200D\\u2060\\uFEFF]/g, "")
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
     .toLocaleLowerCase()
     .replace(/ł/g, "l")
     .normalize("NFD")
-    .replace(/[\\u0300-\\u036f]/g, "")
-    .replace(/[^\\p{L}\\p{N}]+/gu, " ")
-    .replace(/\\s+/g, " ")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -20,32 +20,32 @@ const INSTRUCTION_PATTERNS = [
   {
     reason: "self-harm-instructions",
     patterns: [
-      /\\b(how (can|do) i (kill|hurt) myself|ways to kill myself|suicide methods|how to self harm)\\b/,
-      /\\b(jak (sie )?(zabic|skrzywdzic)|sposoby (na )?samobojstwo|jak sie okaleczyc|czym sie okaleczyc)\\b/,
-      /\\b(como suicidarme|formas de suicidarme|wie kann ich mich umbringen)\\b/
+      /\b(how (can|do) i (kill|hurt) myself|ways to kill myself|suicide methods|how to self harm)\b/,
+      /\b(jak (sie )?(zabic|skrzywdzic)|sposoby (na )?samobojstwo|jak sie okaleczyc|czym sie okaleczyc)\b/,
+      /\b(como suicidarme|formas de suicidarme|wie kann ich mich umbringen)\b/
     ]
   },
   {
     reason: "weapon-instructions",
     patterns: [
-      /\\b(how to (make|build) (a )?(bomb|explosive|pipe bomb|gun)|make an explosive device)\\b/,
-      /\\b(jak (zrobic|zbudowac) (bombe|material wybuchowy|bron palna)|instrukcja budowy bomby)\\b/,
-      /\\b(como fabricar una bomba|wie baut man eine bombe)\\b/
+      /\b(how to (make|build) (a )?(bomb|explosive|pipe bomb|gun)|make an explosive device)\b/,
+      /\b(jak (zrobic|zbudowac) (bombe|material wybuchowy|bron palna)|instrukcja budowy bomby)\b/,
+      /\b(como fabricar una bomba|wie baut man eine bombe)\b/
     ]
   },
   {
     reason: "drug-production",
     patterns: [
-      /\\b(how to (make|cook|synthesize) (meth|methamphetamine|illegal drugs)|make illegal drugs)\\b/,
-      /\\b(jak (zrobic|wyprodukowac|ugotowac) (narkotyki|metamfetamine|amfetamine))\\b/,
-      /\\b(como fabricar metanfetamina|meth herstellen)\\b/
+      /\b(how to (make|cook|synthesize) (meth|methamphetamine|illegal drugs)|make illegal drugs)\b/,
+      /\b(jak (zrobic|wyprodukowac|ugotowac) (narkotyki|metamfetamine|amfetamine))\b/,
+      /\b(como fabricar metanfetamina|meth herstellen)\b/
     ]
   },
   {
     reason: "cyber-abuse",
     patterns: [
-      /\\b(steal (a )?passwords?|steal (an )?account|hack (someone|a person's|my friend's) account|make ransomware|deploy malware)\\b/,
-      /\\b(ukrasc haslo|ukrasc konto|zhakowac cudze konto|zrobic ransomware|stworzyc malware)\\b/
+      /\b(steal (a )?passwords?|steal (an )?account|hack (someone|a person's|my friend's) account|make ransomware|deploy malware)\b/,
+      /\b(ukrasc haslo|ukrasc konto|zhakowac cudze konto|zrobic ransomware|stworzyc malware)\b/
     ]
   }
 ];
