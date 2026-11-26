@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { answerQuestion, classifyQuestion, knowledge } from "./koala-engine.mjs";
-import handler, { buildResearchSummary } from "./koala.mjs";
+import handler, { buildResearchSummary, buildInternalSearchSeed, getCrawlerTerms, scoreCrawlerText, getDocumentRelevance, selectCrawlerSources } from "./koala.mjs";
 import { detectQuestionLanguage, getLanguageStopWords, LANGUAGE_PROFILES } from "./languages.mjs";
 import { getBlockedContentReason } from "./content-safety.mjs";
 import { getUnsafeResearchReason } from "./brain/research-safety.mjs";
@@ -311,4 +311,46 @@ test("research answers read naturally without citation blocks or links", () => {
   assert.match(answer, /Fotosynteza to proces/);
   assert.match(answer, /Chlorofil pochłania energię światła/);
   assert.doesNotMatch(answer, /https?:\/\/|\]\(|Źródła do przeczytania|Sources to read/);
+});
+
+test("search query planning keeps key two-word concepts and expands school topics", () => {
+  const warTerms = getCrawlerTerms("When did World War I begin?");
+  assert.ok(warTerms.includes("world war"));
+  assert.ok(warTerms.includes("history"));
+  assert.ok(scoreCrawlerText("World War I began in 1914.", ["world war"]) >
+    scoreCrawlerText("The war began in 1914.", ["world war"]));
+
+  const biologyTerms = getCrawlerTerms("What is photosynthesis?");
+  assert.ok(biologyTerms.includes("biology"));
+  const sources = selectCrawlerSources("What is photosynthesis?").map(source => source.name);
+  assert.ok(sources.some(sourceName => sourceName.startsWith("OpenStax")));
+  assert.equal(getCrawlerTerms("画像の文字を読んで").some(term => term.includes(" ")), false);
+});
+
+test("search ranking rewards subject coverage and useful URL matches", () => {
+  const terms = getCrawlerTerms("How does photosynthesis work in plant cells?");
+  const focused = getDocumentRelevance({
+    title: "Photosynthesis in plant cells",
+    description: "How plants use light to make sugars",
+    text: "Photosynthesis takes place in plant cells and uses energy from light."
+  }, "https://example.org/biology/photosynthesis-plant-cells", terms);
+  const broad = getDocumentRelevance({
+    title: "Photosynthesis",
+    description: "An introduction to plant science",
+    text: "Plants use energy from light."
+  }, "https://example.org/science", terms);
+  assert.ok(focused.strongMatch);
+  assert.ok(focused.coverage > broad.coverage);
+  assert.ok(focused.score > broad.score);
+});
+
+test("internal research search stays on trusted Wikipedia domains", () => {
+  const source = selectCrawlerSources("What is photosynthesis?")
+    .find(item => item.name === "Wikipedia — English");
+  assert.ok(source);
+  const seed = new URL(buildInternalSearchSeed(source, "photosynthesis in plant cells"));
+  assert.equal(seed.hostname, "en.wikipedia.org");
+  assert.equal(seed.pathname, "/w/index.php");
+  assert.equal(seed.searchParams.get("search"), "photosynthesis in plant cells");
+  assert.equal(buildInternalSearchSeed({ url: "https://example.org/" }, "photosynthesis"), null);
 });
