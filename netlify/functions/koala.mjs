@@ -306,10 +306,13 @@ export function getCrawlerTerms(question) {
   const terms = [...rawTerms];
 
   // Frazy dwuwyrazowe pomagają odróżnić pojęcia o podobnych pojedynczych słowach.
-  for (let index = 0; index < rawTerms.length - 1; index++) {
-    const left = rawTerms[index];
-    const right = rawTerms[index + 1];
-    if (left.length >= 3 && right.length >= 3) terms.push(left + " " + right);
+  // Nie łączymy tokenów dla języków, w których typowo nie rozdziela się słów spacją.
+  if (!["ja", "zh", "th"].includes(language)) {
+    for (let index = 0; index < rawTerms.length - 1; index++) {
+      const left = rawTerms[index];
+      const right = rawTerms[index + 1];
+      if (left.length >= 3 && right.length >= 3) terms.push(left + " " + right);
+    }
   }
 
   for (const expansion of QUERY_EXPANSIONS) {
