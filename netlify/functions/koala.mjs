@@ -1479,16 +1479,16 @@ function summarizeResultText(result, terms) {
   return sentences.slice(0, 2).join(" ").replace(/\s+/g, " ").trim().slice(0, 600);
 }
 
-function buildResearchSummary(question, results, terms) {
+export function buildResearchSummary(question, results, terms) {
   const newsMode = results.some(result => result.category === "news");
   const language = detectQuestionLanguage(question);
-  const labels = getResearchLabels(language);
   const picked = [];
   const seenArticles = new Set();
   const domainCounts = new Map();
+
   for (const result of results) {
     const summary = summarizeResultText(result, terms);
-    const key = normalizeSearchText(`${result.title} ${summary}`).slice(0, 220);
+    const key = normalizeSearchText(result.title + " " + summary).slice(0, 220);
     if (!summary || seenArticles.has(key)) continue;
     const domain = new URL(result.url).hostname;
     if ((domainCounts.get(domain) || 0) >= 2) continue;
@@ -1498,34 +1498,49 @@ function buildResearchSummary(question, results, terms) {
   }
 
   if (newsMode) picked.sort((a, b) => (b.result.publishedAt || 0) - (a.result.publishedAt || 0));
-  const bullets = picked.slice(0, 6).map(({ result, summary }) => {
-    const date = result.date ? ` · ${cleanDisplayText(result.date, 40)}` : "";
-    return `- **${cleanDisplayText(result.title, 160)}** — ${summary}${date} ([${cleanDisplayText(result.source, 70)}](${safeSourceUrl(result.url)}))`;
-  }).join("\n");
-  const sourceLines = picked.slice(0, 8).map(({ result }, index) =>
-    `${index + 1}. [${cleanDisplayText(result.source, 90)} — ${cleanDisplayText(result.title, 140)}](${safeSourceUrl(result.url)})`
-  ).join("\n");
-  const siteCount = new Set(picked.map(item => new URL(item.result.url).hostname)).size;
-  let checkedAt;
-  try {
-    checkedAt = new Intl.DateTimeFormat(language, {
-      timeZone: "Europe/Warsaw", dateStyle: "short", timeStyle: "short"
-    }).format(new Date());
-  } catch {
-    checkedAt = new Intl.DateTimeFormat("en", {
-      timeZone: "Europe/Warsaw", dateStyle: "short", timeStyle: "short"
-    }).format(new Date());
+
+  const leads = {
+    pl: { news: "Oto krótkie podsumowanie najnowszych informacji:", general: "Jasne — oto najważniejsze informacje:" },
+    en: { news: "Here’s a short overview of the latest information:", general: "Sure — here are the key points:" },
+    es: { news: "Aquí tienes un breve resumen de la información más reciente:", general: "Claro, estos son los puntos principales:" },
+    fr: { news: "Voici un bref résumé des informations les plus récentes :", general: "Bien sûr, voici les points essentiels :" },
+    de: { news: "Hier ist eine kurze Zusammenfassung der neuesten Informationen:", general: "Gern — hier sind die wichtigsten Punkte:" },
+    it: { news: "Ecco un breve riepilogo delle informazioni più recenti:", general: "Certo, ecco i punti principali:" },
+    pt: { news: "Aqui está um breve resumo das informações mais recentes:", general: "Claro — estes são os pontos principais:" },
+    ru: { news: "Вот краткий обзор последних сведений:", general: "Конечно, вот главное:" },
+    uk: { news: "Ось короткий огляд найновішої інформації:", general: "Звісно, ось головне:" },
+    ja: { news: "最近の情報を簡潔にまとめます。", general: "要点をまとめると、次のとおりです。" },
+    zh: { news: "以下是最新信息的简要概述：", general: "当然，重点如下：" },
+    tr: { news: "İşte en güncel bilgilerin kısa bir özeti:", general: "Elbette, önemli noktalar şunlar:" }
+  };
+
+  if (!picked.length) {
+    const noResults = {
+      pl: "Nie znalazłam wystarczająco dobrych informacji, żeby odpowiedzieć pewnie. Spróbuj sformułować pytanie inaczej.",
+      en: "I couldn’t find enough useful information to answer confidently. Try rephrasing the question.",
+      es: "No encontré información suficiente para responder con seguridad. Prueba a formular la pregunta de otra manera.",
+      fr: "Je n’ai pas trouvé assez d’informations fiables pour répondre avec assurance. Essaie de reformuler la question.",
+      de: "Ich habe nicht genügend brauchbare Informationen für eine sichere Antwort gefunden. Formuliere die Frage bitte anders.",
+      it: "Non ho trovato informazioni sufficienti per rispondere con sicurezza. Prova a riformulare la domanda.",
+      pt: "Não encontrei informações suficientes para responder com segurança. Tente reformular a pergunta.",
+      ru: "Мне не удалось найти достаточно данных для уверенного ответа. Попробуйте переформулировать вопрос.",
+      uk: "Не вдалося знайти достатньо даних для впевненої відповіді. Спробуйте переформулювати запитання.",
+      ja: "確かな回答に十分な情報が見つかりませんでした。質問を言い換えてみてください。",
+      zh: "没有找到足够的信息来可靠地回答。请尝试换一种方式提问。",
+      tr: "Güvenilir bir yanıt için yeterli bilgi bulamadım. Soruyu farklı şekilde ifade etmeyi deneyin."
+    };
+    return noResults[language] || noResults.en;
   }
 
-  const heading = newsMode ? `## 🐨 ${labels.news}` : `## 🐨 ${labels.materials}`;
-  const intro = newsMode
-    ? `${labels.found} **${picked.length} ${labels.articles} ${siteCount} ${labels.sites}**. ${labels.sorted}`
-    : `${labels.found} **${picked.length} ${labels.pages} ${siteCount} ${labels.sites}**, ${labels.match}`;
-  const limitation = newsMode
-    ? `_${labels.newsLimit}_`
-    : `_${labels.generalLimit}_`;
-
-  return `${heading}\n\n${intro}\n\n### ${labels.important}\n${bullets || "No article text could be extracted."}\n\n### ${labels.sources}\n${sourceLines}\n\n_${labels.checked}: ${checkedAt} (Europe/Warsaw)._\n\n${limitation}`;
+  const selected = picked.slice(0, newsMode ? 4 : 3);
+  const paragraphs = selected.map(({ result, summary }) => {
+    if (!newsMode) return summary;
+    const title = cleanDisplayText(result.title, 160);
+    const date = result.date ? " (" + cleanDisplayText(result.date, 40) + ")" : "";
+    return "**" + title + "** — " + summary + date;
+  });
+  const localized = leads[language] || leads.en;
+  return localized[newsMode ? "news" : "general"] + "\n\n" + paragraphs.join("\n\n");
 }
 
 function isBarcaFixtureQuestion(question) {
