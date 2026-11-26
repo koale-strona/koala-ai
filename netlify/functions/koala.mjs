@@ -1168,7 +1168,8 @@ async function crawlPublicSite(source, question, terms, deadline) {
       }
 
       const path = new URL(finalUrl).pathname.toLowerCase();
-      const isLanding = /^\/(en\/|news|world|world-news|aktualnosci|wiadomosci)?\/?$/i.test(path);
+      const isWikipediaSearchPage = path === "/w/index.php" && new URL(finalUrl).hostname.endsWith(".wikipedia.org");
+      const isLanding = /^\/(en\/|news|world|world-news|aktualnosci|wiadomosci)?\/?$/i.test(path) || isWikipediaSearchPage;
       if (page.text.length < 80 && page.description.length < 30) continue;
 
       if (source.category === "sport") {
