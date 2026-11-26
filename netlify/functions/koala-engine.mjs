@@ -1,10 +1,10 @@
-import { createFlashcards } from "./brain/study-tools.mjs";
-import { detectQuestionLanguage, getMediaMessage } from "./brain/languages.mjs";
-import { ADDITIONAL_KNOWLEDGE } from "./brain/knowledge.mjs";
-import { solveSchoolProblem } from "./brain/reasoning.mjs";
-import { generateEducationalMedia } from "./brain/media-generator.mjs";
-import { getBlockedContentReason, getContentBlockMessage } from "./brain/content-safety.mjs";
-import { getKnowledgeSearchPhrases, understandQuestion } from "./brain/question-understanding.mjs";
+import { createFlashcards } from "./study-tools.mjs";
+import { detectQuestionLanguage, getMediaMessage } from "./languages.mjs";
+import { ADDITIONAL_KNOWLEDGE } from "./knowledge.mjs";
+import { solveSchoolProblem } from "./reasoning.mjs";
+import { generateEducationalMedia } from "./media-generator.mjs";
+import { getBlockedContentReason, getContentBlockMessage } from "./content-safety.mjs";
+import { getKnowledgeSearchPhrases, understandQuestion } from "./question-understanding.mjs";
 
 /*
  * Koala.ai v7 — Brain — lokalny, edukacyjny silnik regułowy z kontekstem i dodatkową wiedzą historyczną.
@@ -429,17 +429,24 @@ function isSocialMessage(question) {
 }
 
 function isMediaReadingRequest(question) {
+  const raw = String(question || "").toLocaleLowerCase();
   const text = normalize(question);
-  const mentionsMedia = /\b(zdjec\w*|obraz\w*|obrazk\w*|fot\w*|film\w*|wideo|video|image|picture|photo)\b/.test(text);
-  const asksToRead = /\b(odczytaj|przeczytaj|rozwiaz|odpowiedz|opisz|wyjasnij|co jest|co widac|jakie slowa|jakie zadanie|jakie pytanie|jakie polecenie|tresc|polecenie|what does|read|solve|answer|describe|explain|instruction|written)\b/.test(text);
+  const mentionsMedia = /\b(zdjec\w*|obraz\w*|obrazk\w*|fot\w*|film\w*|wideo|video|image|picture|photo|imagen|immagine|imagem|bild|afbeelding|resim|gorsel|fotograf|fotografie|dibujo|dessin)\b/u.test(text)
+    || /(?:画像|写真|動画|图片|照片|视频|이미지|사진|동영상|صورة|فيديو|तस्वीर|चित्र|वीडियो)/u.test(raw);
+  const asksToRead = /\b(odczytaj|przeczytaj|rozwiaz|odpowiedz|opisz|wyjasnij|co jest|co widac|jakie slowa|jakie zadanie|jakie pytanie|jakie polecenie|tresc|polecenie|what does|what is|read|solve|answer|describe|explain|instruction|written|was ist|geschrieben|lee|leer|resuelve|responde|contesta|describe|explica|que dice|que pone|lis|lire|resous|reponds|decris|explique|que dit|was steht|lies|lesen|loese|beantworte|beschreibe|erklaere|leggi|leggere|risolvi|rispondi|descrivi|spiega|cosa dice|leia|ler|resolva|responda|descreva|que diz|lees|lezen|beantwoord|beschrijf|leg uit|prochitay|reshi|otvet|opishi|obyasni|prochytai|rozviazhy|vidpovid|poiasny|oku|coz|cevapla|acikla|ne yaziyor)\b/u.test(text)
+    || /(?:読んで|読め|解いて|答えて|説明して|何が書いて|读取|读出|解答|回答|描述|解释|写了什么|읽어|풀어|답해|설명해|무엇이|اقرأ|اشرح|ماذا يقول|पढ़ें|पढ़ो|हल करो|बताओ|समझाओ|क्या लिखा)/u.test(raw);
   return mentionsMedia && asksToRead;
 }
 
 function isMediaGenerationRequest(question) {
+  const raw = String(question || "").toLocaleLowerCase();
   const text = normalize(question);
-  const asksToGenerate = /\b(wygeneruj|stworz|narysuj|zrob|wygenerowac|create|generate|draw|make|animuj)\b/.test(text);
-  const mentionsMedia = /\b(obraz\w*|zdjec\w*|fot\w*|film\w*|wideo|video|image|picture|photo|animacj\w*)\b/.test(text);
-  const supportedDiagramTopic = /\b(atom|komork\w*|trojkat\w*|geometr\w*|planet\w*|uklad sloneczny|obieg(?:u)? wody|cykl wodny|lancuch pokarm\w*|food chain|obwod(?:zie|u)? elektrycz\w*|electric circuit|zacmienie slonca|solar eclipse|warstw\w* ziemi|wnetrze ziemi|earth layers|layers? of (?:the )?earth|cell)\b/.test(text);
+  const asksToGenerate = /\b(wygeneruj|stworz|narysuj|zrob|wygenerowac|create|generate|draw|make|animuj|dibuja|dibuja|crea|genera|genere|dessine|produis|erstelle|zeichne|erzeuge|disegna|crie|desenhe|gere|narisu|sozdai|narisuy|sozday|stvory|namaliui|zgeneryui|olustur|ciz)\b/u.test(text)
+    || /(?:生成|描いて|画いて|绘制|画一|생성|그려|أنشئ|ارسم|बनाओ|चित्र बनाओ)/u.test(raw);
+  const mentionsMedia = /\b(obraz\w*|zdjec\w*|fot\w*|film\w*|wideo|video|image|picture|photo|animacj\w*|imagen|immagine|imagem|bild|foto|afbeelding|resim|gorsel|animacion|animacao|animation|animazione|video)\b/u.test(text)
+    || /(?:画像|写真|動画|图片|照片|视频|그림|이미지|동영상|فيديو|صورة|वीडियो|चित्र)/u.test(raw);
+  const supportedDiagramTopic = /\b(atom|adn|dna|dnk|komork\w*|trojkat\w*|geometr\w*|planet\w*|uklad sloneczny|sistema solar|systeme solaire|sonnensystem|sistema solare|obieg(?:u)? wody|cykl wodny|lancuch pokarm\w*|food chain|obwod(?:zie|u)? elektrycz\w*|electric circuit|zacmienie slonca|solar eclipse|warstw\w* ziemi|wnetrze ziemi|earth layers|layers? of (?:the )?earth|cell|fotosynth\w*|photosynth\w*|fotosint\w*|photosynthesis|光合作用|광합성|太阳系|太陽系|태양계)\b/u.test(text)
+    || /(?:脱氧核糖核酸|光合作用|太陽系|太阳系|태양계)/u.test(raw);
   return asksToGenerate && (mentionsMedia || supportedDiagramTopic);
 }
 
