@@ -277,7 +277,13 @@ const QUERY_EXPANSIONS = [
   { match: /\b(fcbarcelona|fcbarcelony|barcelona|barca|barcelony)\b/, terms: ["barcelona", "barca", "fc barcelona"] },
   { match: /\b(mecz|mecze|spotkanie|terminarz|pilka|pilkarski)\b/, terms: ["match", "fixture", "fixtures", "schedule", "calendar"] },
   { match: /\b(nauka|naukowy|badania|kosmos|kosmosu|astronomia|eksploracji|planeta|planety)\b/, terms: ["science", "research", "space", "planet", "astronomy", "exploration"] },
-  { match: /\b(fotosynteza|fotosyntezy|rosliny|chlorofil)\b/, terms: ["photosynthesis", "plant", "chlorophyll"] },
+  { match: /\b(fotosynteza|fotosyntezy|rosliny|chlorofil|photosynthesis|chlorophyll)\b/, terms: ["photosynthesis", "plant", "chlorophyll", "biology"] },
+  { match: /\b(wojna|wojny|bitwa|pierwsza wojna|druga wojna|historia|history|war|battle|ancient|wwi|wwii)\b/, terms: ["history", "historical", "war", "world war"] },
+  { match: /\b(komorka|komorki|dna|gen|geny|organizm|uklad krwionosny|biology|cell|cells|gene|genes|organism)\b/, terms: ["biology", "cell", "genetics", "organism"] },
+  { match: /\b(atom|atomy|reakcja chemiczna|chemia|chemistry|chemical reaction|molekula)\b/, terms: ["chemistry", "chemical reaction", "atom", "molecule"] },
+  { match: /\b(sila|ruch|predkosc|energia|fizyka|physics|force|motion|velocity|energy|acceleration)\b/, terms: ["physics", "force", "motion", "energy"] },
+  { match: /\b(geografia|kontynent|klimat|mapa|geography|continent|climate|map|earth science|geology)\b/, terms: ["geography", "continent", "climate", "earth science"] },
+  { match: /\b(programowanie|informatyka|algorytm|kodowanie|programming|computer science|algorithm|coding|javascript|html)\b/, terms: ["computer science", "programming", "algorithm", "coding"] },
   { match: /\b(szkoła|szkolny|lekcja|edukacja|zadanie)\b/, terms: ["edukacja", "lekcja", "szkoła", "materiały"] },
   { match: /\b(polska|polski|polskie|urzad|prawo|przepisy|ministerstwo)\b/, terms: ["polska", "polski", "gov"] },
   { match: /\b(historia|historyczny|historyczna)\b/, terms: ["historia", "history", "historyczny"] },
@@ -285,7 +291,7 @@ const QUERY_EXPANSIONS = [
   { match: /\b(polska|w polsce)\b/, terms: ["poland", "polska", "national"] }
 ];
 
-function getCrawlerTerms(question) {
+export function getCrawlerTerms(question) {
   const normalized = normalizeSearchText(`${question} ${getExpandedSearchText(question)}`);
   const language = detectQuestionLanguage(question);
   const languageStopWords = getLanguageStopWords(language);
@@ -298,6 +304,13 @@ function getCrawlerTerms(question) {
     !STOP_WORDS.has(term) && !languageStopWords.has(term)
   );
   const terms = [...rawTerms];
+
+  // Frazy dwuwyrazowe pomagają odróżnić pojęcia o podobnych pojedynczych słowach.
+  for (let index = 0; index < rawTerms.length - 1; index++) {
+    const left = rawTerms[index];
+    const right = rawTerms[index + 1];
+    if (left.length >= 3 && right.length >= 3) terms.push(left + " " + right);
+  }
 
   for (const expansion of QUERY_EXPANSIONS) {
     if (expansion.match.test(normalized)) terms.push(...expansion.terms);
@@ -316,44 +329,63 @@ function getCrawlerTerms(question) {
   return unique(terms).filter(term => term.length >= minimumLength).slice(0, CRAWLER_MAX_TERMS);
 }
 
-function scoreCrawlerText(value, terms) {
+export function scoreCrawlerText(value, terms) {
   const normalized = normalizeSearchText(value);
   if (!normalized || !terms.length) return 0;
 
   const tokens = normalized.split(" ");
-  const tokenSet = new Set(tokens);
+  const tokenCounts = new Map();
+  for (const token of tokens) tokenCounts.set(token, (tokenCounts.get(token) || 0) + 1);
   const containsIdeographs = /[\u3040-\u30ff\u3400-\u9fff\u0e00-\u0e7f]/u.test(normalized);
   const compact = containsIdeographs ? normalized.replace(/\s+/g, "") : "";
   let score = 0;
   for (const term of terms) {
-    if (tokenSet.has(term)) score += 2;
+    if (term.includes(" ")) {
+      if (normalized.includes(term)) score += 5;
+      continue;
+    }
+    const count = tokenCounts.get(term) || 0;
+    if (count) score += 2 + Math.min(count - 1, 2) * 0.35;
     else if ((containsIdeographs && term.length >= 2 && compact.includes(term))
       || (term.length >= 4 && normalized.includes(term))) score += 1;
   }
   return score;
 }
 
-function getDocumentRelevance(page, url, terms) {
+export function getDocumentRelevance(page, url, terms) {
   const titleScore = scoreCrawlerText(page.title || "", terms);
   const descriptionScore = scoreCrawlerText(page.description || "", terms);
   const urlScore = scoreCrawlerText(url || "", terms);
   const contentScore = scoreCrawlerText(`${(page.paragraphs || []).join(" ")} ${page.text || ""}`, terms);
-  const strongMatch = titleScore > 0 || descriptionScore > 0;
-  const score = titleScore * 7 + descriptionScore * 4 + urlScore * 2 + Math.min(contentScore, 12) * 0.35;
-  return { score, titleScore, descriptionScore, urlScore, contentScore, strongMatch };
+  const strongMatch = titleScore > 0 || descriptionScore > 0 || (urlScore > 0 && contentScore >= 2);
+  const combinedText = (page.title || "") + " " + (page.description || "") + " " + (url || "") + " " + (page.text || "");
+  const matchedTerms = terms.filter(term => scoreCrawlerText(combinedText, [term]) > 0).length;
+  const coverage = terms.length ? matchedTerms / terms.length : 0;
+  const score = titleScore * 7.5 + descriptionScore * 4.5 + urlScore * 2.5
+    + Math.min(contentScore, 18) * 0.45 + coverage * 5;
+  return { score, titleScore, descriptionScore, urlScore, contentScore, coverage, strongMatch };
 }
 
 function getCrawlerSnippet(page, terms) {
   const ranked = (page.paragraphs || [])
     .map(paragraph => ({
       text: paragraph,
+      key: normalizeSearchText(paragraph).slice(0, 180),
       score: scoreCrawlerText(paragraph, terms)
     }))
     .filter(item => item.score > 0)
     .sort((a, b) => b.score - a.score || b.text.length - a.text.length);
 
   if (ranked.length) {
-    return ranked.slice(0, 3).map(item => item.text).join("\n\n").slice(0, 1500);
+    const selected = [];
+    const seen = new Set();
+    for (const item of ranked) {
+      if (seen.has(item.key)) continue;
+      seen.add(item.key);
+      selected.push(item.text);
+      if (selected.length >= 3) break;
+    }
+    return selected.join("\n\n").slice(0, 1500);
   }
 
   const fallback = page.description && page.description.length >= 90
@@ -969,7 +1001,7 @@ function extractCrawlerPage(html, pageUrl, host) {
 // DOBÓR WITRYN DO PYTANIA
 // ---------------------------------------------------------------------------
 
-function selectCrawlerSources(question) {
+export function selectCrawlerSources(question) {
   const text = normalizeSearchText(question);
   const has = pattern => pattern.test(text);
   const language = detectQuestionLanguage(question);
@@ -992,11 +1024,18 @@ function selectCrawlerSources(question) {
   else if (officialPoland) categories = ["poland", "news"];
   else categories = ["education", "general"];
 
+  const queryTerms = getCrawlerTerms(question);
   return CRAWLER_SOURCES
     .filter(source => categories.includes(source.category))
-    .sort((a, b) => Number(b.language === language) - Number(a.language === language)
-      || categories.indexOf(a.category) - categories.indexOf(b.category)
-      || (b.trust || 0) - (a.trust || 0))
+    .sort((a, b) => {
+      const languageFit = Number(b.language === language) - Number(a.language === language);
+      if (languageFit) return languageFit;
+      const hintScoreA = scoreCrawlerText((a.hints || []).join(" "), queryTerms);
+      const hintScoreB = scoreCrawlerText((b.hints || []).join(" "), queryTerms);
+      return hintScoreB - hintScoreA
+        || categories.indexOf(a.category) - categories.indexOf(b.category)
+        || (b.trust || 0) - (a.trust || 0);
+    })
     .slice(0, CRAWLER_MAX_SOURCES);
 }
 
