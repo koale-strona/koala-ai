@@ -1828,14 +1828,32 @@ export default async function handler(request) {
   const history = getSafeHistory(body.history);
 
   try {
+    const firstRoute = classifyQuestion(message, "", history);
+    const webFirst = firstRoute.shouldSearchWeb
+      && ["knowledge", "knowledge-comparison", "search", "sports-search", "news-search"].includes(firstRoute.kind);
+    let firstInternetAnswer = null;
+    if (webFirst) {
+      try {
+        firstInternetAnswer = await searchAllSources(firstRoute.searchQuery || message);
+      } catch (searchError) {
+        console.warn("Koala first web search failed:", searchError?.message || searchError);
+      }
+      if (firstInternetAnswer) return jsonResponse({ answer: firstInternetAnswer }, 200, origin);
+    }
+
     const localAnswer = answerQuestion(message, history);
     let finalAnswer = typeof localAnswer === "string"
       ? localAnswer
       : "Nie udało mi się przygotować odpowiedzi. Spróbuj ponownie.";
 
     const localUnknown = isLocalUnknown(finalAnswer);
+    if (webFirst && !firstInternetAnswer) {
+      const fallbackNote = getNoSearchResultMessage(message, localUnknown).trim();
+      if (localUnknown) finalAnswer = fallbackNote;
+      else finalAnswer += `\\n\\n${fallbackNote}`;
+    }
     const route = classifyQuestion(message, finalAnswer, history);
-    const onlineSearch = shouldSearchOnline(message, finalAnswer, history);
+    const onlineSearch = !webFirst && shouldSearchOnline(message, finalAnswer, history);
 
     if (onlineSearch && !["greeting", "thanks", "social", "math", "knowledge", "teacher-answer"].includes(route.kind)) {
       const internetAnswer = await searchAllSources(route.searchQuery || message);
