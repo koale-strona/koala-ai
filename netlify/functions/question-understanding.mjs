@@ -45,7 +45,19 @@ const CONCEPTS = [
   ["ciśnienie", "pressure|presión|pression|druck|pressione|pressão|давление|тиск|ضغط|圧力|压力|압력|tlak|presiune|nyomás|druk|tryck|tryk|trykk|paine|pressió|slėgis|tlak|áp suất"],
   ["części mowy", "parts of speech|partes de la oración|parties du discours|wortarten|parti del discorso|classes gramaticais|части речи|частини мови|词类|品詞|품사|slovní druhy|părți de vorbire|szófajok|woordsoorten|ordklasser|ordklasser|ordklasser|sanaluokat|categories gramaticals|kalbos dalys|slovné druhy|từ loại"],
   ["czasownik", "verb|verbo|verbe|verb|verbo|verbo|глагол|дієслово|动词|動詞|동사|sloveso|verb|ige|werkwoord|verb|udsagnsord|verb|verbi|verb|veiksmažodis|sloveso|động từ"],
-  ["demokracja", "democracy|democracia|démocratie|demokratie|democrazia|демократия|демократія|民主|民主主義|민주주의|demokracie|democrație|demokrácia|democratie|demokrati|demokrati|demokrati|demokratia|democràcia|demokratija|demokracia|dân chủ"]
+  ["demokracja", "democracy|democracia|démocratie|demokratie|democrazia|демократия|демократія|民主|民主主義|민주주의|demokracie|democrație|demokrácia|democratie|demokrati|demokrati|demokrati|demokratia|democràcia|demokratija|demokracia|dân chủ"],
+  ["układ krwionośny", "circulatory system|sistema circulatorio|système circulatoire|kreislaufsystem|apparato circolatorio|sistema circulatório|кровеносная система|кровоносна система|循環器系|순환계"],
+  ["układ oddechowy", "respiratory system|sistema respiratorio|système respiratoire|atemwegssystem|apparato respiratorio|sistema respiratório|дыхательная система|дихальна система|呼吸器系|호흡계"],
+  ["układ pokarmowy", "digestive system|digestive tract|sistema digestivo|système digestif|verdauungssystem|apparato digerente|sistema digestório|пищеварительная система|травна система|消化器系|소화계"],
+  ["twierdzenie Pitagorasa", "pythagorean theorem|teorema de pitagoras|théorème de pythagore|satz des pythagoras|teorema di pitagora|teorema de pitágoras|теорема пифагора|теорема піфагора|三平方の定理|피타고라스 정리"],
+  ["zmiana klimatu", "climate change|cambio climatico|changement climatique|klimawandel|cambiamento climatico|mudança climática|изменение климата|зміна клімату|气候变化|気候変動|기후 변화"],
+  ["pory roku", "seasons|las estaciones|les saisons|jahreszeiten|le stagioni|estações do ano|времена года|пори року|四季|계절"],
+  ["prąd elektryczny", "electric current|electrical current|corriente electrica|courant electrique|elektrischer strom|corrente elettrica|corrente eletrica|электрический ток|електричний струм|電流|전류"],
+  ["prawo zachowania masy", "law of conservation of mass|conservation of mass|ley de conservacion de la masa|loi de conservation de la masse|massenerhaltungssatz|legge di conservazione della massa|закон сохранения массы|закон збереження маси|質量保存の法則|질량 보존 법칙"],
+  ["układ współrzędnych", "coordinate system|coordinate plane|sistema de coordenadas|systeme de coordonnees|koordinatensystem|sistema di coordinate|система координат|座標系|좌표계"],
+  ["kontynenty i oceany", "continents and oceans|continentes y oceanos|continents et oceans|kontinente und ozeane|continenti e oceani|continentes e oceanos|континенты и океаны|материки й океани|大陸と海洋|대륙과 해양"],
+  ["system dwójkowy", "binary system|binary number system|sistema binario|systeme binaire|binarsystem|sistema binario|система счисления двоичная|двійкова система числення|二進法|이진법"],
+  ["rodzaje kątów", "types of angles|tipos de angulos|types d angles|winkelarten|tipi di angoli|tipos de angulos|виды углов|види кутів|角の種類|각의 종류"]
 ].map(([canonical, aliases]) => ({ canonical, aliases: aliases.split("|").map(fold).filter(Boolean) }));
 
 const QUESTION_PREFIXES = {
@@ -63,16 +75,27 @@ const QUESTION_PREFIXES = {
   ja: ["とは何", "どのように機能", "例を挙げる"],
   zh: ["什么是", "如何运作", "举例说明"],
   ar: ["ما هو", "كيف يعمل", "أعط مثالا على"],
-  hi: ["क्या है", "कैसे काम करता है", "उदाहरण दें"]
+  hi: ["क्या है", "कैसे काम करता है", "उदाहरण दें"],
+  cs: ["co je", "jak funguje", "uveď příklad"],
+  ro: ["ce este", "cum funcționează", "dă un exemplu"],
+  hu: ["mi az", "hogyan működik", "mondj példát"],
+  sv: ["vad är", "hur fungerar", "ge ett exempel"],
+  da: ["hvad er", "hvordan fungerer", "giv et eksempel"],
+  no: ["hva er", "hvordan fungerer", "gi et eksempel"],
+  fi: ["mikä on", "miten se toimii", "anna esimerkki"],
+  id: ["apa itu", "bagaimana cara kerja", "berikan contoh"],
+  vi: ["là gì", "hoạt động như thế nào", "cho ví dụ"],
+  ko: ["무엇인가요", "어떻게 작동하나요", "예를 들어"],
+  el: ["τι είναι", "πώς λειτουργεί", "δώσε ένα παράδειγμα"]
 };
 
 const INTENT_WORDS = {
-  definition: /\b(co to jest|czym jest|what is|define|qué es|was ist|что такое|що таке)\b/u,
-  explanation: /\b(wyjasnij|wytlumacz|jak dziala|dlaczego|explain|how does|why|cómo funciona|comment fonctionne|warum|почему|як працює)\b/u,
-  example: /\b(przyklad|podaj przyklad|example|give an example|ejemplo|beispiel|пример|приклад)\b/u,
-  steps: /\b(krok po kroku|jak obliczyc|rozpisz|step by step|how to calculate|paso a paso|schritt für schritt)\b/u,
-  compare: /\b(porownaj|roznica|compare|difference between|comparar|unterschied zwischen|сравни|порівняй)\b/u,
-  simplify: /\b(prosciej|latwiej|w prostych slowach|simpler|in simple terms|más sencillo|einfacher)\b/u
+  definition: /(?:例を挙げる|举例说明|예를 들어|\b(co to jest|czym jest|what is|define|que es|qu est ce que|was ist|che cos e|cos e|o que e|что такое|що таке|nedir|mi az|ce este|apa itu)\b)/u,
+  explanation: /(?:\b(wyjasnij|wytlumacz|jak dziala|dlaczego|explain|how does|why|como funciona|por que|comment fonctionne|wie funktioniert|warum|perche|come funziona|как работает|почему|як працює|nasil calisir)\b|解释|説明して|설명해)/u,
+  example: /(?:ví dụ|vi du|उदाहरण दें|\b(przyklad|podaj przyklad|example|give an example|ejemplo|beispiel|пример|приклад|exemplo|voorbeeld|ornek ver)\b)/u,
+  steps: /(?:\b(krok po kroku|jak obliczyc|rozpisz|step by step|how to calculate|paso a paso|schritt fur schritt|etape par etape|passo a passo|шаг за шагом|крок за кроком)\b|一步一步|順を追って|단계별)/u,
+  compare: /(?:\b(porownaj|roznica|compare|difference between|comparar|diferencia entre|unterschied zwischen|сравни|порівняй|so sanh|karsilastir)\b|比較して|비교해)/u,
+  simplify: /(?:\b(prosciej|latwiej|w prostych slowach|simpler|in simple terms|mas sencillo|en palabras sencillas|einfacher|plus simple|piu semplice|in parole semplici|простыми словами|proshche|daha basit)\b|简单来说|簡単に|쉽게 설명)/u
 };
 
 export function understandQuestion(question) {
@@ -88,7 +111,8 @@ export function understandQuestion(question) {
     if (matched) concepts.push(concept.canonical);
   }
 
-  const intent = Object.entries(INTENT_WORDS).find(([, pattern]) => pattern.test(normalized))?.[0] || "factual";
+  const intentOrder = ["steps", "compare", "simplify", "example", "explanation", "definition"];
+  const intent = intentOrder.find(name => INTENT_WORDS[name].test(normalized)) || "factual";
   const language = detectQuestionLanguage(raw);
   const expanded = [...new Set([normalized, ...concepts])].join(" ");
   const commandsRemoved = normalized

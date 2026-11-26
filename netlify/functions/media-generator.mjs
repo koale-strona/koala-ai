@@ -59,8 +59,62 @@ function earthLayers(animated) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-labelledby="title desc"><title id="title">Warstwy wnętrza Ziemi</title><desc id="desc">Schemat skorupy, płaszcza, jądra zewnętrznego i wewnętrznego</desc><rect width="720" height="440" rx="28" fill="#15192d"/><text x="32" y="52" fill="#fff" font-size="26" font-family="sans-serif" font-weight="700">Wnętrze Ziemi</text><text x="32" y="80" fill="#c2c9e5" font-size="14" font-family="sans-serif">Warstwy i ich grubości pokazano schematycznie</text><circle cx="300" cy="245" r="145" fill="#bd583d"/><circle cx="300" cy="245" r="95" fill="#f0a347"/><circle cx="300" cy="245" r="48" fill="#ffe28a"/><circle cx="300" cy="245" r="13" fill="#fff5c7"/><g font-family="sans-serif" font-size="17" fill="#f0f3ff"><path d="M408 155 H500" stroke="#9bd2ed" stroke-width="2"/><text x="510" y="160">skorupa</text><path d="M382 210 H500" stroke="#ffb57c" stroke-width="2"/><text x="510" y="215">płaszcz</text><path d="M342 260 H500" stroke="#ffe28a" stroke-width="2"/><text x="510" y="265">jądro zewnętrzne</text><path d="M312 300 H500" stroke="#fff5c7" stroke-width="2"/><text x="510" y="305">jądro wewnętrzne</text></g>${animated ? '<circle cx="300" cy="245" r="22" fill="none" stroke="#fff5c7" stroke-width="3"><animate attributeName="r" values="14;44;14" dur="2.8s" repeatCount="indefinite"/></circle>' : ""}</svg>`;
 }
 
+
+function photosynthesis(animated) {
+  const pulse = animated
+    ? '<animate attributeName="opacity" values="0.45;1;0.45" dur="3s" repeatCount="indefinite"/>'
+    : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-labelledby="title desc">
+<title id="title">Fotosynteza</title><desc id="desc">Schemat: światło, woda i dwutlenek węgla pomagają roślinie wytworzyć glukozę i tlen</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#60a5fa"/></marker><linearGradient id="leaf"><stop stop-color="#86efac"/><stop offset="1" stop-color="#15803d"/></linearGradient></defs>
+<rect width="720" height="440" rx="28" fill="#effaf1"/>
+<text x="36" y="48" fill="#14532d" font-size="28" font-family="sans-serif" font-weight="700">Fotosynteza</text>
+<text x="36" y="75" fill="#365c45" font-size="15" font-family="sans-serif">Schemat poglądowy — nie przedstawia skali</text>
+<circle cx="116" cy="148" r="38" fill="#fbbf24"><g>${pulse}</g></circle><text x="82" y="205" fill="#713f12" font-size="16" font-family="sans-serif">światło</text>
+<path d="M155 150 C220 150 245 175 292 195" fill="none" stroke="#60a5fa" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="40" y="280" fill="#1e3a8a" font-size="18" font-family="sans-serif">CO₂ + woda</text>
+<path d="M178 272 C235 270 258 252 295 238" fill="none" stroke="#60a5fa" stroke-width="4" marker-end="url(#arrow)"/>
+<path d="M350 325 C350 255 350 213 350 156" fill="none" stroke="#166534" stroke-width="12" stroke-linecap="round"/>
+<path d="M350 238 C282 236 258 198 275 168 C319 171 348 190 350 238Z" fill="url(#leaf)" stroke="#166534" stroke-width="3"/>
+<path d="M350 220 C416 216 449 179 433 150 C389 154 357 174 350 220Z" fill="url(#leaf)" stroke="#166534" stroke-width="3"/>
+<path d="M350 236 C370 217 394 191 420 165" fill="none" stroke="#dcfce7" stroke-width="3"/>
+<path d="M350 238 C330 218 308 193 288 176" fill="none" stroke="#dcfce7" stroke-width="3"/>
+<text x="307" y="365" fill="#14532d" font-size="17" font-family="sans-serif">roślina</text>
+<path d="M445 205 C500 205 520 180 555 166" fill="none" stroke="#60a5fa" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="540" y="143" fill="#14532d" font-size="18" font-family="sans-serif">glukoza</text>
+<path d="M445 235 C500 244 520 273 555 286" fill="none" stroke="#60a5fa" stroke-width="4" marker-end="url(#arrow)"/>
+<text x="560" y="302" fill="#1d4ed8" font-size="18" font-family="sans-serif">tlen (O₂)</text>
+<text x="482" y="354" fill="#365c45" font-size="14" font-family="sans-serif">w liściach, dzięki chlorofilowi</text>
+</svg>`;
+}
+
+function dna(animated) {
+  const pairs = Array.from({ length: 11 }, (_, index) => {
+    const y = 105 + index * 23;
+    const offset = Math.sin(index * Math.PI / 2) * 52;
+    const left = 360 - offset;
+    const right = 360 + offset;
+    const bases = [["A", "T"], ["C", "G"], ["T", "A"], ["G", "C"]][index % 4];
+    return `<line x1="${left}" y1="${y}" x2="${right}" y2="${y}" stroke="#93c5fd" stroke-width="4"/><circle cx="${left}" cy="${y}" r="6" fill="#f472b6"/><circle cx="${right}" cy="${y}" r="6" fill="#34d399"/><text x="${left - 17}" y="${y + 5}" fill="#7f1d1d" font-size="13" font-family="sans-serif">${bases[0]}</text><text x="${right + 8}" y="${y + 5}" fill="#064e3b" font-size="13" font-family="sans-serif">${bases[1]}</text>`;
+  }).join("");
+  const motion = animated
+    ? '<animate attributeName="opacity" values="0.65;1;0.65" dur="4s" repeatCount="indefinite"/>'
+    : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-labelledby="title desc">
+<title id="title">DNA i geny</title><desc id="desc">Uproszczony model podwójnej helisy DNA z parami zasad A–T i C–G</desc>
+<rect width="720" height="440" rx="28" fill="#101a35"/>
+<text x="36" y="48" fill="#fff" font-size="28" font-family="sans-serif" font-weight="700">DNA — podwójna helisa</text>
+<text x="36" y="75" fill="#cbd5e1" font-size="15" font-family="sans-serif">Uproszczony model: zasady łączą się w pary A–T oraz C–G</text>
+<g>${motion}${pairs}</g>
+<text x="245" y="395" fill="#f9a8d4" font-size="16" font-family="sans-serif">A i T</text>
+<text x="405" y="395" fill="#6ee7b7" font-size="16" font-family="sans-serif">C i G</text>
+</svg>`;
+}
+
 const TOPICS = [
-  { test: /uklad sloneczny|planeta|planety|solar system|planets?/, name: "Układ Słoneczny", draw: solarSystem },
+  { test: /photosynth|fotosynthe|fotosintesis|光合作用|광합성/, name: "Fotosynteza", draw: photosynthesis },
+  { test: /\b(dna|adn|dnk)\b|днк|脱氧核糖核酸/, name: "DNA i geny", draw: dna },
+  { test: /uklad sloneczny|sistema solar|systeme solaire|sonnensystem|sistema solare|planeta|planety|solar system|planets?|太阳系|太陽系|태양계/, name: "Układ Słoneczny", draw: solarSystem },
   { test: /atom|proton|neutron|electron/, name: "Budowa atomu", draw: atom },
   { test: /obieg(?:u)? wody|cykl wodny|water cycle/, name: "Obieg wody", draw: waterCycle },
   { test: /trojkat|geometr|triangle|geometry/, name: "Geometria", draw: geometry },
@@ -73,12 +127,12 @@ const TOPICS = [
 
 export function generateEducationalMedia(prompt) {
   const text = fold(prompt);
-  const isGeneration = /\b(wygeneruj|stworz|narysuj|zrob|generate|create|draw|make|animuj)\b/.test(text);
+  const isGeneration = /\b(wygeneruj|stworz|narysuj|zrob|generate|create|draw|make|animuj|dibuja|crea|genera|genere|dessine|erstelle|zeichne|erzeuge|disegna|crie|desenhe|gere|narisu|sozda|olustur|ciz)\b/.test(text) || /(?:生成|描いて|画いて|绘制|생성|그려|أنشئ|ارسم|बनाओ|चित्र बनाओ)/u.test(text);
   if (!isGeneration) return null;
 
   const topic = TOPICS.find(item => item.test.test(text));
   if (!topic) return null;
-  const animated = /\b(film|wideo|video|animac\w*|animated|animation|clip)\b/.test(text);
+  const animated = /\b(film|wideo|video|animac\w*|animated|animation|clip|pelicula|video|vidéo|animation|film|animazione|animacao|анимац\w*|видео|animasyon)\b/.test(text) || /(?:動画|动画|影片|동영상|वीडियो|فيديو)/u.test(text);
   const svg = topic.draw(animated);
   const encoded = Buffer.from(svg, "utf8").toString("base64");
   const kind = animated ? "animation" : "image";
